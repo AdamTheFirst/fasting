@@ -14,7 +14,7 @@ Fast me is judged here by its spec (v0.1, native, features 1 to 11), not a build
 
 Legend: **D** = Fast me differs (better for our user). **P** = parity. **B** = Fast me behind. **—** = left out on purpose. "?" = not verified (needs a hands-on check).
 
-| Area | Zero | Fastic | BodyFast | Simple | Fast me (spec) | |
+| Area | Zero | Fastic | BodyFast | Simple | Fast me (spec) | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
 | Onboarding | Plus offer screens on launch, "continue free" hidden on the last screen | 68-step onboarding, ~6 min quiz, paywall at the end, spin-the-wheel discount if you close it | 20 steps, ends with a signed "commitment contract", then a paywall | Asks for a weight-loss target, builds a plan | One tap to a running fast. No account, no quiz | D |
 | Longest fast | Custom fasts up to 7 days (168 h) | Preset schedules 12:12 to 23:1, intermittent only | Plan-based. OMAD reported as paid | 24 h and 36 h windows are premium | No cap. Shown in days, goal optional or "until a date" | D |
