@@ -21,7 +21,7 @@ export function SafetyCard({ onDismiss, onTurnOff }: { onDismiss: () => void; on
       <View style={styles.links}>
         {SAFETY_CARD.sources.map((s) => (
           <Body
-            key={s.url}
+            key={`${s.url}${c.text}`}
             accessibilityRole="link"
             style={[font.sm, { color: c.text, textDecorationLine: 'underline' }]}
             onPress={() => void Linking.openURL(s.url)}

@@ -286,7 +286,9 @@ function StartFast({
       <SectionHeader
         action={
           <Pressable accessibilityRole="link" onPress={() => router.push('/history')} hitSlop={8}>
-            <Text style={[font.sm, { color: c.text, textDecorationLine: 'underline' }]}>History</Text>
+            <Text key={c.text} style={[font.sm, { color: c.text, textDecorationLine: 'underline' }]}>
+              History
+            </Text>
           </Pressable>
         }
       >

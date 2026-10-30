@@ -56,6 +56,7 @@ function Detail({ text, source }: { text?: string; source?: MilestoneSource | nu
       {text ? <Text style={[font.sm, { color: c.textMuted }]}>{text}</Text> : null}
       {source ? (
         <Text
+          key={c.text}
           accessibilityRole="link"
           style={[font.xs, { color: c.text, textDecorationLine: 'underline' }]}
           onPress={() => void Linking.openURL(source.url)}

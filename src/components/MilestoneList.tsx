@@ -93,6 +93,7 @@ export function MilestoneList({
                 </Text>
                 {m.source ? (
                   <Text
+                    key={c.text}
                     accessibilityRole="link"
                     onPress={() => void Linking.openURL(m.source!.url)}
                     style={[font.xs, { color: c.text, textDecorationLine: 'underline' }]}

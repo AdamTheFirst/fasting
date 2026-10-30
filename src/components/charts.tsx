@@ -213,7 +213,7 @@ export function BarChart({
       {average !== undefined && average > 0 && averageLabel ? (
         <View style={styles.legend}>
           <View style={[styles.legendDash, { borderColor: c.text }]} />
-          <Text style={[font.xs, { color: c.textMuted }]}>{averageLabel}</Text>
+          <Text style={[font.xs, { color: c.textMuted, flex: 1 }]}>{averageLabel}</Text>
         </View>
       ) : null}
     </View>
@@ -335,7 +335,7 @@ export function LineChart({
               { backgroundColor: c.accentSubtle, borderColor: c.border, borderWidth: 1 },
             ]}
           />
-          <Text style={[font.xs, { color: c.textMuted }]}>{bandLabel}</Text>
+          <Text style={[font.xs, { color: c.textMuted, flex: 1 }]}>{bandLabel}</Text>
         </View>
       ) : null}
     </View>

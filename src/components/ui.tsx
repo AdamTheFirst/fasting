@@ -14,7 +14,19 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { bold, font, inkBorder, layout, medium, radius, space, strong, tabular, useColors } from '../theme';
+import {
+  bold,
+  font,
+  inkBorder,
+  layout,
+  medium,
+  radius,
+  space,
+  strong,
+  tabular,
+  useColors,
+  useIsDark,
+} from '../theme';
 import { Icon, type IconName } from './Icon';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'quiet';
@@ -77,6 +89,8 @@ export function Button({
       <View style={styles.buttonRow}>
         {icon ? <Icon name={icon} size={size === 'sm' ? 18 : 20} color={fg} /> : null}
         <Text
+          // Android drops an underline when only the colour changes (a theme switch); remount per colour.
+          key={fg}
           style={[
             size === 'sm' ? font.sm : font.md,
             { color: fg, fontWeight: '600' },
@@ -370,6 +384,7 @@ export function SwitchRow({
   onChange: (v: boolean) => void;
 }) {
   const c = useColors();
+  const dark = useIsDark();
   // The whole row toggles, not only the small switch.
   return (
     <ListRow
@@ -383,7 +398,7 @@ export function SwitchRow({
           value={value}
           onValueChange={onChange}
           trackColor={{ false: c.border, true: c.accent }}
-          thumbColor={value ? c.onAccent : c.switchThumbOff}
+          thumbColor={value ? (dark ? '#FFFFFF' : c.onAccent) : c.switchThumbOff}
           ios_backgroundColor={c.border}
         />
       }
