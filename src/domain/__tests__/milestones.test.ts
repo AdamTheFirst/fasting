@@ -71,6 +71,7 @@ describe('customMilestone', () => {
     });
     expect(customMilestone(120, '', 'c2')?.title).toBe('5d');
     expect(customMilestone(18, '', 'c3')?.body).toBe('You reached 18h.');
+    expect(customMilestone(0.5, '', 'c5')?.title).toBe('30m');
     expect(customMilestone(0, '', 'c4')).toBeNull();
   });
 });

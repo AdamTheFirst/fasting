@@ -1,11 +1,16 @@
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { Body, Button, SectionHeader } from '../../components/ui';
 import { APP_NAME } from '../../config/identity';
 import { csvToFasts, fastsToCsv } from '../../domain/csv';
 import { goalLabel, newId } from '../../domain/fast';
-import { AUTOPHAGY_NOTE, BUILT_IN_MILESTONES, customMilestone } from '../../domain/milestones';
+import {
+  AUTOPHAGY_NOTE,
+  BUILT_IN_MILESTONES,
+  customMilestone,
+  type MilestoneSource,
+} from '../../domain/milestones';
 import { health } from '../../services/health';
 import { pickCsv, shareCsv } from '../../services/files';
 import { ensureNotificationPermission } from '../../services/notifications';
@@ -17,20 +22,32 @@ function Toggle({
   hint,
   value,
   onChange,
+  source,
 }: {
   label: string;
   hint?: string;
   value: boolean;
   onChange: (v: boolean) => void;
+  source?: MilestoneSource | null;
 }) {
   const c = useColors();
+  // The whole row toggles, not only the small switch.
   return (
-    <View style={styles.toggle}>
+    <Pressable style={styles.toggle} onPress={() => onChange(!value)} accessible={false}>
       <View style={{ flex: 1 }}>
         <Body>{label}</Body>
         {hint ? (
           <Body muted style={font.sm}>
             {hint}
+          </Body>
+        ) : null}
+        {source ? (
+          <Body
+            accessibilityRole="link"
+            style={[font.sm, { color: c.accent }]}
+            onPress={() => void Linking.openURL(source.url)}
+          >
+            {source.label}
           </Body>
         ) : null}
       </View>
@@ -42,7 +59,7 @@ function Toggle({
         thumbColor={value ? c.accent : c.surface}
         ios_backgroundColor={c.border}
       />
-    </View>
+    </Pressable>
   );
 }
 
@@ -82,7 +99,7 @@ export default function SettingsScreen() {
 
   const addCustomMilestone = async () => {
     const m = customMilestone(Number(mHours.replace(',', '.')), mNote, newId());
-    if (!m) return;
+    if (!m) return Alert.alert('Enter the hours as a number, like 36 or 4.5.');
     await setMilestones({ custom: [...ms.custom, m].sort((a, b) => a.hours - b.hours) });
     setMHours('');
     setMNote('');
@@ -161,6 +178,7 @@ export default function SettingsScreen() {
           key={m.id}
           label={m.title}
           hint={m.body}
+          source={m.source}
           value={ms.enabledIds.includes(m.id)}
           onChange={(on) =>
             void setMilestones({

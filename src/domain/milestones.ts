@@ -135,6 +135,7 @@ export function customMilestone(hours: number, note: string, id: string): Milest
   if (!Number.isFinite(hours) || hours <= 0) return null;
   const title = formatDuration(hours * HOUR)
     .replace(/ 00m$/, '')
-    .replace(/ 0h$/, '');
+    .replace(/ 0h$/, '')
+    .replace(/^0h /, '');
   return { id, hours, title, body: note.trim() || `You reached ${title}.`, source: null };
 }

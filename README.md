@@ -41,6 +41,19 @@ npm start
 
 Health Connect on an emulator: use a Google Play system image with API 34 or later (Health Connect is built in), then add a weight in the Health Connect app to see it appear in the weight chart.
 
+### Building on Windows
+
+The native build fails with `Filename longer than 260 characters` from ninja, because the CMake 3.22.1 that Android Studio installs by default ships ninja 1.10, which can't handle long paths. Install a newer CMake once and point the project at it:
+
+```bash
+sdkmanager "cmake;3.31.6"
+echo cmake.dir=C\:/Users/<you>/AppData/Local/Android/Sdk/cmake/3.31.6 >> android/local.properties
+```
+
+`android/` is generated, so run `npm run android` once first to create it, add the line, then run it again. Keep the line if you regenerate with `expo prebuild --clean`. The repo's `.gitattributes` forces LF line endings so Prettier passes on Windows checkouts.
+
+Health Connect also works on a plain Google APIs image (API 34+); we tested on `system-images;android-35;google_apis;x86_64`.
+
 No Mac? Build iOS in the cloud with EAS: `npx eas-cli build --profile development --platform ios` (needs an Apple Developer account, $99/yr, for a device build).
 
 ## Checks
