@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { TimelineMark } from '../domain/milestones';
 import { formatDuration, HOUR } from '../domain/time';
-import { font, radius, serif, space, useColors } from '../theme';
+import { font, radius, strong, space, useColors } from '../theme';
 import { Icon } from './Icon';
 
 /**
@@ -49,19 +49,17 @@ export function MilestoneBanner({ mark, onClose }: { mark: TimelineMark; onClose
     <View
       accessibilityLiveRegion="polite"
       accessibilityRole="alert"
-      style={[styles.banner, { backgroundColor: c.milestoneSubtle, borderColor: c.milestone }]}
+      style={[styles.banner, { backgroundColor: c.accentSubtle, borderColor: c.text }]}
     >
-      <View style={[styles.icon, { backgroundColor: c.milestone }]}>
+      <View style={[styles.icon, { backgroundColor: c.accent, borderColor: c.onAccent }]}>
         <Icon
           name={mark.kind === 'goal' ? 'flag' : mark.kind === 'best' ? 'trophy' : 'check'}
           size={18}
-          color={c.surface}
+          color={c.onAccent}
         />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={[font.md, { color: c.text, fontFamily: serif, fontWeight: '700' }]}>
-          {headline(mark)}
-        </Text>
+        <Text style={[font.md, { color: c.text, ...strong }]}>{headline(mark)}</Text>
         <Text style={[font.sm, { color: c.text }]}>{mark.body}</Text>
       </View>
       <Pressable accessibilityRole="button" accessibilityLabel="Close" hitSlop={12} onPress={onClose}>
@@ -77,8 +75,15 @@ const styles = StyleSheet.create({
     gap: space[3],
     padding: space[4],
     borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: 1.5,
     alignItems: 'flex-start',
   },
-  icon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  icon: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

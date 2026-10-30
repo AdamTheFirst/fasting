@@ -1,11 +1,12 @@
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { TimelineMark } from '../domain/milestones';
-import { formatDuration, HOUR } from '../domain/time';
-import { font, serif, space, tabular, useColors } from '../theme';
-import { Icon } from './Icon';
+import { phaseAt } from '../domain/phases';
+import { formatShort, HOUR } from '../domain/time';
+import { font, inkBorder, medium, phaseColor, radius, space, tabular, useColors } from '../theme';
 
-/** "12h", "2d", "3d 4h": whole hours, days once past 48 h, so a previous best of 72.2 h reads "3d". */
+/** "12h", "2d", "3d 4h": days once past 48 h, so a previous best of 72.2 h reads "3d". */
 const hoursLabel = (h: number) => {
   if (h < 48) return `${Math.round(h * 10) / 10}h`;
   const whole = Math.round(h);
@@ -15,8 +16,8 @@ const hoursLabel = (h: number) => {
 };
 
 /**
- * "Along the way": a vertical line of what is likely happening, passed points filled
- * in ochre, the next one highlighted. Plain words, "likely", and a source for each.
+ * Every point along the fast as one tidy row, coloured by its phase.
+ * Tap a row to read what is likely happening and its source.
  */
 export function MilestoneList({
   marks,
@@ -29,66 +30,79 @@ export function MilestoneList({
 }) {
   const c = useColors();
   const nextKey = marks.find((m) => !m.passed)?.key;
+  const [open, setOpen] = useState<string | null>(null);
   return (
     <View>
       {marks.map((m, i) => {
         const isNext = m.key === nextKey;
-        const last = i === marks.length - 1;
-        const dot = m.passed ? c.milestone : isNext ? c.accent : c.border;
-        const when = m.passed
-          ? 'Passed'
-          : `In ${formatDuration((m.hours - elapsedHours) * HOUR)} · ${new Date(
-              start + m.hours * HOUR,
-            ).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' })}`;
+        const isOpen = open === m.key;
+        const dot =
+          m.kind === 'goal'
+            ? c.accent
+            : m.kind === 'best'
+              ? c.periodSubtle
+              : phaseColor(c, phaseAt(m.hours).key);
+        const when = m.passed ? 'Done' : `in ${formatShort((m.hours - elapsedHours) * HOUR)}`;
+        const at = new Date(start + m.hours * HOUR).toLocaleString(undefined, {
+          weekday: 'short',
+          hour: 'numeric',
+          minute: '2-digit',
+        });
         return (
-          <View
+          <Pressable
             key={m.key}
-            style={styles.item}
-            accessible
-            accessibilityLabel={`${m.title}, ${hoursLabel(m.hours)}. ${when}. ${m.body}`}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: isOpen }}
+            accessibilityLabel={`${m.title}, ${hoursLabel(m.hours)}, ${m.passed ? 'done' : when}`}
+            onPress={() => setOpen(isOpen ? null : m.key)}
+            style={[
+              styles.row,
+              i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border },
+            ]}
           >
-            <View style={styles.rail}>
+            <View style={styles.head}>
               <View
                 style={[
-                  styles.dot,
-                  { borderColor: dot, backgroundColor: m.passed ? dot : 'transparent' },
-                  isNext && styles.dotNext,
+                  styles.cell,
+                  { backgroundColor: m.passed ? c.period : c.surface2 },
+                  isNext && { backgroundColor: c.surface, borderWidth: inkBorder, borderColor: c.text },
                 ]}
               >
-                {m.passed ? <Icon name="check" size={12} color={c.surface} /> : null}
-              </View>
-              {!last && (
-                <View style={[styles.line, { backgroundColor: m.passed ? c.milestone : c.border }]} />
-              )}
-            </View>
-            <View style={[styles.text, !last && { paddingBottom: space[5] }]}>
-              <View style={styles.titleRow}>
                 <Text
-                  style={[
-                    font.md,
-                    tabular,
-                    { color: c.text, fontFamily: serif, fontWeight: '700', width: 58 },
-                  ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  style={[font.xs, medium, tabular, { color: m.passed ? c.onPeriod : c.text }]}
                 >
                   {hoursLabel(m.hours)}
                 </Text>
-                <Text style={[font.md, { color: c.text, fontWeight: '600', flex: 1 }]}>{m.title}</Text>
               </View>
-              <Text style={[font.xs, { color: isNext ? c.accent : c.textMuted, fontWeight: '600' }]}>
-                {when}
+              <View style={[styles.swatch, { backgroundColor: dot, borderColor: c.text }]} />
+              <Text
+                numberOfLines={1}
+                style={[font.sm, medium, { color: m.passed || isNext ? c.text : c.textMuted, flex: 1 }]}
+              >
+                {m.title}
               </Text>
-              <Text style={[font.sm, { color: m.passed || isNext ? c.text : c.textMuted }]}>{m.body}</Text>
-              {m.source ? (
-                <Text
-                  accessibilityRole="link"
-                  onPress={() => void Linking.openURL(m.source!.url)}
-                  style={[font.xs, { color: c.accent, fontWeight: '600' }]}
-                >
-                  Source: {m.source.label}
-                </Text>
-              ) : null}
+              <Text style={[font.xs, tabular, { color: c.textMuted }]}>{when}</Text>
             </View>
-          </View>
+            {isOpen ? (
+              <View style={styles.body}>
+                <Text style={[font.sm, { color: c.text }]}>{m.body}</Text>
+                <Text style={[font.xs, { color: c.textMuted }]}>
+                  {m.passed ? `Passed ${at}` : `Around ${at}`}
+                </Text>
+                {m.source ? (
+                  <Text
+                    accessibilityRole="link"
+                    onPress={() => void Linking.openURL(m.source!.url)}
+                    style={[font.xs, { color: c.text, textDecorationLine: 'underline' }]}
+                  >
+                    Source: {m.source.label}
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+          </Pressable>
         );
       })}
     </View>
@@ -96,19 +110,16 @@ export function MilestoneList({
 }
 
 const styles = StyleSheet.create({
-  item: { flexDirection: 'row', gap: space[3] },
-  rail: { alignItems: 'center', width: 22 },
-  dot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
+  row: { paddingVertical: space[2], gap: space[2] },
+  head: { flexDirection: 'row', alignItems: 'center', gap: space[3] },
+  cell: {
+    width: 52,
+    height: 36,
+    borderRadius: radius.md - 2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
+    paddingHorizontal: 4,
   },
-  dotNext: { borderWidth: 3 },
-  line: { width: 2, flex: 1, marginVertical: 2, borderRadius: 1 },
-  text: { flex: 1, gap: 3 },
-  titleRow: { flexDirection: 'row', alignItems: 'baseline', gap: space[2] },
+  swatch: { width: 10, height: 10, borderRadius: 3, borderWidth: 1 },
+  body: { paddingLeft: 52 + space[3], gap: 4 },
 });

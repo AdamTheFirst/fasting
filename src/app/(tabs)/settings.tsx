@@ -3,7 +3,16 @@ import { useState } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BrandMark, Icon } from '../../components/Icon';
-import { Button, Chip, ListGroup, ListRow, Screen, SectionHeader, SwitchRow } from '../../components/ui';
+import {
+  Button,
+  Chip,
+  ListGroup,
+  ListRow,
+  Screen,
+  SectionHeader,
+  Segmented,
+  SwitchRow,
+} from '../../components/ui';
 import { APP_NAME } from '../../config/identity';
 import { csvToFasts, fastsToCsv } from '../../domain/csv';
 import { goalLabel, newId } from '../../domain/fast';
@@ -19,7 +28,18 @@ import { pickCsv, shareCsv } from '../../services/files';
 import { health } from '../../services/health';
 import { ensureNotificationPermission } from '../../services/notifications';
 import { useStore } from '../../state/store';
-import { font, radius, serif, space, tabular, useColors } from '../../theme';
+import {
+  type Appearance,
+  font,
+  radius,
+  space,
+  strong,
+  tabular,
+  themes,
+  type ThemeId,
+  useColors,
+  useIsDark,
+} from '../../theme';
 
 // Monday first, in the phone's language.
 const WEEKDAY_NAMES = Array.from({ length: 7 }, (_, i) =>
@@ -37,13 +57,44 @@ function Detail({ text, source }: { text?: string; source?: MilestoneSource | nu
       {source ? (
         <Text
           accessibilityRole="link"
-          style={[font.xs, { color: c.accent, fontWeight: '600' }]}
+          style={[font.xs, { color: c.text, textDecorationLine: 'underline' }]}
           onPress={() => void Linking.openURL(source.url)}
         >
           Source: {source.label}
         </Text>
       ) : null}
     </View>
+  );
+}
+
+/** A theme with its real colours, like Periodiary's theme list. */
+function ThemeRow({ id, selected, onPress }: { id: ThemeId; selected: boolean; onPress: () => void }) {
+  const c = useColors();
+  const dark = useIsDark();
+  const t = themes[id][dark ? 'dark' : 'light'];
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      accessibilityLabel={`${themes[id].name} theme`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.themeRow, pressed && { backgroundColor: c.surface2 }]}
+    >
+      <View style={[styles.preview, { backgroundColor: t.bg, borderColor: c.border }]}>
+        <View style={[styles.previewBar, { backgroundColor: t.accent, borderColor: t.onAccent }]} />
+        <View style={styles.previewDots}>
+          <View style={[styles.previewDot, { backgroundColor: t.period }]} />
+          <View
+            style={[styles.previewDot, { backgroundColor: t.surface, borderColor: t.text, borderWidth: 1.5 }]}
+          />
+        </View>
+      </View>
+      <Text style={[font.md, { color: c.text, flex: 1, fontWeight: '500' }]}>{themes[id].name}</Text>
+      {selected ? <Text style={[font.sm, { color: c.textMuted }]}>In use</Text> : null}
+      <View style={[styles.radio, { borderColor: selected ? c.text : c.textMuted }]}>
+        {selected ? <View style={[styles.radioDot, { backgroundColor: c.text }]} /> : null}
+      </View>
+    </Pressable>
   );
 }
 
@@ -64,7 +115,11 @@ function MeasureInput({
   return (
     <View style={styles.inline}>
       <TextInput
-        style={[font.md, styles.input, { color: c.text, borderColor: c.border, backgroundColor: c.bg }]}
+        style={[
+          font.md,
+          styles.input,
+          { color: c.text, borderColor: c.borderInput, backgroundColor: c.surface },
+        ]}
         value={value}
         onChangeText={setValue}
         placeholder={`New ${label.toLowerCase()} (${unit})`}
@@ -181,9 +236,36 @@ export default function SettingsScreen() {
     }
   };
 
-  const input = [font.md, styles.input, { color: c.text, borderColor: c.border, backgroundColor: c.bg }];
+  const input = [
+    font.md,
+    styles.input,
+    { color: c.text, borderColor: c.borderInput, backgroundColor: c.surface },
+  ];
   return (
-    <Screen title="Settings" eyebrow="Your rules">
+    <Screen title="Settings">
+      <SectionHeader>Theme</SectionHeader>
+      <ListGroup>
+        {(Object.keys(themes) as ThemeId[]).map((id) => (
+          <ThemeRow
+            key={id}
+            id={id}
+            selected={settings.theme === id}
+            onPress={() => void updateSettings({ theme: id })}
+          />
+        ))}
+      </ListGroup>
+
+      <SectionHeader>Appearance</SectionHeader>
+      <Segmented<Appearance>
+        value={settings.appearance}
+        onChange={(appearance) => void updateSettings({ appearance })}
+        options={[
+          { value: 'light', label: 'Light' },
+          { value: 'dark', label: 'Dark' },
+          { value: 'system', label: 'System' },
+        ]}
+      />
+
       <SectionHeader>Health</SectionHeader>
       <ListGroup footer="Reads and writes weight and height only. Nothing leaves this phone otherwise.">
         <SwitchRow
@@ -385,8 +467,8 @@ export default function SettingsScreen() {
       </ListGroup>
 
       <View style={styles.about}>
-        <BrandMark size={28} color={c.accent} />
-        <Text style={[font.lg, { color: c.text, fontFamily: serif, fontWeight: '600' }]}>fastaway</Text>
+        <BrandMark size={28} color={c.text} />
+        <Text style={[font.lg, { color: c.text, ...strong }]}>Fastaway</Text>
         <Text style={[font.xs, { color: c.textMuted, textAlign: 'center' }]}>
           Version {Constants.expoConfig?.version ?? '0.1.0'}. A fasting log, not medical advice.{'\n'}
           Tracking is free, with no length limit.
@@ -399,7 +481,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   inline: { flexDirection: 'row', gap: space[2], alignItems: 'center' },
   pad: { paddingHorizontal: space[4], paddingVertical: space[3] },
-  hours: { flex: 0, width: 76 },
+  hours: { flexGrow: 0, flexShrink: 0, flexBasis: 76, width: 76 },
   days: { flexDirection: 'row', flexWrap: 'wrap', gap: space[1] },
   input: {
     flex: 1,
@@ -409,6 +491,27 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: space[3],
   },
+  themeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[3],
+    paddingHorizontal: space[4],
+    paddingVertical: space[3],
+    minHeight: 64,
+  },
+  preview: { width: 44, height: 40, borderRadius: radius.sm, borderWidth: 1, padding: 5, gap: 4 },
+  previewBar: { height: 10, borderRadius: 3, borderWidth: 1 },
+  previewDots: { flexDirection: 'row', gap: 4 },
+  previewDot: { width: 12, height: 12, borderRadius: 3 },
+  radio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioDot: { width: 12, height: 12, borderRadius: 6 },
   iconBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   about: { alignItems: 'center', gap: space[2], marginTop: space[8] },
 });

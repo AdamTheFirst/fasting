@@ -1,10 +1,10 @@
-import { type ReactNode, useState } from 'react';
+import React, { type ReactNode, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, Line, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Line, Path, Pattern, Rect, Text as SvgText } from 'react-native-svg';
 
-import { font, space, tabular, useColors } from '../theme';
+import { font, inkBorder, space, tabular, useColors } from '../theme';
 
-const AXIS_W = 38;
+const AXIS_W = 44;
 const LABEL_H = 20;
 
 /** 4 even steps that end on a round number, so gridlines read cleanly. */
@@ -16,9 +16,9 @@ export function niceMax(max: number, steps = 4): number {
   return nice * steps;
 }
 
-/** Hours on an axis: "16h", and days past 48 h ("3d"), so a 5-day fast never reads as "120". */
+/** Hours on an axis: "16h", and whole days once the axis passes 4 days, so a 5-day fast never reads as "120". */
 export const hoursTick = (h: number, maxH: number) =>
-  maxH > 48 ? `${Math.round((h / 24) * 10) / 10}d` : `${Math.round(h)}h`;
+  maxH > 96 ? `${Math.round((h / 24) * 10) / 10}d` : `${Math.round(h)}h`;
 
 function useWidth() {
   const [width, setWidth] = useState(0);
@@ -34,12 +34,13 @@ export interface Bar {
   label?: string;
   /** Shown above the chart when the bar is tapped. */
   detail?: string;
-  /** Full colour (true) or soft (false). */
+  /** Solid (true) or hatched (false), e.g. a fast that ended before its goal. */
   strong?: boolean;
 }
 
 /**
- * Bars on soft dashed gridlines. Tap a bar to read it. The axis grows with the
+ * Periodiary-style bars: a pastel fill with an ink outline, values inside when they fit,
+ * and a dashed ink average line. Tap a bar to read it. The axis grows with the
  * tallest bar, so a 120 h fast never clips.
  */
 export function BarChart({
@@ -69,8 +70,8 @@ export function BarChart({
   const [width, onLayout] = useWidth();
   const [selected, setSelected] = useState<string | null>(null);
   const top = Math.max(...bars.map((b) => b.value), average ?? 0, 1);
-  // Past 48 h the axis steps in whole days, so it reads 1d 2d 3d 4d rather than 0.8d 1.7d.
-  const max = dayAxis && top > 48 ? Math.ceil(top / 96) * 96 : niceMax(integer ? Math.max(top, 4) : top);
+  // Past 4 days the axis steps in whole days, so it reads 1d 2d 3d 4d rather than 0.8d 1.7d.
+  const max = dayAxis && top > 96 ? Math.ceil(top / 96) * 96 : niceMax(integer ? Math.max(top, 4) : top);
   const plotW = Math.max(0, width - AXIS_W);
   const slot = bars.length ? plotW / bars.length : 0;
   const barW = Math.max(3, Math.min(maxBarWidth, slot * 0.62));
@@ -106,6 +107,17 @@ export function BarChart({
       {width > 0 && (
         <View>
           <Svg width={width} height={height + LABEL_H}>
+            <Defs>
+              <Pattern
+                id="barHatch"
+                width={7}
+                height={7}
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(45)"
+              >
+                <Line x1={0} y1={0} x2={0} y2={7} stroke={c.hatch} strokeWidth={2} />
+              </Pattern>
+            </Defs>
             {[0, 1, 2, 3, 4].map((i) => {
               const v = (max / 4) * i;
               return (
@@ -115,24 +127,39 @@ export function BarChart({
                   x2={width}
                   y1={y(v)}
                   y2={y(v)}
-                  stroke={c.border}
-                  strokeWidth={1}
-                  strokeDasharray={i === 0 ? undefined : '3 5'}
+                  stroke={i === 0 ? c.text : c.border}
+                  strokeWidth={i === 0 ? 1.5 : 1}
                 />
               );
             })}
             {bars.map((b, i) => {
               const h = Math.max(b.value > 0 ? 3 : 0, (b.value / max) * height);
               const x = AXIS_W + slot * i + (slot - barW) / 2;
-              const r = Math.min(6, barW / 2, h);
-              const fill = b.strong === false ? c.accentSoft : c.accent;
+              const r = Math.min(4, barW / 2, h);
+              const soft = b.strong === false;
+              const showValue = barW >= 20 && h >= 26;
               return (
-                <Path
-                  key={b.key}
-                  d={`M${x} ${height} V${height - h + r} Q${x} ${height - h} ${x + r} ${height - h} H${x + barW - r} Q${x + barW} ${height - h} ${x + barW} ${height - h + r} V${height} Z`}
-                  fill={fill}
-                  opacity={selected && selected !== b.key ? 0.45 : 1}
-                />
+                <React.Fragment key={b.key}>
+                  <Path
+                    d={`M${x} ${height} V${height - h + r} Q${x} ${height - h} ${x + r} ${height - h} H${x + barW - r} Q${x + barW} ${height - h} ${x + barW} ${height - h + r} V${height}`}
+                    fill={soft ? 'url(#barHatch)' : c.accent}
+                    stroke={soft ? c.textMuted : c.onAccent}
+                    strokeWidth={barW >= 8 ? inkBorder : 1}
+                    opacity={selected && selected !== b.key ? 0.4 : 1}
+                  />
+                  {showValue && (
+                    <SvgText
+                      x={x + barW / 2}
+                      y={height - h + 16}
+                      fontSize={12}
+                      fontWeight="500"
+                      fill={soft ? c.text : c.onAccent}
+                      textAnchor="middle"
+                    >
+                      {tick(b.value, max)}
+                    </SvgText>
+                  )}
+                </React.Fragment>
               );
             })}
             {average !== undefined && average > 0 && (
@@ -141,9 +168,9 @@ export function BarChart({
                 x2={width}
                 y1={y(average)}
                 y2={y(average)}
-                stroke={c.milestone}
+                stroke={c.text}
                 strokeWidth={1.5}
-                strokeDasharray="6 4"
+                strokeDasharray="5 4"
               />
             )}
           </Svg>
@@ -185,7 +212,7 @@ export function BarChart({
       )}
       {average !== undefined && average > 0 && averageLabel ? (
         <View style={styles.legend}>
-          <View style={[styles.legendDash, { backgroundColor: c.milestone }]} />
+          <View style={[styles.legendDash, { borderColor: c.text }]} />
           <Text style={[font.xs, { color: c.textMuted }]}>{averageLabel}</Text>
         </View>
       ) : null}
@@ -198,7 +225,7 @@ export interface Point {
   v: number;
 }
 
-/** A soft area line for weight or BMI, with an optional shaded band (the healthy BMI range). */
+/** A plain ink line for weight or BMI, with an optional shaded band (the healthy BMI range). */
 export function LineChart({
   points,
   height = 150,
@@ -228,7 +255,6 @@ export function LineChart({
   const x = (t: number) => AXIS_W + (t1 === t0 ? plotW / 2 : ((t - t0) / (t1 - t0)) * plotW);
   const y = (v: number) => 8 + (height - 16) * (1 - (v - lo) / (hi - lo));
   const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(p.t)} ${y(p.v)}`).join(' ');
-  const area = points.length > 1 ? `${line} L${x(t1)} ${height} L${x(t0)} ${height} Z` : '';
   const lastP = points.at(-1);
   const date = (t: number) => new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 
@@ -237,20 +263,13 @@ export function LineChart({
       {width > 0 && points.length > 0 && (
         <View>
           <Svg width={width} height={height + LABEL_H}>
-            <Defs>
-              <LinearGradient id="area" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor={c.accent} stopOpacity={0.28} />
-                <Stop offset="1" stopColor={c.accent} stopOpacity={0} />
-              </LinearGradient>
-            </Defs>
             {band && (
               <Rect
                 x={AXIS_W}
                 width={width - AXIS_W}
                 y={y(band.max)}
                 height={y(band.min) - y(band.max)}
-                fill={c.success}
-                opacity={0.12}
+                fill={c.accentSubtle}
               />
             )}
             {[0, 1, 2].map((i) => (
@@ -264,8 +283,7 @@ export function LineChart({
                 strokeDasharray="3 5"
               />
             ))}
-            {area ? <Path d={area} fill="url(#area)" /> : null}
-            <Path d={line} stroke={c.accent} strokeWidth={2.5} fill="none" strokeLinejoin="round" />
+            <Path d={line} stroke={c.text} strokeWidth={2} fill="none" strokeLinejoin="round" />
             {points.length <= 40 &&
               points.map((p) => (
                 <Circle
@@ -274,11 +292,20 @@ export function LineChart({
                   cy={y(p.v)}
                   r={3}
                   fill={c.surface}
-                  stroke={c.accent}
-                  strokeWidth={2}
+                  stroke={c.text}
+                  strokeWidth={1.5}
                 />
               ))}
-            {lastP && <Circle cx={x(lastP.t)} cy={y(lastP.v)} r={5.5} fill={c.accent} />}
+            {lastP && (
+              <Circle
+                cx={x(lastP.t)}
+                cy={y(lastP.v)}
+                r={6}
+                fill={c.accent}
+                stroke={c.onAccent}
+                strokeWidth={inkBorder}
+              />
+            )}
           </Svg>
           {[0, 1, 2].map((i) => {
             const v = hi - ((hi - lo) / 2) * i;
@@ -302,7 +329,12 @@ export function LineChart({
       )}
       {band && bandLabel ? (
         <View style={styles.legend}>
-          <View style={[styles.legendBox, { backgroundColor: c.success, opacity: 0.35 }]} />
+          <View
+            style={[
+              styles.legendBox,
+              { backgroundColor: c.accentSubtle, borderColor: c.border, borderWidth: 1 },
+            ]}
+          />
           <Text style={[font.xs, { color: c.textMuted }]}>{bandLabel}</Text>
         </View>
       ) : null}
@@ -311,7 +343,7 @@ export function LineChart({
 }
 
 /**
- * The last `weeks` weeks as a grid of days, darker the longer you fasted.
+ * The last `weeks` weeks as a grid of days, in the same three steps as the calendar.
  * Days, not rings: the shape of your rhythm at a glance.
  */
 export function DayGrid({
@@ -349,8 +381,7 @@ export function DayGrid({
           width={cell}
           height={cell}
           rx={Math.min(3, cell / 3)}
-          fill={h > 0 ? c.accent : c.border}
-          opacity={h > 0 ? 0.25 + 0.75 * Math.min(1, h / 24) : 1}
+          fill={h >= 12 ? c.period : h > 0 ? c.periodSubtle : c.surface2}
         />,
       );
     }
@@ -362,18 +393,17 @@ export function DayGrid({
           {cells}
         </Svg>
       )}
-      <View style={[styles.legend, { justifyContent: 'flex-end' }]}>
-        <Text style={[font.xs, { color: c.textMuted }]}>0h</Text>
-        {[0, 0.33, 0.66, 1].map((o) => (
-          <View
-            key={o}
-            style={[
-              styles.legendBox,
-              { backgroundColor: o ? c.accent : c.border, opacity: o ? 0.25 + 0.75 * o : 1 },
-            ]}
-          />
+      <View style={[styles.legend, { justifyContent: 'flex-end', gap: space[3] }]}>
+        {[
+          { fill: c.surface2, label: 'None' },
+          { fill: c.periodSubtle, label: 'Under 12h' },
+          { fill: c.period, label: '12h or more' },
+        ].map((l) => (
+          <View key={l.label} style={styles.legendItem}>
+            <View style={[styles.legendBox, { backgroundColor: l.fill }]} />
+            <Text style={[font.xs, { color: c.textMuted }]}>{l.label}</Text>
+          </View>
         ))}
-        <Text style={[font.xs, { color: c.textMuted }]}>24h</Text>
       </View>
     </View>
   );
@@ -384,6 +414,7 @@ const styles = StyleSheet.create({
   yLabel: { position: 'absolute', left: 0, width: AXIS_W - 6 },
   xLabel: { position: 'absolute', width: 60, textAlign: 'center' },
   legend: { flexDirection: 'row', alignItems: 'center', gap: space[2], marginTop: space[2] },
-  legendDash: { width: 16, height: 2, borderRadius: 1 },
-  legendBox: { width: 10, height: 10, borderRadius: 2 },
+  legendDash: { width: 18, borderTopWidth: 2, borderStyle: 'dashed' },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendBox: { width: 12, height: 12, borderRadius: 3 },
 });

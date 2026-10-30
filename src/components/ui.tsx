@@ -14,8 +14,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { font, layout, radius, serif, space, tabular, useColors } from '../theme';
-import { BrandMark, Icon, type IconName } from './Icon';
+import { bold, font, inkBorder, layout, medium, radius, space, strong, tabular, useColors } from '../theme';
+import { Icon, type IconName } from './Icon';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'quiet';
 
@@ -40,17 +40,19 @@ export function Button({
   style?: StyleProp<ViewStyle>;
 } & Omit<PressableProps, 'children' | 'style'>) {
   const c = useColors();
+  // Periodiary buttons: a pastel fill with ink text for the main action, an ink outline for the
+  // second one, and plain ink text for the rest. Text is never coloured by the accent.
   const bg = {
     primary: c.accent,
-    secondary: c.surface2,
+    secondary: c.surface,
     ghost: 'transparent',
-    quiet: c.accentSubtle,
+    quiet: c.surface2,
     danger: 'transparent',
   }[variant];
-  const fg = { primary: c.onAccent, secondary: c.text, ghost: c.accent, quiet: c.accent, danger: c.danger }[
+  const fg = { primary: c.onAccent, secondary: c.text, ghost: c.text, quiet: c.text, danger: c.danger }[
     variant
   ];
-  const height = { sm: 36, md: 48, lg: caption ? 68 : 60 }[size];
+  const height = { sm: 36, md: 48, lg: caption ? 64 : 56 }[size];
   return (
     <Pressable
       accessibilityRole="button"
@@ -63,8 +65,10 @@ export function Button({
           paddingHorizontal: size === 'sm' ? space[3] : space[5],
           alignSelf: block ? 'stretch' : 'center',
         },
-        variant === 'danger' && { borderWidth: 1, borderColor: c.danger },
-        pressed && { opacity: 0.85, transform: [{ scale: 0.985 }] },
+        variant === 'secondary' && { borderWidth: 1.5, borderColor: c.text },
+        variant === 'danger' && { borderWidth: 1.5, borderColor: c.danger },
+        size === 'sm' && { borderRadius: radius.full },
+        pressed && { opacity: 0.8 },
         rest.disabled && { opacity: 0.4 },
         style,
       ]}
@@ -74,8 +78,9 @@ export function Button({
         {icon ? <Icon name={icon} size={size === 'sm' ? 18 : 20} color={fg} /> : null}
         <Text
           style={[
-            size === 'lg' ? font.lg : size === 'sm' ? font.sm : font.md,
+            size === 'sm' ? font.sm : font.md,
             { color: fg, fontWeight: '600' },
+            variant === 'ghost' && { textDecorationLine: 'underline' },
           ]}
         >
           {label}
@@ -110,13 +115,13 @@ export function Chip({
       style={[
         styles.chip,
         compact && styles.chipCompact,
-        {
-          borderColor: selected ? c.accent : c.border,
-          backgroundColor: selected ? c.accent : c.surface,
-        },
+        selected
+          ? { borderWidth: inkBorder, borderColor: c.onAccent, backgroundColor: c.accent }
+          : { borderWidth: 1, borderColor: c.textMuted, backgroundColor: c.surface },
       ]}
     >
-      <Text style={[font.sm, { color: selected ? c.onAccent : c.text, fontWeight: '600' }]}>{label}</Text>
+      {selected && !compact ? <Icon name="check" size={16} color={c.onAccent} /> : null}
+      <Text style={[font.sm, medium, { color: selected ? c.onAccent : c.text }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -133,7 +138,10 @@ export function Segmented<T extends string | number>({
 }) {
   const c = useColors();
   return (
-    <View accessibilityRole="radiogroup" style={[styles.segmented, { backgroundColor: c.surface2 }]}>
+    <View
+      accessibilityRole="radiogroup"
+      style={[styles.segmented, { backgroundColor: c.surface, borderColor: c.border }]}
+    >
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -142,9 +150,13 @@ export function Segmented<T extends string | number>({
             accessibilityRole="radio"
             accessibilityState={{ selected: on }}
             onPress={() => onChange(o.value)}
-            style={[styles.segment, on && [styles.segmentOn, { backgroundColor: c.surface }]]}
+            style={[
+              styles.segment,
+              on && { backgroundColor: c.accent, borderWidth: inkBorder, borderColor: c.onAccent },
+            ]}
           >
-            <Text style={[font.sm, { color: on ? c.text : c.textMuted, fontWeight: '600' }]}>{o.label}</Text>
+            {on ? <Icon name="check" size={14} color={c.onAccent} /> : null}
+            <Text style={[font.sm, medium, { color: on ? c.onAccent : c.text }]}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -152,8 +164,9 @@ export function Segmented<T extends string | number>({
   );
 }
 
-type Tone = 'plain' | 'accent' | 'milestone' | 'hero';
+type Tone = 'plain' | 'accent' | 'period' | 'flat';
 
+/** A flat white card on the chalk background. No gradients, glows or shadows. */
 export function Card({
   children,
   tone = 'plain',
@@ -168,16 +181,20 @@ export function Card({
   accessibilityLabel?: string;
 }) {
   const c = useColors();
-  const bg = { plain: c.surface, accent: c.accentSubtle, milestone: c.milestoneSubtle, hero: c.hero }[tone];
-  const border = tone === 'plain' ? c.border : 'transparent';
-  const body = [styles.card, { backgroundColor: bg, borderColor: border }, style];
+  const bg = { plain: c.surface, accent: c.accentSubtle, period: c.periodSubtle, flat: c.surface2 }[tone];
+  const body = [
+    styles.card,
+    { backgroundColor: bg },
+    tone === 'plain' && { borderWidth: 1, borderColor: c.border },
+    style,
+  ];
   if (!onPress) return <View style={body}>{children}</View>;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
-      style={({ pressed }) => [body, pressed && { opacity: 0.9 }]}
+      style={({ pressed }) => [body, pressed && { opacity: 0.85 }]}
     >
       {children}
     </Pressable>
@@ -189,7 +206,7 @@ export function Body({ muted, style, ...rest }: TextProps & { muted?: boolean })
   return <Text style={[font.md, { color: muted ? c.textMuted : c.text }, style]} {...rest} />;
 }
 
-/** Serif title text: screen titles, card headings and big numbers. */
+/** Title text: screen titles, card headings and big numbers. */
 export function Title({
   size = 'xl',
   style,
@@ -200,7 +217,7 @@ export function Title({
   return (
     <Text
       accessibilityRole="header"
-      style={[font[size], { color: color ?? c.text, fontFamily: serif, fontWeight: '600' }, style]}
+      style={[font[size], strong, { color: color ?? c.text }, style]}
       {...rest}
     />
   );
@@ -210,11 +227,8 @@ export function SectionHeader({ children, action }: { children: string; action?:
   const c = useColors();
   return (
     <View style={styles.sectionHeader}>
-      <Text
-        accessibilityRole="header"
-        style={[font.xs, { color: c.textMuted, fontWeight: '700', letterSpacing: 0.8, flex: 1 }]}
-      >
-        {children.toUpperCase()}
+      <Text accessibilityRole="header" style={[font.md, bold, { color: c.text, flex: 1 }]}>
+        {children}
       </Text>
       {action}
     </View>
@@ -246,8 +260,8 @@ export function Stat({
       accessibilityLabel={`${label}: ${value}${unit ? ` ${unit}` : ''}${hint ? `. ${hint}` : ''}`}
       style={{ flex: 1, alignItems: align === 'center' ? 'center' : 'flex-start', gap: 2 }}
     >
-      <Text style={[font.xs, { color: mutedColor ?? c.textMuted, fontWeight: '600' }]}>{label}</Text>
-      <Text style={[font.xl, tabular, { color: color ?? c.text, fontFamily: serif, fontWeight: '600' }]}>
+      <Text style={[font.xs, { color: mutedColor ?? c.textMuted }]}>{label}</Text>
+      <Text style={[font.xl, tabular, { color: color ?? c.text, ...strong }]}>
         {value}
         {unit ? <Text style={[font.sm, { color: mutedColor ?? c.textMuted }]}> {unit}</Text> : null}
       </Text>
@@ -263,14 +277,16 @@ export function ListGroup({ children, footer }: { children: ReactNode; footer?: 
   return (
     <View style={{ gap: space[2] }}>
       <View style={[styles.group, { backgroundColor: c.surface, borderColor: c.border }]}>
-        {items.map((child, i) => (
-          <View
-            key={i}
-            style={i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }}
-          >
-            {child}
-          </View>
-        ))}
+        <View>
+          {items.map((child, i) => (
+            <View
+              key={i}
+              style={i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }}
+            >
+              {child}
+            </View>
+          ))}
+        </View>
       </View>
       {footer ? (
         <Text style={[font.xs, { color: c.textMuted, paddingHorizontal: space[2] }]}>{footer}</Text>
@@ -307,8 +323,8 @@ export function ListRow({
     <>
       <View style={styles.row}>
         {icon ? (
-          <View style={[styles.rowIcon, { backgroundColor: c.accentSubtle }]}>
-            <Icon name={icon} size={18} color={iconColor ?? c.accent} />
+          <View style={styles.rowIcon}>
+            <Icon name={icon} size={20} color={iconColor ?? c.textMuted} />
           </View>
         ) : null}
         <View style={{ flex: 1, gap: 2 }}>
@@ -323,7 +339,7 @@ export function ListRow({
         </View>
         {value ? <Text style={[font.md, tabular, { color: c.textMuted }]}>{value}</Text> : null}
         {right}
-        {chevron ? <Icon name="chevron" size={18} color={c.textFaint} /> : null}
+        {chevron ? <Icon name="chevron" size={18} color={c.text} /> : null}
       </View>
       {children}
     </>
@@ -366,8 +382,8 @@ export function SwitchRow({
           accessibilityLabel={label}
           value={value}
           onValueChange={onChange}
-          trackColor={{ false: c.border, true: c.accentSoft }}
-          thumbColor={value ? c.accent : c.switchThumbOff}
+          trackColor={{ false: c.border, true: c.accent }}
+          thumbColor={value ? c.onAccent : c.switchThumbOff}
           ios_backgroundColor={c.border}
         />
       }
@@ -380,20 +396,26 @@ export function Badge({
   tone = 'accent',
 }: {
   label: string;
-  tone?: 'accent' | 'milestone' | 'muted';
+  tone?: 'accent' | 'period' | 'muted' | 'estimate';
 }) {
   const c = useColors();
-  const bg = { accent: c.accentSubtle, milestone: c.milestoneSubtle, muted: c.surface2 }[tone];
-  const fg = { accent: c.accent, milestone: c.milestone, muted: c.textMuted }[tone];
+  const bg = { accent: c.accent, period: c.period, muted: c.surface2, estimate: c.surface }[tone];
+  const fg = { accent: c.onAccent, period: c.onPeriod, muted: c.textMuted, estimate: c.text }[tone];
   return (
-    <View style={[styles.badge, { backgroundColor: bg }]}>
-      <Text style={[font.xs, { color: fg, fontWeight: '700' }]}>{label}</Text>
+    <View
+      style={[
+        styles.badge,
+        { backgroundColor: bg },
+        tone === 'estimate' && { borderWidth: 1.5, borderStyle: 'dashed', borderColor: c.textMuted },
+      ]}
+    >
+      <Text style={[font.xs, medium, { color: fg }]}>{label}</Text>
     </View>
   );
 }
 
 /**
- * Every tab screen: safe area, the brand mark, a serif title and an optional
+ * Every tab screen: safe area, a title with an optional line under it and an optional
  * right-hand action, then scrolling content.
  */
 export function Screen({
@@ -415,13 +437,8 @@ export function Screen({
   const header = (
     <View style={[styles.header, { paddingTop: space[3] }]}>
       <View style={{ flex: 1, gap: 2 }}>
-        <View style={styles.eyebrow}>
-          <BrandMark size={14} color={c.accent} bleed={false} />
-          <Text style={[font.xs, { color: c.textMuted, fontWeight: '700', letterSpacing: 0.8 }]}>
-            {(eyebrow ?? 'fastaway').toUpperCase()}
-          </Text>
-        </View>
-        <Title size="xl">{title}</Title>
+        <Title size="2xl">{title}</Title>
+        {eyebrow ? <Text style={[font.sm, { color: c.textMuted }]}>{eyebrow}</Text> : null}
       </View>
       {right}
     </View>
@@ -451,7 +468,7 @@ export function Screen({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: radius.full,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -459,30 +476,25 @@ const styles = StyleSheet.create({
   chip: {
     height: 40,
     borderRadius: radius.full,
-    borderWidth: 1,
     paddingHorizontal: space[4],
+    flexDirection: 'row',
+    gap: space[1],
     justifyContent: 'center',
     alignItems: 'center',
   },
-  chipCompact: { height: 34, minWidth: 34, paddingHorizontal: space[2] },
-  segmented: { flexDirection: 'row', borderRadius: radius.md, padding: 3 },
+  chipCompact: { height: 36, minWidth: 36, paddingHorizontal: space[2] },
+  segmented: { flexDirection: 'row', borderRadius: radius.md, borderWidth: 1, padding: 3 },
   segment: {
     flex: 1,
-    minHeight: 36,
+    minHeight: 40,
+    flexDirection: 'row',
+    gap: space[1],
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.md - 3,
-  },
-  segmentOn: {
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
+    borderRadius: radius.sm,
   },
   card: {
     borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
     padding: space[5],
     gap: space[3],
   },
@@ -492,7 +504,7 @@ const styles = StyleSheet.create({
     marginTop: space[4],
     paddingHorizontal: space[1],
   },
-  group: { borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
+  group: { borderRadius: radius.md, borderWidth: 1, overflow: 'hidden' },
   rowWrap: {
     paddingHorizontal: space[4],
     paddingVertical: space[3],
@@ -501,11 +513,11 @@ const styles = StyleSheet.create({
     gap: space[3],
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: space[3] },
-  rowIcon: { width: 32, height: 32, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  rowIcon: { width: 24, alignItems: 'center', justifyContent: 'center' },
   badge: {
     borderRadius: radius.full,
     paddingHorizontal: space[2],
-    paddingVertical: 2,
+    paddingVertical: 3,
     alignSelf: 'flex-start',
   },
   header: {
@@ -515,6 +527,5 @@ const styles = StyleSheet.create({
     paddingBottom: space[4],
     gap: space[3],
   },
-  eyebrow: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
   content: { paddingHorizontal: layout.gutter, gap: space[3] },
 });

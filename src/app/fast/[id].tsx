@@ -73,10 +73,8 @@ export default function EditFast() {
       keyboardShouldPersistTaps="handled"
     >
       <Stack.Screen options={{ title: isNew ? 'Add a past fast' : running ? 'Running fast' : 'Edit fast' }} />
-      <Card tone="accent" style={{ alignItems: 'center', gap: space[1] }}>
-        <Text style={[font.xs, { color: c.accent, fontWeight: '700', letterSpacing: 0.8 }]}>
-          {running ? 'SO FAR' : 'DURATION'}
-        </Text>
+      <Card style={{ alignItems: 'center', gap: space[1] }}>
+        <Text style={[font.sm, { color: c.textMuted }]}>{running ? 'So far' : 'Duration'}</Text>
         <Title size="2xl" style={tabular}>
           {formatDuration(duration)}
         </Title>

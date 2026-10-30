@@ -11,10 +11,10 @@ export function SafetyCard({ onDismiss, onTurnOff }: { onDismiss: () => void; on
   return (
     <View
       accessibilityRole="summary"
-      style={[styles.card, { backgroundColor: c.milestoneSubtle, borderLeftColor: c.milestone }]}
+      style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}
     >
       <View style={styles.head}>
-        <Icon name="info" color={c.milestone} />
+        <Icon name="info" color={c.text} />
         <Title size="lg">{SAFETY_CARD.title}</Title>
       </View>
       <Body style={font.sm}>{SAFETY_CARD.body}</Body>
@@ -23,7 +23,7 @@ export function SafetyCard({ onDismiss, onTurnOff }: { onDismiss: () => void; on
           <Body
             key={s.url}
             accessibilityRole="link"
-            style={[font.sm, { color: c.milestone, fontWeight: '600', textDecorationLine: 'underline' }]}
+            style={[font.sm, { color: c.text, textDecorationLine: 'underline' }]}
             onPress={() => void Linking.openURL(s.url)}
           >
             {s.label}
@@ -39,7 +39,7 @@ export function SafetyCard({ onDismiss, onTurnOff }: { onDismiss: () => void; on
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.lg, borderLeftWidth: 4, padding: space[5], gap: space[3] },
+  card: { borderRadius: radius.lg, borderWidth: 1, padding: space[5], gap: space[3] },
   head: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
   links: { gap: space[1] },
   row: { flexDirection: 'row', gap: space[2], flexWrap: 'wrap' },

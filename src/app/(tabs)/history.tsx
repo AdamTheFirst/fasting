@@ -5,17 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BarChart, DayGrid, hoursTick, LineChart } from '../../components/charts';
 import { BrandMark, Icon } from '../../components/Icon';
 import { MonthCalendar } from '../../components/MonthCalendar';
-import {
-  Badge,
-  Body,
-  Button,
-  Card,
-  Screen,
-  SectionHeader,
-  Segmented,
-  Stat,
-  Title,
-} from '../../components/ui';
+import { Badge, Body, Button, Card, Screen, SectionHeader, Segmented, Title } from '../../components/ui';
 import { elapsedMs, type Fast, goalReachedAt } from '../../domain/fast';
 import {
   averageHours,
@@ -31,7 +21,7 @@ import {
 import { DAY, formatDuration, formatShort } from '../../domain/time';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
-import { font, radius, serif, space, tabular, useColors } from '../../theme';
+import { bold, font, inkBorder, radius, space, strong, tabular, useColors } from '../../theme';
 
 const shortDate = (t: number) =>
   new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
@@ -70,9 +60,9 @@ export default function HistoryScreen() {
       accessibilityRole="button"
       accessibilityLabel="Add a past fast"
       onPress={() => router.push('/fast/new')}
-      style={[styles.headerBtn, { backgroundColor: c.accentSubtle }]}
+      style={[styles.headerBtn, { backgroundColor: c.accent, borderColor: c.onAccent }]}
     >
-      <Icon name="plus" color={c.accent} />
+      <Icon name="plus" color={c.onAccent} />
     </Pressable>
   );
 
@@ -80,19 +70,14 @@ export default function HistoryScreen() {
     return (
       <Screen title="History" right={addPast}>
         <Card style={styles.empty}>
-          <BrandMark size={40} color={c.accentSoft} />
+          <BrandMark size={40} color={c.textMuted} />
           <Title size="lg" style={{ textAlign: 'center' }}>
             Nothing here yet
           </Title>
           <Body muted style={{ textAlign: 'center' }}>
             Your fasts will show up as days on a calendar, with charts once there are a few.
           </Body>
-          <Button
-            label="Add a past fast"
-            icon="plus"
-            variant="quiet"
-            onPress={() => router.push('/fast/new')}
-          />
+          <Button label="Add a past fast" variant="secondary" onPress={() => router.push('/fast/new')} />
         </Card>
       </Screen>
     );
@@ -107,37 +92,30 @@ export default function HistoryScreen() {
 
   return (
     <Screen title="History" right={addPast}>
-      <Card tone="hero" style={{ gap: space[4] }}>
-        <View>
-          <Text style={[font.xs, { color: c.onHeroMuted, fontWeight: '700', letterSpacing: 0.8 }]}>
-            THIS MONTH
-          </Text>
-          <Text style={[font.display, tabular, { color: c.onHero, fontFamily: serif, fontWeight: '600' }]}>
-            {Math.round(recs.hoursThisMonth)}
-            <Text style={[font.lg, { color: c.onHeroMuted }]}> hours fasted</Text>
-          </Text>
-        </View>
-        <View style={styles.statRow}>
-          <Stat label="Fasts" value={`${fastsThisMonth}`} color={c.onHero} mutedColor={c.onHeroMuted} />
-          <Stat
-            label="Longest ever"
-            value={recs.longest ? formatShort(elapsedMs(recs.longest, now)) : '–'}
-            color={c.onHero}
-            mutedColor={c.onHeroMuted}
-          />
-          <Stat
-            label="Streak"
-            value={`${streak}d`}
-            hint={`best ${recs.longestStreakDays}d`}
-            color={c.onHero}
-            mutedColor={c.onHeroMuted}
-          />
-        </View>
-        <Text style={[font.xs, { color: c.onHeroMuted }]}>
-          {Math.round(recs.hoursThisYear)} hours this year. A day counts toward a streak after{' '}
-          {settings.streakMinHours}h.
-        </Text>
-      </Card>
+      <View style={styles.tiles}>
+        <Tile
+          label="This month"
+          value={`${Math.round(recs.hoursThisMonth)}`}
+          unit="hours"
+          hint={`${fastsThisMonth} ${fastsThisMonth === 1 ? 'fast' : 'fasts'}`}
+        />
+        <Tile
+          label="Average fast"
+          value={avg ? formatShort(avg * 3_600_000) : '–'}
+          hint={`Last ${range === 365 ? 'year' : `${range} days`}`}
+        />
+        <Tile
+          label="Longest ever"
+          value={recs.longest ? formatShort(elapsedMs(recs.longest, now)) : '–'}
+          hint={recs.longest ? shortDate(recs.longest.start) : undefined}
+        />
+        <Tile
+          label="Streak"
+          value={`${streak}`}
+          unit={streak === 1 ? 'day' : 'days'}
+          hint={`Best ${recs.longestStreakDays}, at ${settings.streakMinHours}h or more`}
+        />
+      </View>
 
       <Card>
         <MonthCalendar
@@ -149,7 +127,13 @@ export default function HistoryScreen() {
         />
       </Card>
 
-      <SectionHeader>Charts</SectionHeader>
+      <View style={styles.legend}>
+        <LegendCell color={c.period} label="12h or more" />
+        <LegendCell color={c.periodSubtle} label="Shorter" />
+        <LegendCell color={c.surface} label="Today" ring />
+      </View>
+
+      <SectionHeader>Insights</SectionHeader>
       <Segmented<Range>
         value={range}
         onChange={setRange}
@@ -174,7 +158,7 @@ export default function HistoryScreen() {
           tick={hoursTick}
           dayAxis
           average={avg}
-          averageLabel="Average length. Soft bars ended before their goal."
+          averageLabel="Dashed line: average. Hatched bars ended before their goal."
           maxBarWidth={22}
         />
       </ChartCard>
@@ -224,11 +208,11 @@ export default function HistoryScreen() {
       >
         {weights.length === 0 ? (
           <Pressable onPress={() => router.push('/settings')} style={styles.cta}>
-            <Icon name="heart" color={c.accent} />
+            <Icon name="heart" color={c.text} />
             <Body style={[font.sm, { flex: 1 }]}>
               Add a weight in Settings, or turn on Health sync, to see this chart.
             </Body>
-            <Icon name="chevron" size={18} color={c.textFaint} />
+            <Icon name="chevron" size={18} color={c.text} />
           </Pressable>
         ) : (
           <LineChart points={weights.map((w) => ({ t: w.at, v: w.kg }))} />
@@ -252,9 +236,7 @@ export default function HistoryScreen() {
       <SectionHeader>All fasts</SectionHeader>
       {[...groups].map(([month, list]) => (
         <View key={month} style={{ gap: space[2] }}>
-          <Text style={[font.sm, { color: c.textMuted, fontWeight: '600', paddingHorizontal: space[1] }]}>
-            {month}
-          </Text>
+          <Text style={[font.sm, { color: c.textMuted, paddingHorizontal: space[1] }]}>{month}</Text>
           <View style={[styles.list, { backgroundColor: c.surface, borderColor: c.border }]}>
             {list.map((f, i) => (
               <FastRow key={f.id} fast={f} now={now} first={i === 0} />
@@ -282,7 +264,9 @@ function ChartCard({
     <Card>
       <View style={styles.chartHead}>
         <View style={{ flex: 1 }}>
-          <Title size="lg">{title}</Title>
+          <Text accessibilityRole="header" style={[font.md, bold, { color: c.text }]}>
+            {title}
+          </Text>
           {subtitle ? <Text style={[font.sm, tabular, { color: c.textMuted }]}>{subtitle}</Text> : null}
         </View>
         {right}
@@ -309,20 +293,21 @@ function FastRow({ fast, now, first }: { fast: Fast; now: number; first: boolean
         pressed && { backgroundColor: c.surface2 },
       ]}
     >
-      <View style={[styles.dateBlock, { backgroundColor: running ? c.accent : c.surface2 }]}>
-        <Text
-          style={[font.lg, { color: running ? c.onAccent : c.text, fontFamily: serif, fontWeight: '700' }]}
-        >
-          {d.getDate()}
-        </Text>
-        <Text
-          style={[font.xs, { color: running ? c.onAccent : c.textMuted, fontSize: 10, fontWeight: '700' }]}
-        >
-          {d.toLocaleDateString(undefined, { weekday: 'short' }).toUpperCase()}
+      <View
+        style={[
+          styles.dateBlock,
+          running
+            ? { backgroundColor: c.accent, borderWidth: inkBorder, borderColor: c.onAccent }
+            : { backgroundColor: c.surface2 },
+        ]}
+      >
+        <Text style={[font.md, bold, tabular, { color: running ? c.onAccent : c.text }]}>{d.getDate()}</Text>
+        <Text style={[font.xs, { color: running ? c.onAccent : c.textMuted, fontSize: 11 }]}>
+          {d.toLocaleDateString(undefined, { weekday: 'short' })}
         </Text>
       </View>
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={[font.lg, tabular, { color: c.text, fontWeight: '600' }]}>
+        <Text style={[font.md, bold, tabular, { color: c.text }]}>
           {formatDuration(elapsedMs(fast, now))}
         </Text>
         <Text numberOfLines={1} style={[font.xs, { color: c.textMuted }]}>
@@ -330,26 +315,78 @@ function FastRow({ fast, now, first }: { fast: Fast; now: number; first: boolean
           {fast.note ? ` · ${fast.note}` : ''}
         </Text>
       </View>
-      {running ? (
-        <Badge label="Running" />
-      ) : met ? (
-        <View style={[styles.met, { backgroundColor: c.milestoneSubtle }]}>
-          <Icon name="check" size={14} color={c.milestone} />
-        </View>
-      ) : null}
-      <Icon name="chevron" size={16} color={c.textFaint} />
+      {running ? <Badge label="Running" /> : met ? <Badge label="Goal met" tone="muted" /> : null}
+      <Icon name="chevron" size={16} color={c.text} />
     </Pressable>
   );
 }
 
+function Tile({ label, value, unit, hint }: { label: string; value: string; unit?: string; hint?: string }) {
+  const c = useColors();
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${label}: ${value}${unit ? ` ${unit}` : ''}${hint ? `. ${hint}` : ''}`}
+      style={[styles.tile, { backgroundColor: c.surface, borderColor: c.border }]}
+    >
+      <Text style={[font.sm, { color: c.text }]}>{label}</Text>
+      <Text numberOfLines={1} adjustsFontSizeToFit style={[font['2xl'], strong, tabular, { color: c.text }]}>
+        {value}
+        {unit ? <Text style={[font.md, { color: c.text, fontWeight: '400' }]}> {unit}</Text> : null}
+      </Text>
+      {hint ? <Text style={[font.xs, { color: c.textMuted }]}>{hint}</Text> : null}
+    </View>
+  );
+}
+
+function LegendCell({ color, label, ring }: { color: string; label: string; ring?: boolean }) {
+  const c = useColors();
+  return (
+    <View style={styles.legendItem}>
+      <View
+        style={[
+          styles.legendSwatch,
+          { backgroundColor: color },
+          ring ? { borderWidth: inkBorder, borderColor: c.text } : null,
+        ]}
+      />
+      <Text style={[font.xs, { color: c.textMuted }]}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  headerBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  headerBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    borderWidth: inkBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: space[3] },
+  tile: {
+    flexGrow: 1,
+    flexBasis: '45%',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: space[4],
+    gap: 2,
+  },
+  legend: { flexDirection: 'row', gap: space[4], paddingHorizontal: space[1] },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendSwatch: { width: 16, height: 16, borderRadius: 5 },
   empty: { alignItems: 'center', paddingVertical: space[10], gap: space[3] },
-  statRow: { flexDirection: 'row', gap: space[3] },
   chartHead: { flexDirection: 'row', alignItems: 'flex-start', gap: space[2] },
   cta: { flexDirection: 'row', alignItems: 'center', gap: space[3], paddingVertical: space[2] },
-  list: { borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
+  list: { borderRadius: radius.md, borderWidth: 1, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[3], minHeight: 68 },
-  dateBlock: { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  met: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  dateBlock: {
+    width: 46,
+    height: 46,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

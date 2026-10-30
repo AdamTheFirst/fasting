@@ -1,6 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { font, radius, serif, space, useColors } from '../theme';
+import { font, radius, strong, space, useColors } from '../theme';
 import { Button } from './ui';
 
 /**
@@ -39,17 +39,14 @@ export function ConfirmDialog({
       <Pressable
         accessibilityLabel={cancelLabel}
         onPress={onCancel}
-        style={[styles.scrim, { backgroundColor: 'rgba(22,20,26,0.55)' }]}
+        style={[styles.scrim, { backgroundColor: 'rgba(21,25,32,0.5)' }]}
       >
         <Pressable
           accessibilityViewIsModal
           onPress={() => {}}
           style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}
         >
-          <Text
-            accessibilityRole="header"
-            style={[font.xl, { color: c.text, fontFamily: serif, fontWeight: '600' }]}
-          >
+          <Text accessibilityRole="header" style={[font.xl, { color: c.text, ...strong }]}>
             {title}
           </Text>
           {message ? <Text style={[font.md, { color: c.textMuted }]}>{message}</Text> : null}

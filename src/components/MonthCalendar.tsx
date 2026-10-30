@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { dayKey } from '../domain/stats';
-import { font, serif, space, useColors } from '../theme';
+import { font, inkBorder, radius, space, strong, useColors } from '../theme';
 import { Icon } from './Icon';
 
 const GAP = 4;
@@ -54,17 +54,14 @@ export function MonthCalendar({
       onPress={() => onChangeMonth?.(delta)}
       style={[styles.arrow, !enabled && { opacity: 0.3 }]}
     >
-      <Icon name={glyph === '‹' ? 'chevronLeft' : 'chevron'} size={20} color={c.accent} />
+      <Icon name={glyph === '‹' ? 'chevronLeft' : 'chevron'} size={20} color={c.text} />
     </Pressable>
   );
 
   return (
     <View>
       <View style={styles.header}>
-        <Text
-          accessibilityRole="header"
-          style={[font.lg, { color: c.text, fontFamily: serif, fontWeight: '600', flex: 1 }]}
-        >
+        <Text accessibilityRole="header" style={[font.lg, { color: c.text, ...strong, flex: 1 }]}>
           {title}
         </Text>
         {onChangeMonth && arrow('Previous month', '‹', -1, true)}
@@ -73,7 +70,7 @@ export function MonthCalendar({
       <View style={styles.grid} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         {WEEKDAYS.map((w, i) => (
           <View key={`w${i}`} style={[styles.weekday, { width: size }]}>
-            <Text style={[font.xs, { color: c.textMuted, fontWeight: '600' }]}>{w}</Text>
+            <Text style={[font.xs, { color: c.textMuted }]}>{w}</Text>
           </View>
         ))}
         {cells.map((d, i) => {
@@ -88,24 +85,18 @@ export function MonthCalendar({
               onPress={() => onPressDay?.(key)}
               style={[
                 styles.cell,
-                { width: size, height: size, backgroundColor: c.surface2 },
-                isToday && { borderWidth: 2, borderColor: c.milestone },
+                {
+                  width: size,
+                  height: size,
+                  backgroundColor: hours >= 12 ? c.period : hours > 0 ? c.periodSubtle : c.surface2,
+                },
+                isToday && { borderWidth: inkBorder, borderColor: c.text },
               ]}
             >
-              {hours > 0 && (
-                // Shade a layer under the number so the number itself stays fully readable.
-                <View
-                  style={[
-                    StyleSheet.absoluteFill,
-                    styles.fill,
-                    { backgroundColor: c.accent, opacity: 0.2 + 0.8 * Math.min(1, hours / 24) },
-                  ]}
-                />
-              )}
               <Text
                 style={[
                   font.sm,
-                  { color: hours > 12 ? c.onAccent : c.text, fontWeight: isToday ? '800' : '500' },
+                  { color: hours >= 12 ? c.onPeriod : c.text, fontWeight: isToday ? '600' : '400' },
                 ]}
               >
                 {d}
@@ -123,6 +114,5 @@ const styles = StyleSheet.create({
   arrow: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   weekday: { alignItems: 'center', paddingBottom: 2 },
-  cell: { borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  fill: { borderRadius: 10 },
+  cell: { borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
 });
