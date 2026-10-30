@@ -4,8 +4,8 @@ import { Alert, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-na
 import { Body, Button, SectionHeader } from '../../components/ui';
 import { APP_NAME } from '../../config/identity';
 import { csvToFasts, fastsToCsv } from '../../domain/csv';
-import { newId } from '../../domain/fast';
-import { AUTOPHAGY_NOTE, BUILT_IN_MILESTONES } from '../../domain/milestones';
+import { goalLabel, newId } from '../../domain/fast';
+import { AUTOPHAGY_NOTE, BUILT_IN_MILESTONES, customMilestone } from '../../domain/milestones';
 import { health } from '../../services/health';
 import { pickCsv, shareCsv } from '../../services/files';
 import { ensureNotificationPermission } from '../../services/notifications';
@@ -23,6 +23,7 @@ function Toggle({
   value: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const c = useColors();
   return (
     <View style={styles.toggle}>
       <View style={{ flex: 1 }}>
@@ -33,16 +34,36 @@ function Toggle({
           </Body>
         ) : null}
       </View>
-      <Switch accessibilityLabel={label} value={value} onValueChange={onChange} />
+      <Switch
+        accessibilityLabel={label}
+        value={value}
+        onValueChange={onChange}
+        trackColor={{ false: c.border, true: c.accentSubtle }}
+        thumbColor={value ? c.accent : c.surface}
+        ios_backgroundColor={c.border}
+      />
     </View>
   );
 }
 
 export default function SettingsScreen() {
-  const { fasts, settings, updateSettings, replaceAllFasts, addWeight, addHeight } = useStore();
+  const {
+    fasts,
+    presets,
+    settings,
+    updateSettings,
+    replaceAllFasts,
+    addWeight,
+    addHeight,
+    savePreset,
+    deletePreset,
+  } = useStore();
   const c = useColors();
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
+  const [mHours, setMHours] = useState('');
+  const [mNote, setMNote] = useState('');
+  const [streakHours, setStreakHours] = useState(String(settings.streakMinHours));
   const ms = settings.milestones;
 
   const setMilestones = async (patch: Partial<typeof ms>) => {
@@ -58,6 +79,26 @@ export default function SettingsScreen() {
     }
     await updateSettings({ milestones: next });
   };
+
+  const addCustomMilestone = async () => {
+    const m = customMilestone(Number(mHours.replace(',', '.')), mNote, newId());
+    if (!m) return;
+    await setMilestones({ custom: [...ms.custom, m].sort((a, b) => a.hours - b.hours) });
+    setMHours('');
+    setMNote('');
+  };
+
+  const saveStreakHours = () => {
+    const h = Number(streakHours.replace(',', '.'));
+    if (h > 0 && h <= 24) void updateSettings({ streakMinHours: h });
+    else setStreakHours(String(settings.streakMinHours));
+  };
+
+  const confirmDeletePreset = (id: string, name: string) =>
+    Alert.alert(`Delete the preset "${name}"?`, 'Past fasts keep their goal.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => void deletePreset(id) },
+    ]);
 
   const toggleHealth = async (on: boolean) => {
     if (on) {
@@ -142,12 +183,87 @@ export default function SettingsScreen() {
         {AUTOPHAGY_NOTE}
       </Body>
 
+      <SectionHeader>Your own milestones</SectionHeader>
+      {ms.custom.map((m) => (
+        <View key={m.id} style={styles.inline}>
+          <View style={{ flex: 1 }}>
+            <Body>{m.title}</Body>
+            <Body muted style={font.sm}>
+              {m.body}
+            </Body>
+          </View>
+          <Button
+            label="Remove"
+            variant="ghost"
+            onPress={() => void setMilestones({ custom: ms.custom.filter((x) => x.id !== m.id) })}
+          />
+        </View>
+      ))}
+      <View style={styles.inline}>
+        <TextInput
+          style={[input, styles.hours]}
+          value={mHours}
+          onChangeText={setMHours}
+          placeholder="Hours"
+          accessibilityLabel="Milestone hours"
+          placeholderTextColor={c.textMuted}
+          keyboardType="decimal-pad"
+        />
+        <TextInput
+          style={input}
+          value={mNote}
+          onChangeText={setMNote}
+          placeholder="Note (optional)"
+          accessibilityLabel="Milestone note"
+          placeholderTextColor={c.textMuted}
+        />
+        <Button label="Add" variant="secondary" onPress={() => void addCustomMilestone()} />
+      </View>
+
       <SectionHeader>Long fasts</SectionHeader>
       <Toggle
         label="Show the safety card past 72 h"
         value={!settings.safetyCardDisabled}
         onChange={(v) => void updateSettings({ safetyCardDisabled: !v })}
       />
+
+      <SectionHeader>Presets</SectionHeader>
+      {presets.length === 0 ? (
+        <Body muted style={font.sm}>
+          Save one from the Custom goal on the Fast screen, or from any finished fast.
+        </Body>
+      ) : (
+        presets.map((p) => (
+          <View key={p.id} style={styles.inline}>
+            <TextInput
+              style={input}
+              defaultValue={p.name}
+              accessibilityLabel={`Preset name, ${goalLabel(p.goal)}`}
+              onEndEditing={(e) => {
+                const name = e.nativeEvent.text.trim();
+                if (name && name !== p.name) void savePreset({ ...p, name });
+              }}
+            />
+            <Body muted style={[font.sm, styles.presetGoal]}>
+              {goalLabel(p.goal)}
+            </Body>
+            <Button label="Delete" variant="ghost" onPress={() => confirmDeletePreset(p.id, p.name)} />
+          </View>
+        ))
+      )}
+
+      <SectionHeader>Streaks</SectionHeader>
+      <View style={styles.inline}>
+        <Body style={{ flex: 1 }}>A day counts toward a streak after this many hours fasted</Body>
+        <TextInput
+          style={[input, styles.hours]}
+          value={streakHours}
+          onChangeText={setStreakHours}
+          onEndEditing={saveStreakHours}
+          accessibilityLabel="Streak hours"
+          keyboardType="decimal-pad"
+        />
+      </View>
 
       <SectionHeader>Weight and height</SectionHeader>
       <Toggle
@@ -202,5 +318,7 @@ const styles = StyleSheet.create({
   screen: { padding: layout.gutter, gap: space[3], paddingBottom: space[12] },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: space[3], minHeight: 44 },
   inline: { flexDirection: 'row', gap: space[2], alignItems: 'center' },
+  hours: { flex: 0, width: 80 },
+  presetGoal: { minWidth: 56, textAlign: 'right' },
   input: { flex: 1, height: 48, borderWidth: 1, borderRadius: radius.md, paddingHorizontal: space[3] },
 });

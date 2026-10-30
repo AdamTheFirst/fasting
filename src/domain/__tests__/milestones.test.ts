@@ -1,5 +1,5 @@
 import type { Fast } from '../fast';
-import { DEFAULT_MILESTONE_SETTINGS, planAlerts } from '../milestones';
+import { customMilestone, DEFAULT_MILESTONE_SETTINGS, planAlerts } from '../milestones';
 import { HOUR } from '../time';
 
 const NOW = Date.UTC(2026, 9, 30, 12);
@@ -57,5 +57,20 @@ describe('planAlerts', () => {
   it('never schedules for an ended fast', () => {
     const settings = { ...DEFAULT_MILESTONE_SETTINGS, enabledIds: ['h24'] };
     expect(planAlerts({ ...running, end: NOW }, settings, 0, NOW)).toEqual([]);
+  });
+});
+
+describe('customMilestone', () => {
+  it('names a milestone by its length and keeps your note', () => {
+    expect(customMilestone(36, ' walk ', 'c1')).toEqual({
+      id: 'c1',
+      hours: 36,
+      title: '1d 12h',
+      body: 'walk',
+      source: null,
+    });
+    expect(customMilestone(120, '', 'c2')?.title).toBe('5d');
+    expect(customMilestone(18, '', 'c3')?.body).toBe('You reached 18h.');
+    expect(customMilestone(0, '', 'c4')).toBeNull();
   });
 });

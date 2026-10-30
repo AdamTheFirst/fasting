@@ -129,3 +129,12 @@ export function planAlerts(
   }
   return alerts.filter((a) => a.fireAt > now).sort((a, b) => a.fireAt - b.fireAt);
 }
+
+/** The person's own milestone, e.g. 36 h "walk and electrolytes". Any hour count, no upper limit. */
+export function customMilestone(hours: number, note: string, id: string): Milestone | null {
+  if (!Number.isFinite(hours) || hours <= 0) return null;
+  const title = formatDuration(hours * HOUR)
+    .replace(/ 00m$/, '')
+    .replace(/ 0h$/, '');
+  return { id, hours, title, body: note.trim() || `You reached ${title}.`, source: null };
+}

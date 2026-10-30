@@ -3,8 +3,17 @@ import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { DateTimeField } from '../../components/DateTimeField';
-import { Body, Button } from '../../components/ui';
-import { FAST_ERROR_TEXT, type Fast, newId, validateFast } from '../../domain/fast';
+import { Body, Button, Chip } from '../../components/ui';
+import {
+  FAST_ERROR_TEXT,
+  type Fast,
+  GOAL_CHOICES,
+  type Goal,
+  goalLabel,
+  newId,
+  presetFromFast,
+  validateFast,
+} from '../../domain/fast';
 import { formatDuration, HOUR } from '../../domain/time';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
@@ -13,7 +22,7 @@ import { font, layout, radius, space, useColors } from '../../theme';
 /** Edit any fast, running or past, or add a past one ("new"). It's your record. */
 export default function EditFast() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { fasts, saveFast, deleteFast, savePreset } = useStore();
+  const { fasts, presets, saveFast, deleteFast, savePreset } = useStore();
   const c = useColors();
   const existing = fasts.find((f) => f.id === id);
   const isNew = id === 'new' || !existing;
@@ -51,10 +60,18 @@ export default function EditFast() {
     ]);
 
   const saveAsPreset = async () => {
-    const hours = Math.round(((draft.end ?? now) - draft.start) / HOUR);
-    await savePreset({ id: newId(), name: `${hours}h`, goal: { kind: 'duration', ms: hours * HOUR } });
-    Alert.alert(`Saved "${hours}h" as a preset.`);
+    const preset = presetFromFast(draft, now);
+    await savePreset(preset);
+    Alert.alert(`Saved "${preset.name}" as a preset.`);
   };
+
+  // Goals you can switch to. The fast's own goal stays listed even if it matches no choice.
+  const goalChoices = [
+    ...GOAL_CHOICES.map((g) => ({ key: g.label, label: g.label, goal: g.goal })),
+    ...presets.map((p) => ({ key: p.id, label: p.name, goal: p.goal })),
+  ];
+  const sameGoal = (a: Goal | null, b: Goal | null) => JSON.stringify(a) === JSON.stringify(b);
+  const currentGoalListed = goalChoices.some((ch) => sameGoal(ch.goal, draft.goal));
 
   return (
     <ScrollView contentContainerStyle={styles.screen}>
@@ -77,6 +94,20 @@ export default function EditFast() {
         />
       )}
       <Body>Duration {formatDuration((draft.end ?? now) - draft.start)}</Body>
+      <Body muted style={font.sm}>
+        Goal
+      </Body>
+      <View style={styles.chips} accessibilityRole="radiogroup">
+        {!currentGoalListed && <Chip label={goalLabel(draft.goal)} selected onPress={() => {}} />}
+        {goalChoices.map((ch) => (
+          <Chip
+            key={ch.key}
+            label={ch.label}
+            selected={sameGoal(ch.goal, draft.goal)}
+            onPress={() => setDraft({ ...draft, goal: ch.goal })}
+          />
+        ))}
+      </View>
       <TextInput
         placeholder="Note (optional)"
         placeholderTextColor={c.textMuted}
@@ -105,5 +136,6 @@ export default function EditFast() {
 const styles = StyleSheet.create({
   screen: { padding: layout.gutter, gap: space[4] },
   row: { flexDirection: 'row', gap: space[2] },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2] },
   note: { minHeight: 80, borderWidth: 1, borderRadius: radius.md, padding: space[3] },
 });

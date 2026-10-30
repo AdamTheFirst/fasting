@@ -132,7 +132,9 @@ export default function HistoryScreen() {
           data={weights.map((w) => ({ value: w.kg, label: shortDate(w.at) }))}
           color={c.accent}
           dataPointsColor={c.accent}
-          yAxisLabelSuffix="kg"
+          yAxisLabelSuffix=" kg"
+          yAxisLabelWidth={64}
+          noOfSections={4}
           yAxisTextStyle={{ color: c.textMuted }}
           xAxisLabelTextStyle={{ color: c.textMuted, fontSize: 10 }}
           rulesColor={c.border}
@@ -152,6 +154,7 @@ export default function HistoryScreen() {
             referenceLine1Position={HEALTHY_BMI.min}
             showReferenceLine2
             referenceLine2Position={HEALTHY_BMI.max}
+            noOfSections={4}
             yAxisTextStyle={{ color: c.textMuted }}
             xAxisLabelTextStyle={{ color: c.textMuted, fontSize: 10 }}
           />
@@ -168,7 +171,11 @@ export default function HistoryScreen() {
         >
           <Body style={font.sm}>
             {shortDate(f.start)}
-            {f.end ? ` to ${shortDate(f.end)}` : ' · Running'}
+            {f.end === null
+              ? ' · Running'
+              : shortDate(f.end) === shortDate(f.start)
+                ? ''
+                : ` to ${shortDate(f.end)}`}
           </Body>
           <Body style={[font.lg, { fontWeight: '600', fontVariant: ['tabular-nums'] }]}>
             {formatDuration(elapsedMs(f, now))}
