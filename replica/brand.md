@@ -115,6 +115,21 @@ Store, trademark, domain and handle checks for these are still **to run** (block
 
 Store search note: App Store and Play rank on the words in the title and subtitle, so the subtitle should also carry "Fasting Tracker" and "Long & Intermittent Fasts".
 
+
+### Second revision (2026-10-30): one word that flows
+
+"Fast Unbound" means the right thing but the hard "t" stops dead before "un". The fix is one word where "Fast" runs straight into a vowel or a soft sound.
+
+| Name | Say it | Meaning | Web search, 2026-10-30 | Note |
+| --- | --- | --- | --- | --- |
+| **Fastaway** (pick) | FAST-a-way | Fast away, for as long as you like | no fasting app found | Flows in one breath. "Fastway Couriers" exists in delivery, a different category |
+| Holdfast | HOLD-fast | A real English word: a firm grip, staying steady. Also "hold the fast" | no fasting app found | Fits the quiet, steady voice. Doesn't start with "Fast", so the subtitle carries search |
+| Fastalong | FAST-a-long | Fast along, keep going | no fasting app found | Friendly, slightly softer than Fastaway |
+
+Ruled out: **Fastever** (too close to the existing "Intermittent Fasting FastEr ™"), **Fastopen** (reads as the networking term TCP Fast Open).
+
+Search note: the stores match words in the title and subtitle, so "Fastaway: Fasting Tracker" shows for "fast" and "fasting" either way.
+
 ## 4. Palette
 
 Everyone in the category reaches for "healthy" hues: greens, teals, bright blue, warm orange and coral. None of that was verified to hex today (the brand sites and stores didn't expose colours to my tools), so check against the real icons. We go elsewhere: **plum on oat**, earthy and quiet, which also fits "Fallow".
