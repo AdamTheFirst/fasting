@@ -1,6 +1,6 @@
 # Fast me: purpose and MVP spec
 
-Draft, 2026-10-30. Built on the scouting in [fixes.md](fixes.md) and [feedback.md](feedback.md), now 79 review rows from 6 source types and 14 apps.
+Snapshot of 2026-10-30 morning. The live, updated spec (charts, Health sync, milestone alerts, native-first) is the Claude doc: https://claude.ai/artifact/DNu6GL8DaCBZmaB2JBh6n7
 
 ## Purpose
 
