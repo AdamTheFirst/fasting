@@ -96,6 +96,25 @@ To run these in about 20 minutes: search each name at tmsearch.uspto.gov (classe
 
 **Recommendation: Fallow**, with Longhaul as the backup if the checks fail. Store name format: "Fallow: Fasting Log" (the subtitle can carry "Long & Intermittent Fasts").
 
+
+### Revised brief (2026-10-30, from Salih)
+
+The name must be **English, clear in meaning, and show up when people type "fast"** in the store. So it starts with "Fast", and the second word has to carry the difference, because the store is full of Fast-something apps.
+
+Already taken in the stores (seen in web search today): FastLog, FastWise, Fasty, Fasta, Fasto, Fastee, Fastify, Faster, Fast Slow, Just Fast, Simply Fast, Easy Fast, Fast Ease, SuperFast, FastTrack, FastKit, "Fast:", "fast_", MyFast, FastEasy, BodyFast, FitFast. "Long Fast" is too close to Suavita's "Fasting Tracker for long fast" listing.
+
+| Name | Meaning | Web search for a fasting app, 2026-10-30 | Note |
+| --- | --- | --- | --- |
+| **Fast Unbound** (pick) | Fasting without limits: no cap, no plan forced on you | none found | Says both angles in two words. Store title: "Fast Unbound: Fasting Tracker" |
+| Fast Your Way | You decide how you fast | none found | Clearest for angle B, but a phrase is weak as a trademark |
+| Fast Horizon | A fast with no end in sight; long view | none found | Calm, nice icon (a horizon line), meaning less direct |
+| Fast On | Keep fasting, as long as you want | none found | Short, but "fast on" reads like "fast-on" or "turn on" |
+| Fast Unlimited | No length cap | none found | Clear but sounds like a phone data plan |
+
+Store, trademark, domain and handle checks for these are still **to run** (blocked from this environment).
+
+Store search note: App Store and Play rank on the words in the title and subtitle, so the subtitle should also carry "Fasting Tracker" and "Long & Intermittent Fasts".
+
 ## 4. Palette
 
 Everyone in the category reaches for "healthy" hues: greens, teals, bright blue, warm orange and coral. None of that was verified to hex today (the brand sites and stores didn't expose colours to my tools), so check against the real icons. We go elsewhere: **plum on oat**, earthy and quiet, which also fits "Fallow".
