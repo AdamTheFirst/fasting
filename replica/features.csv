@@ -1,0 +1,9 @@
+feature,original,size,skill,evidence
+Zero-question start (Start button first screen; no account or quiz),no,S,replica-design,clunky_ux_bugs 10 rows; BodyFast 20-step onboarding
+Open-ended and multi-day fasts with no cap (days:hours; goal by hours/days/date or none),no,S,replica-backend,long_fast_support 8 rows; Zero 168h cap; Fastic 23:1
+Edit start/end after the fact; never auto-stop; no forced names; delete any fast,no,S,replica-backend,rigid_schedule_no_control 20 rows
+Custom saved protocols and per-weekday rhythms,no,M,replica-design,rigid_schedule_no_control; Yazio request 283 votes
+All tracking free forever; no converting trials,no,S,replica-launch,billing_dark_patterns 22 rows 4 sources
+Fast calendar; longest-fast record; optional weight overlay,no,M,replica-design,history_and_insights 4 rows; Reddit requests
+Quiet by default (no tips/feeds/upgrade nags),no,S,replica-design,clutter_nags_ads 7 rows (thin)
+Home-screen widget and CSV export/import,no,M,replica-backend,Reddit requests (thin)

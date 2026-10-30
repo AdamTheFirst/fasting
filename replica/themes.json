@@ -1,0 +1,10 @@
+{
+  "billing_dark_patterns": ["charg", "subscription", "cancel", "refund", "money", "scam", "trial", "payment", "\\$", "£", "predatory", "penny", "paywall", "a year"],
+  "long_fast_support": ["extended", "long fast", "prolonged", "over 24", "longer than 24", "days and hours", "open ended", "over 12 or 24"],
+  "rigid_schedule_no_control": ["customiz", "edit", "defaults to", "anchored", "schedule", "start/finish", "auto stop", "stopped by itself", "stop when", "milestone", "flexib", "fasting length", "auto-generated", "naming", "name for every"],
+  "clutter_nags_ads": ["\\bads\\b", "popup", "upgrade", "tip u didn", "100+ features", "social crap", "too much", "permanent new info"],
+  "clunky_ux_bugs": ["cumbersome", "painful", "harder than it should", "not working", "unusable", "lost all my progress", "terrible", "log a fast", "frustrating"],
+  "history_and_insights": ["chart", "visual", "history", "correlate", "weight loss"],
+  "generic_not_personal": ["broad", "specific needs", "personalized"],
+  "privacy": ["sharing my data"]
+}
