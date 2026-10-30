@@ -1,9 +1,9 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { DateTimeField } from '../../components/DateTimeField';
-import { Body, Button, Chip } from '../../components/ui';
+import { Body, Button, Card, Chip, SectionHeader, Title } from '../../components/ui';
 import {
   FAST_ERROR_TEXT,
   type Fast,
@@ -17,7 +17,7 @@ import {
 import { formatDuration, HOUR } from '../../domain/time';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
-import { font, layout, radius, space, useColors } from '../../theme';
+import { font, radius, space, tabular, useColors } from '../../theme';
 
 /** Edit any fast, running or past, or add a past one ("new"). It's your record. */
 export default function EditFast() {
@@ -73,30 +73,48 @@ export default function EditFast() {
   const sameGoal = (a: Goal | null, b: Goal | null) => JSON.stringify(a) === JSON.stringify(b);
   const currentGoalListed = goalChoices.some((ch) => sameGoal(ch.goal, draft.goal));
 
+  const duration = (draft.end ?? now) - draft.start;
+  const running = draft.end === null;
+
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
-      <Stack.Screen options={{ title: isNew ? 'Add a past fast' : 'Edit fast' }} />
-      <Body muted>Change start or end. It&apos;s your record.</Body>
-      <DateTimeField
-        label="Start"
-        value={draft.start}
-        onChange={(start) => setDraft({ ...draft, start })}
-        error={
-          error && error !== 'end_before_start' && error !== 'end_in_future' ? FAST_ERROR_TEXT[error] : null
-        }
-      />
-      {draft.end !== null && (
+    <ScrollView
+      style={{ backgroundColor: c.bg }}
+      contentContainerStyle={styles.screen}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Stack.Screen options={{ title: isNew ? 'Add a past fast' : running ? 'Running fast' : 'Edit fast' }} />
+      <Card tone="accent" style={{ alignItems: 'center', gap: space[1] }}>
+        <Text style={[font.xs, { color: c.accent, fontWeight: '700', letterSpacing: 0.8 }]}>
+          {running ? 'SO FAR' : 'DURATION'}
+        </Text>
+        <Title size="2xl" style={tabular}>
+          {formatDuration(duration)}
+        </Title>
+        <Body muted style={font.sm}>
+          Change start or end. It&apos;s your record.
+        </Body>
+      </Card>
+
+      <Card>
         <DateTimeField
-          label="End"
-          value={draft.end}
-          onChange={(end) => setDraft({ ...draft, end })}
-          error={error === 'end_before_start' || error === 'end_in_future' ? FAST_ERROR_TEXT[error] : null}
+          label="Start"
+          value={draft.start}
+          onChange={(start) => setDraft({ ...draft, start })}
+          error={
+            error && error !== 'end_before_start' && error !== 'end_in_future' ? FAST_ERROR_TEXT[error] : null
+          }
         />
-      )}
-      <Body>Duration {formatDuration((draft.end ?? now) - draft.start)}</Body>
-      <Body muted style={font.sm}>
-        Goal
-      </Body>
+        {draft.end !== null && (
+          <DateTimeField
+            label="End"
+            value={draft.end}
+            onChange={(end) => setDraft({ ...draft, end })}
+            error={error === 'end_before_start' || error === 'end_in_future' ? FAST_ERROR_TEXT[error] : null}
+          />
+        )}
+      </Card>
+
+      <SectionHeader>Goal</SectionHeader>
       <View style={styles.chips} accessibilityRole="radiogroup">
         {!currentGoalListed && <Chip label={goalLabel(draft.goal)} selected onPress={() => {}} />}
         {goalChoices.map((ch) => (
@@ -108,25 +126,36 @@ export default function EditFast() {
           />
         ))}
       </View>
+
+      <SectionHeader>Note</SectionHeader>
       <TextInput
-        placeholder="Note (optional)"
-        placeholderTextColor={c.textMuted}
+        placeholder="How it went, what you broke it with… (optional)"
+        placeholderTextColor={c.textFaint}
         value={draft.note ?? ''}
         onChangeText={(note) => setDraft({ ...draft, note: note || null })}
         multiline
-        style={[
-          font.md,
-          styles.note,
-          { color: c.text, borderColor: c.borderInput, backgroundColor: c.surface },
-        ]}
+        style={[font.md, styles.note, { color: c.text, borderColor: c.border, backgroundColor: c.surface }]}
       />
-      <Button label="Save" onPress={() => void save()} disabled={!!error} />
+      <Button
+        label={isNew ? 'Add fast' : 'Save'}
+        size="lg"
+        block
+        onPress={() => void save()}
+        disabled={!!error}
+        style={{ marginTop: space[2] }}
+      />
       {!isNew && (
         <View style={styles.row}>
           {draft.end !== null && (
-            <Button label="Save as preset" variant="secondary" onPress={() => void saveAsPreset()} />
+            <Button
+              label="Save as preset"
+              icon="plus"
+              size="sm"
+              variant="quiet"
+              onPress={() => void saveAsPreset()}
+            />
           )}
-          <Button label="Delete" variant="danger" onPress={remove} />
+          <Button label="Delete" size="sm" variant="danger" onPress={remove} />
         </View>
       )}
     </ScrollView>
@@ -134,8 +163,14 @@ export default function EditFast() {
 }
 
 const styles = StyleSheet.create({
-  screen: { padding: layout.gutter, gap: space[4] },
-  row: { flexDirection: 'row', gap: space[2] },
+  screen: { padding: 20, gap: space[3], paddingBottom: space[12] },
+  row: { flexDirection: 'row', gap: space[2], justifyContent: 'center', marginTop: space[2] },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2] },
-  note: { minHeight: 80, borderWidth: 1, borderRadius: radius.md, padding: space[3] },
+  note: {
+    minHeight: 96,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: space[4],
+    textAlignVertical: 'top',
+  },
 });

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { dayKey } from '../domain/stats';
-import { font, space, useColors } from '../theme';
+import { font, serif, space, useColors } from '../theme';
+import { Icon } from './Icon';
 
 const GAP = 4;
 
@@ -18,7 +19,10 @@ export function MonthCalendar({
   onPressDay,
   onChangeMonth,
   canGoForward = true,
+  now,
 }: {
+  /** Marks today. */
+  now: number;
   month: Date;
   hoursByDay: Map<string, number>;
   onPressDay?: (key: string) => void;
@@ -38,6 +42,7 @@ export function MonthCalendar({
     ...Array(lead).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
+  const todayKey = dayKey(now);
   const title = first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
   const arrow = (label: string, glyph: string, delta: -1 | 1, enabled: boolean) => (
@@ -49,14 +54,17 @@ export function MonthCalendar({
       onPress={() => onChangeMonth?.(delta)}
       style={[styles.arrow, !enabled && { opacity: 0.3 }]}
     >
-      <Text style={[font.lg, { color: c.accent }]}>{glyph}</Text>
+      <Icon name={glyph === '‹' ? 'chevronLeft' : 'chevron'} size={20} color={c.accent} />
     </Pressable>
   );
 
   return (
     <View>
       <View style={styles.header}>
-        <Text accessibilityRole="header" style={[font.sm, { color: c.text, fontWeight: '600', flex: 1 }]}>
+        <Text
+          accessibilityRole="header"
+          style={[font.lg, { color: c.text, fontFamily: serif, fontWeight: '600', flex: 1 }]}
+        >
           {title}
         </Text>
         {onChangeMonth && arrow('Previous month', '‹', -1, true)}
@@ -72,12 +80,17 @@ export function MonthCalendar({
           if (d === null) return <View key={`e${i}`} style={{ width: size, height: size }} />;
           const key = dayKey(new Date(month.getFullYear(), month.getMonth(), d).getTime());
           const hours = hoursByDay.get(key) ?? 0;
+          const isToday = key === todayKey;
           return (
             <Pressable
               key={key}
               accessibilityLabel={`${key}: ${Math.round(hours)} hours fasted`}
               onPress={() => onPressDay?.(key)}
-              style={[styles.cell, { width: size, height: size, backgroundColor: c.surface2 }]}
+              style={[
+                styles.cell,
+                { width: size, height: size, backgroundColor: c.surface2 },
+                isToday && { borderWidth: 2, borderColor: c.milestone },
+              ]}
             >
               {hours > 0 && (
                 // Shade a layer under the number so the number itself stays fully readable.
@@ -89,7 +102,12 @@ export function MonthCalendar({
                   ]}
                 />
               )}
-              <Text style={[font.xs, { color: hours > 12 ? c.onAccent : c.text, fontWeight: '500' }]}>
+              <Text
+                style={[
+                  font.sm,
+                  { color: hours > 12 ? c.onAccent : c.text, fontWeight: isToday ? '800' : '500' },
+                ]}
+              >
                 {d}
               </Text>
             </Pressable>
@@ -105,6 +123,6 @@ const styles = StyleSheet.create({
   arrow: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   weekday: { alignItems: 'center', paddingBottom: 2 },
-  cell: { borderRadius: 6, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  fill: { borderRadius: 6 },
+  cell: { borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  fill: { borderRadius: 10 },
 });

@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { StoreProvider } from '../state/store';
 import { useHealthSync } from '../state/useHealthSync';
-import { useColors } from '../theme';
+import { serif, useColors } from '../theme';
 
 function Root() {
   const c = useColors();
@@ -15,7 +15,8 @@ function Root() {
         screenOptions={{
           headerStyle: { backgroundColor: c.bg },
           headerTintColor: c.accent,
-          headerTitleStyle: { color: c.text },
+          headerTitleStyle: { color: c.text, fontFamily: serif, fontWeight: '600' },
+          headerShadowVisible: false,
           contentStyle: { backgroundColor: c.bg },
         }}
       >

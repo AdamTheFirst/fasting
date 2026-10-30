@@ -1,0 +1,136 @@
+import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
+
+export type IconName =
+  | 'fast'
+  | 'history'
+  | 'settings'
+  | 'plus'
+  | 'check'
+  | 'chevron'
+  | 'chevronLeft'
+  | 'edit'
+  | 'info'
+  | 'heart'
+  | 'bell'
+  | 'flag'
+  | 'export'
+  | 'import'
+  | 'trophy'
+  | 'calendar'
+  | 'clock'
+  | 'close'
+  | 'scale'
+  | 'ruler';
+
+/** Line icons drawn for Fastaway: 24 px grid, 1.75 stroke, round caps. No rings, no clocks faces as heroes. */
+export function Icon({ name, size = 22, color }: { name: IconName; size?: number; color: string }) {
+  const p = {
+    stroke: color,
+    strokeWidth: 1.75,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    fill: 'none',
+  };
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      {name === 'fast' && (
+        <>
+          <Line x1="2" y1="17" x2="22" y2="17" {...p} />
+          <Line x1="6" y1="12" x2="16" y2="12" {...p} />
+          <Line x1="9" y1="7" x2="13" y2="7" {...p} />
+        </>
+      )}
+      {name === 'history' && (
+        <>
+          <Rect x="3.5" y="5" width="17" height="15" rx="3" {...p} />
+          <Line x1="3.5" y1="10" x2="20.5" y2="10" {...p} />
+          <Line x1="8" y1="3" x2="8" y2="6.5" {...p} />
+          <Line x1="16" y1="3" x2="16" y2="6.5" {...p} />
+          <Line x1="7.5" y1="14.5" x2="13" y2="14.5" {...p} />
+        </>
+      )}
+      {name === 'settings' && (
+        <>
+          <Line x1="4" y1="7" x2="20" y2="7" {...p} />
+          <Line x1="4" y1="17" x2="20" y2="17" {...p} />
+          <Circle cx="9" cy="7" r="2.25" {...p} fill={color} />
+          <Circle cx="15" cy="17" r="2.25" {...p} fill={color} />
+        </>
+      )}
+      {name === 'plus' && <Path d="M12 5v14M5 12h14" {...p} />}
+      {name === 'check' && <Path d="M5 12.5l4.5 4.5L19 7.5" {...p} />}
+      {name === 'chevron' && <Path d="M9 5l7 7-7 7" {...p} />}
+      {name === 'chevronLeft' && <Path d="M15 5l-7 7 7 7" {...p} />}
+      {name === 'close' && <Path d="M6 6l12 12M18 6L6 18" {...p} />}
+      {name === 'edit' && <Path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4" {...p} />}
+      {name === 'info' && (
+        <>
+          <Circle cx="12" cy="12" r="9" {...p} />
+          <Path d="M12 11v6M12 7.5v.01" {...p} />
+        </>
+      )}
+      {name === 'heart' && (
+        <Path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0112 7.3 4.3 4.3 0 0119.5 10c0 5.4-7.5 10-7.5 10z" {...p} />
+      )}
+      {name === 'bell' && <Path d="M6 16V11a6 6 0 1112 0v5l1.5 2h-15L6 16zM10 20.5h4" {...p} />}
+      {name === 'flag' && <Path d="M6 21V4M6 4h11l-2.5 4L17 12H6" {...p} />}
+      {name === 'export' && (
+        <Path d="M12 15V3M7.5 7.5L12 3l4.5 4.5M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6" {...p} />
+      )}
+      {name === 'import' && (
+        <Path d="M12 3v12M7.5 10.5L12 15l4.5-4.5M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6" {...p} />
+      )}
+      {name === 'trophy' && (
+        <Path
+          d="M8 4h8v5a4 4 0 01-8 0V4zM8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M8.5 20h7M10 17h4v3h-4z"
+          {...p}
+        />
+      )}
+      {name === 'calendar' && (
+        <>
+          <Rect x="3.5" y="5" width="17" height="15" rx="3" {...p} />
+          <Line x1="3.5" y1="10" x2="20.5" y2="10" {...p} />
+        </>
+      )}
+      {name === 'clock' && <Path d="M12 7v5l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z" {...p} />}
+      {name === 'ruler' && <Path d="M4 16L16 4l4 4L8 20l-4-4zM8 12l2 2M11 9l2 2M14 6l2 2" {...p} />}
+      {name === 'scale' && (
+        <>
+          <Rect x="3.5" y="4" width="17" height="16" rx="4" {...p} />
+          <Path d="M8.5 9.5a5 5 0 017 0M12 9.5l1.5-1.5" {...p} />
+        </>
+      )}
+    </Svg>
+  );
+}
+
+/**
+ * The Fastaway mark from the logo brief: one long stroke that runs off the right edge
+ * (a road or horizon that keeps going) with two shorter strokes above it.
+ */
+export function BrandMark({
+  size = 28,
+  color,
+  bleed = true,
+}: {
+  size?: number;
+  color: string;
+  bleed?: boolean;
+}) {
+  const w = size * 1.25;
+  return (
+    <Svg width={w} height={size} viewBox="0 0 40 32">
+      <Line
+        x1="4"
+        y1="25"
+        x2={bleed ? 40 : 36}
+        y2="25"
+        stroke={color}
+        strokeWidth={4.5}
+        strokeLinecap="round"
+      />
+      <Line x1="10" y1="16" x2="28" y2="16" stroke={color} strokeWidth={4.5} strokeLinecap="round" />
+      <Line x1="15" y1="7" x2="22" y2="7" stroke={color} strokeWidth={4.5} strokeLinecap="round" />
+    </Svg>
+  );
+}
