@@ -1,0 +1,6 @@
+{
+  "apple": {"Zero": "1168348542", "Suavita": "1568443548", "MyFast": "1218416683", "Easy Fast": "6443566279"},
+  "countries": ["us", "gb", "de", "tr"],
+  "subreddits": ["fasting", "waterfasting", "intermittentfasting"],
+  "queries": ["app", "tracker"]
+}
