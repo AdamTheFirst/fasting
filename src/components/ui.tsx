@@ -35,15 +35,18 @@ export function Chip({
   label,
   selected,
   onPress,
+  accessibilityLabel,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
+  accessibilityLabel?: string;
 }) {
   const c = useColors();
   return (
     <Pressable
       accessibilityRole="radio"
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ selected }}
       onPress={onPress}
       style={[

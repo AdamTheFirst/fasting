@@ -18,6 +18,7 @@ import {
   presetFromFast,
 } from '../../domain/fast';
 import { shouldShowSafetyCard } from '../../domain/safety';
+import { presetForToday } from '../../domain/settings';
 import { DAY, formatDuration } from '../../domain/time';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
@@ -32,7 +33,15 @@ export default function FastScreen() {
     useStore();
   const now = useNow();
   const c = useColors();
-  const [selectedKey, setSelectedKey] = useState('Open-ended');
+  const [picked, setPicked] = useState<string | null>(null);
+  // Until you pick something, the weekly rhythm (if any) chooses; otherwise open-ended.
+  const todays = presetForToday(
+    settings.weekdayPresets,
+    presets.map((p) => p.id),
+    now,
+  );
+  const selectedKey = picked ?? todays ?? 'Open-ended';
+  const setSelectedKey = setPicked;
   const [customKind, setCustomKind] = useState<CustomKind>('hours');
   const [customAmount, setCustomAmount] = useState('');
   const [customUntil, setCustomUntil] = useState(() => Date.now() + DAY);

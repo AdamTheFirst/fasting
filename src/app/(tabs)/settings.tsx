@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
-import { Body, Button, SectionHeader } from '../../components/ui';
+import { Body, Button, Chip, SectionHeader } from '../../components/ui';
 import { APP_NAME } from '../../config/identity';
 import { csvToFasts, fastsToCsv } from '../../domain/csv';
 import { goalLabel, newId } from '../../domain/fast';
@@ -12,10 +12,19 @@ import {
   type MilestoneSource,
 } from '../../domain/milestones';
 import { health } from '../../services/health';
+import { toggleWeekday } from '../../domain/settings';
 import { pickCsv, shareCsv } from '../../services/files';
 import { ensureNotificationPermission } from '../../services/notifications';
 import { useStore } from '../../state/store';
 import { font, layout, radius, space, useColors } from '../../theme';
+
+// Monday first, in the phone's language.
+const WEEKDAY_NAMES = Array.from({ length: 7 }, (_, i) =>
+  new Date(2026, 0, 5 + i).toLocaleDateString(undefined, { weekday: 'long' }),
+);
+const WEEKDAY_LETTERS = WEEKDAY_NAMES.map((_, i) =>
+  new Date(2026, 0, 5 + i).toLocaleDateString(undefined, { weekday: 'narrow' }),
+);
 
 function Toggle({
   label,
@@ -252,22 +261,42 @@ export default function SettingsScreen() {
         </Body>
       ) : (
         presets.map((p) => (
-          <View key={p.id} style={styles.inline}>
-            <TextInput
-              style={input}
-              defaultValue={p.name}
-              accessibilityLabel={`Preset name, ${goalLabel(p.goal)}`}
-              onEndEditing={(e) => {
-                const name = e.nativeEvent.text.trim();
-                if (name && name !== p.name) void savePreset({ ...p, name });
-              }}
-            />
-            <Body muted style={[font.sm, styles.presetGoal]}>
-              {goalLabel(p.goal)}
-            </Body>
-            <Button label="Delete" variant="ghost" onPress={() => confirmDeletePreset(p.id, p.name)} />
+          <View key={p.id} style={styles.preset}>
+            <View style={styles.inline}>
+              <TextInput
+                style={input}
+                defaultValue={p.name}
+                accessibilityLabel={`Preset name, ${goalLabel(p.goal)}`}
+                onEndEditing={(e) => {
+                  const name = e.nativeEvent.text.trim();
+                  if (name && name !== p.name) void savePreset({ ...p, name });
+                }}
+              />
+              <Body muted style={[font.sm, styles.presetGoal]}>
+                {goalLabel(p.goal)}
+              </Body>
+              <Button label="Delete" variant="ghost" onPress={() => confirmDeletePreset(p.id, p.name)} />
+            </View>
+            <View style={styles.days} accessibilityLabel={`Days that start on ${p.name}`}>
+              {WEEKDAY_LETTERS.map((letter, day) => (
+                <Chip
+                  key={day}
+                  label={letter}
+                  accessibilityLabel={WEEKDAY_NAMES[day]}
+                  selected={settings.weekdayPresets[day] === p.id}
+                  onPress={() =>
+                    void updateSettings({ weekdayPresets: toggleWeekday(settings.weekdayPresets, day, p.id) })
+                  }
+                />
+              ))}
+            </View>
           </View>
         ))
+      )}
+      {presets.length > 0 && (
+        <Body muted style={font.sm}>
+          Pick days to make a preset the Start screen&apos;s choice on those days. Optional.
+        </Body>
       )}
 
       <SectionHeader>Streaks</SectionHeader>
@@ -337,6 +366,8 @@ const styles = StyleSheet.create({
   toggle: { flexDirection: 'row', alignItems: 'center', gap: space[3], minHeight: 44 },
   inline: { flexDirection: 'row', gap: space[2], alignItems: 'center' },
   hours: { flex: 0, width: 80 },
+  preset: { gap: space[2] },
+  days: { flexDirection: 'row', flexWrap: 'wrap', gap: space[1] },
   presetGoal: { minWidth: 56, textAlign: 'right' },
   input: { flex: 1, height: 48, borderWidth: 1, borderRadius: radius.md, paddingHorizontal: space[3] },
 });
