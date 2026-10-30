@@ -1,4 +1,12 @@
-import { elapsedMs, type Fast, goalReachedAt, validateFast } from '../fast';
+import {
+  elapsedMs,
+  type Fast,
+  goalLabel,
+  goalReachedAt,
+  parseDurationGoal,
+  presetFromFast,
+  validateFast,
+} from '../fast';
 import { DAY, HOUR } from '../time';
 
 const NOW = Date.UTC(2026, 9, 30, 12);
@@ -33,5 +41,30 @@ describe('fast', () => {
     const other = fast({ id: 'b', start: NOW - 20 * HOUR, end: NOW - 9 * HOUR });
     expect(validateFast(fast(), [other], NOW)).toBe('overlaps');
     expect(validateFast(other, [other], NOW)).toBeNull();
+  });
+});
+
+describe('custom goals and presets', () => {
+  it('parses any positive length in hours or days, with no upper limit', () => {
+    expect(parseDurationGoal('36', 'hours')).toEqual({ kind: 'duration', ms: 36 * HOUR });
+    expect(parseDurationGoal('4,5', 'days')).toEqual({ kind: 'duration', ms: 4.5 * DAY });
+    expect(parseDurationGoal('40', 'days')).toEqual({ kind: 'duration', ms: 40 * DAY });
+    expect(parseDurationGoal('0', 'hours')).toBeNull();
+    expect(parseDurationGoal('abc', 'days')).toBeNull();
+  });
+
+  it('labels goals as hours below two days and as days above', () => {
+    expect(goalLabel(null)).toBe('Open-ended');
+    expect(goalLabel({ kind: 'duration', ms: 20 * HOUR })).toBe('20h');
+    expect(goalLabel({ kind: 'duration', ms: 36 * HOUR })).toBe('36h');
+    expect(goalLabel({ kind: 'duration', ms: 72 * HOUR })).toBe('3 days');
+    expect(goalLabel({ kind: 'until', at: NOW })).toMatch(/^until /);
+  });
+
+  it('makes a preset from a finished fast, rounded to the hour', () => {
+    const p = presetFromFast({ start: NOW - 71.6 * HOUR, end: NOW }, NOW);
+    expect(p.goal).toEqual({ kind: 'duration', ms: 72 * HOUR });
+    expect(p.name).toBe('3 days');
+    expect(presetFromFast({ start: NOW - 20 * HOUR, end: NOW }, NOW, ' 20:4 ').name).toBe('20:4');
   });
 });

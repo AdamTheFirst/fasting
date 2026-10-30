@@ -20,6 +20,9 @@ export default function HistoryScreen() {
   const c = useColors();
   const now = useNow(60_000);
   const [range, setRange] = useState<30 | 90>(30);
+  // Months back from the current one: 0 is this month.
+  const [monthOffset, setMonthOffset] = useState(0);
+  const shownMonth = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - monthOffset, 1);
 
   const byDay = useMemo(() => hoursByDay(fasts, now), [fasts, now]);
   const lengths = useMemo(() => fastLengths(fasts, range, now), [fasts, range, now]);
@@ -40,28 +43,47 @@ export default function HistoryScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.screen}>
-      <MonthCalendar month={new Date(now)} hoursByDay={byDay} />
+      <MonthCalendar
+        month={shownMonth}
+        hoursByDay={byDay}
+        onChangeMonth={(delta) => setMonthOffset((m) => Math.max(0, m - delta))}
+        canGoForward={monthOffset > 0}
+      />
 
       <SectionHeader>Records</SectionHeader>
-      <View style={styles.row}>
-        <Card>
-          <Body muted style={font.xs}>
-            Longest fast
-          </Body>
-          <Body style={font.lg}>{recs.longest ? formatDuration(elapsedMs(recs.longest, now)) : '-'}</Body>
-        </Card>
-        <Card>
-          <Body muted style={font.xs}>
-            Longest streak
-          </Body>
-          <Body style={font.lg}>{recs.longestStreakDays}d</Body>
-        </Card>
-        <Card>
-          <Body muted style={font.xs}>
-            This year
-          </Body>
-          <Body style={font.lg}>{Math.round(recs.hoursThisYear)}h</Body>
-        </Card>
+      <View style={styles.records}>
+        <View style={styles.record}>
+          <Card>
+            <Body muted style={font.xs}>
+              Longest fast
+            </Body>
+            <Body style={font.lg}>{recs.longest ? formatDuration(elapsedMs(recs.longest, now)) : '-'}</Body>
+          </Card>
+        </View>
+        <View style={styles.record}>
+          <Card>
+            <Body muted style={font.xs}>
+              Longest streak
+            </Body>
+            <Body style={font.lg}>{recs.longestStreakDays}d</Body>
+          </Card>
+        </View>
+        <View style={styles.record}>
+          <Card>
+            <Body muted style={font.xs}>
+              This month
+            </Body>
+            <Body style={font.lg}>{Math.round(recs.hoursThisMonth)}h</Body>
+          </Card>
+        </View>
+        <View style={styles.record}>
+          <Card>
+            <Body muted style={font.xs}>
+              This year
+            </Body>
+            <Body style={font.lg}>{Math.round(recs.hoursThisYear)}h</Body>
+          </Card>
+        </View>
       </View>
 
       <SectionHeader>Fast lengths</SectionHeader>
@@ -160,6 +182,8 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   screen: { padding: layout.gutter, gap: space[3] },
   row: { flexDirection: 'row', gap: space[2], flexWrap: 'wrap' },
+  records: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2] },
+  record: { flexBasis: '45%', flexGrow: 1 },
   fastRow: {
     minHeight: 64,
     flexDirection: 'row',

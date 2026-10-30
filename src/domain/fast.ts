@@ -66,3 +66,32 @@ export const GOAL_CHOICES: { label: string; goal: Goal | null }[] = [
 export function newId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
+
+export type GoalUnit = 'hours' | 'days';
+
+/** Reads a typed goal such as "36" hours or "4.5" days. Any positive length is fine; there is no upper limit. */
+export function parseDurationGoal(amount: string, unit: GoalUnit): Goal | null {
+  const n = Number(amount.trim().replace(',', '.'));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const ms = Math.round(n * (unit === 'days' ? DAY : HOUR));
+  return { kind: 'duration', ms };
+}
+
+/** A short name for a goal, used for presets and the Start screen: "36h", "5 days", "until Mon 3 Nov". */
+export function goalLabel(goal: Goal | null): string {
+  if (!goal) return 'Open-ended';
+  if (goal.kind === 'until') {
+    const d = new Date(goal.at);
+    return `until ${d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}`;
+  }
+  const hours = goal.ms / HOUR;
+  if (hours >= 48 && hours % 24 === 0) return `${hours / 24} days`;
+  return `${Math.round(hours * 10) / 10}h`;
+}
+
+/** Turns a finished fast into a preset goal, rounded to the hour. */
+export function presetFromFast(fast: Pick<Fast, 'start' | 'end'>, now: number, name?: string): Preset {
+  const hours = Math.max(1, Math.round(((fast.end ?? now) - fast.start) / HOUR));
+  const goal: Goal = { kind: 'duration', ms: hours * HOUR };
+  return { id: newId(), name: name?.trim() || goalLabel(goal), goal };
+}

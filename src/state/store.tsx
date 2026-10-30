@@ -22,6 +22,7 @@ interface Store {
   deleteFast(id: string): Promise<void>;
   replaceAllFasts(fasts: Fast[]): Promise<void>;
   savePreset(preset: Preset): Promise<void>;
+  deletePreset(id: string): Promise<void>;
   addWeight(entry: WeightEntry): Promise<void>;
   addHeight(entry: HeightEntry): Promise<void>;
   updateSettings(patch: Partial<AppSettings>): Promise<void>;
@@ -106,6 +107,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       async savePreset(preset) {
         await db.savePreset(preset);
+        setPresets(await db.listPresets());
+      },
+      async deletePreset(id) {
+        await db.deletePreset(id);
         setPresets(await db.listPresets());
       },
       async addWeight(entry) {

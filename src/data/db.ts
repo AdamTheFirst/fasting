@@ -4,7 +4,7 @@ import type { HeightEntry, WeightEntry } from '../domain/body';
 import type { Fast, Goal, Preset } from '../domain/fast';
 
 /** Everything lives on the phone. No account, no server. */
-let db: SQLite.SQLiteDatabase | null = null;
+let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
 const MIGRATIONS: string[] = [
   `CREATE TABLE fasts (
@@ -22,8 +22,17 @@ const MIGRATIONS: string[] = [
    CREATE TABLE settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);`,
 ];
 
-export async function getDb(): Promise<SQLite.SQLiteDatabase> {
-  if (db) return db;
+// The first screen fires several queries at once, so share one open-and-migrate promise
+// instead of letting each call run the migrations again.
+export function getDb(): Promise<SQLite.SQLiteDatabase> {
+  dbPromise ??= openAndMigrate().catch((e: unknown) => {
+    dbPromise = null;
+    throw e;
+  });
+  return dbPromise;
+}
+
+async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
   const opened = await SQLite.openDatabaseAsync('fasts.db');
   await opened.execAsync('PRAGMA journal_mode = WAL;');
   const row = await opened.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
@@ -33,7 +42,6 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
       await opened.execAsync(`PRAGMA user_version = ${v + 1}`);
     });
   }
-  db = opened;
   return opened;
 }
 
@@ -102,6 +110,10 @@ export async function savePreset(p: Preset): Promise<void> {
     p.name,
     p.goal ? JSON.stringify(p.goal) : null,
   );
+}
+
+export async function deletePreset(id: string): Promise<void> {
+  await (await getDb()).runAsync('DELETE FROM presets WHERE id = ?', id);
 }
 
 export async function listWeights(): Promise<WeightEntry[]> {

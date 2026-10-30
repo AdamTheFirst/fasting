@@ -19,11 +19,14 @@ export function DateTimeField({
   value,
   onChange,
   error,
+  future = false,
 }: {
   label: string;
   value: number;
   onChange: (t: number) => void;
   error?: string | null;
+  /** Pick a time from now on (a goal) instead of one in the past (a record). */
+  future?: boolean;
 }) {
   const c = useColors();
   const [mode, setMode] = useState<'date' | 'time' | null>(null);
@@ -61,7 +64,8 @@ export function DateTimeField({
           value={new Date(value)}
           mode={Platform.OS === 'ios' ? 'datetime' : mode}
           display={Platform.OS === 'ios' ? 'inline' : 'default'}
-          maximumDate={new Date()}
+          maximumDate={future ? undefined : new Date()}
+          minimumDate={future ? new Date() : undefined}
           onChange={handle}
         />
       )}

@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
-import { type Fast, goalReachedAt } from '../domain/fast';
-import { DAY, formatElapsed, formatSpoken } from '../domain/time';
+import { type Fast, goalLabel, goalReachedAt } from '../domain/fast';
+import { DAY, formatDuration, formatElapsed, formatSpoken } from '../domain/time';
 import { font, layout, useColors } from '../theme';
 
 /**
@@ -61,6 +61,11 @@ export function DayRing({ fast, now }: { fast: Fast; now: number }) {
           {elapsed >= DAY ? `Day ${Math.floor(elapsed / DAY) + 1}` : 'Fasting'}
           {goalAt && now >= goalAt ? ' · Goal reached' : ''}
         </Text>
+        {goalAt && now < goalAt ? (
+          <Text style={[font.xs, { color: c.textMuted }]}>
+            {`${fast.goal?.kind === 'until' ? 'Fasting ' : ''}${goalLabel(fast.goal)}${fast.goal?.kind === 'until' ? '' : ' goal'} · ${formatDuration(goalAt - now)} to go`}
+          </Text>
+        ) : null}
       </View>
     </View>
   );
