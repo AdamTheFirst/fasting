@@ -367,7 +367,7 @@ export function SwitchRow({
           value={value}
           onValueChange={onChange}
           trackColor={{ false: c.border, true: c.accentSoft }}
-          thumbColor={value ? c.accent : c.surface}
+          thumbColor={value ? c.accent : c.switchThumbOff}
           ios_backgroundColor={c.border}
         />
       }
@@ -413,7 +413,7 @@ export function Screen({
   const c = useColors();
   const insets = useSafeAreaInsets();
   const header = (
-    <View style={[styles.header, { paddingTop: insets.top + space[3] }]}>
+    <View style={[styles.header, { paddingTop: space[3] }]}>
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.eyebrow}>
           <BrandMark size={14} color={c.accent} bleed={false} />
@@ -426,23 +426,26 @@ export function Screen({
       {right}
     </View>
   );
-  if (!scroll)
-    return (
-      <View style={{ flex: 1, backgroundColor: c.bg }}>
-        {header}
-        <View style={styles.content}>{children}</View>
-      </View>
-    );
+  // The status bar is transparent, so content stops below it instead of scrolling under the clock.
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: c.bg }}
-      contentContainerStyle={{ paddingBottom: space[12] }}
-      keyboardShouldPersistTaps="handled"
-      {...rest}
-    >
-      {header}
-      <View style={styles.content}>{children}</View>
-    </ScrollView>
+    <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: insets.top }}>
+      {scroll ? (
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: space[12] }}
+          keyboardShouldPersistTaps="handled"
+          {...rest}
+        >
+          {header}
+          <View style={styles.content}>{children}</View>
+        </ScrollView>
+      ) : (
+        <>
+          {header}
+          <View style={styles.content}>{children}</View>
+        </>
+      )}
+    </View>
   );
 }
 

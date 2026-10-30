@@ -51,7 +51,10 @@ export function BarChart({
   maxBarWidth = 26,
   emptyText = 'Nothing in this range yet.',
   dayAxis = false,
+  integer = false,
 }: {
+  /** Counts: keep every axis step a whole number. */
+  integer?: boolean;
   /** Values are hours: snap the axis to whole days once it passes 48 h. */
   dayAxis?: boolean;
   bars: readonly Bar[];
@@ -67,13 +70,22 @@ export function BarChart({
   const [selected, setSelected] = useState<string | null>(null);
   const top = Math.max(...bars.map((b) => b.value), average ?? 0, 1);
   // Past 48 h the axis steps in whole days, so it reads 1d 2d 3d 4d rather than 0.8d 1.7d.
-  const max = dayAxis && top > 48 ? Math.ceil(top / 96) * 96 : niceMax(top);
+  const max = dayAxis && top > 48 ? Math.ceil(top / 96) * 96 : niceMax(integer ? Math.max(top, 4) : top);
   const plotW = Math.max(0, width - AXIS_W);
   const slot = bars.length ? plotW / bars.length : 0;
   const barW = Math.max(3, Math.min(maxBarWidth, slot * 0.62));
   const y = (v: number) => height - (v / max) * height;
   const sel = bars.find((b) => b.key === selected);
   const labelEvery = Math.max(1, Math.ceil(bars.length / 6));
+  // Several fasts can start on the same day; label that day once.
+  const shownLabels = new Set<number>();
+  let lastLabel: string | undefined;
+  bars.forEach((b, i) => {
+    if (b.label && i % labelEvery === 0 && b.label !== lastLabel) {
+      shownLabels.add(i);
+      lastLabel = b.label;
+    }
+  });
 
   if (bars.length === 0)
     return (
@@ -144,7 +156,7 @@ export function BarChart({
             </Text>
           ))}
           {bars.map((b, i) =>
-            b.label && i % labelEvery === 0 ? (
+            shownLabels.has(i) ? (
               <Text
                 key={b.key}
                 numberOfLines={1}
@@ -196,7 +208,8 @@ export function LineChart({
 }: {
   points: readonly Point[];
   height?: number;
-  format: (v: number) => string;
+  /** Axis label; by default one decimal when the range is narrow, whole numbers otherwise. */
+  format?: (v: number) => string;
   band?: { min: number; max: number };
   bandLabel?: string;
 }) {
@@ -208,6 +221,7 @@ export function LineChart({
   const pad = Math.max(0.5, (hi0 - lo0) * 0.15);
   const lo = lo0 - pad;
   const hi = hi0 + pad;
+  const label = format ?? ((v: number) => v.toFixed(hi - lo < 6 ? 1 : 0));
   const t0 = points[0]?.t ?? 0;
   const t1 = points.at(-1)?.t ?? 1;
   const plotW = Math.max(0, width - AXIS_W - 8);
@@ -270,7 +284,7 @@ export function LineChart({
             const v = hi - ((hi - lo) / 2) * i;
             return (
               <Text key={i} style={[font.xs, tabular, styles.yLabel, { color: c.textMuted, top: y(v) - 8 }]}>
-                {format(v)}
+                {label(v)}
               </Text>
             );
           })}

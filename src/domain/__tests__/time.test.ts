@@ -1,4 +1,4 @@
-import { DAY, formatDuration, formatElapsed, formatSpoken, HOUR, MINUTE } from '../time';
+import { DAY, formatDuration, formatElapsed, formatShort, formatSpoken, HOUR, MINUTE } from '../time';
 
 describe('formatElapsed', () => {
   it('shows days as days with no cap', () => {
@@ -18,5 +18,13 @@ describe('formatDuration and formatSpoken', () => {
     expect(formatDuration(72 * HOUR + 10 * MINUTE)).toBe('3d 0h 10m');
     expect(formatDuration(16 * HOUR)).toBe('16h 00m');
     expect(formatSpoken(3 * DAY + 4 * HOUR + 1 * MINUTE)).toBe('3 days 4 hours 1 minute');
+  });
+});
+
+describe('formatShort', () => {
+  it('shows minutes under an hour, then hours, then days and hours', () => {
+    expect(formatShort(13 * MINUTE)).toBe('13m');
+    expect(formatShort(16 * HOUR + 5 * MINUTE)).toBe('16h');
+    expect(formatShort(3 * DAY + 4 * HOUR)).toBe('3d 4h');
   });
 });

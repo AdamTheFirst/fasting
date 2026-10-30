@@ -5,7 +5,14 @@ import { formatDuration, HOUR } from '../domain/time';
 import { font, serif, space, tabular, useColors } from '../theme';
 import { Icon } from './Icon';
 
-const hoursLabel = (h: number) => (h >= 48 && h % 24 === 0 ? `${h / 24}d` : `${Math.round(h * 10) / 10}h`);
+/** "12h", "2d", "3d 4h": whole hours, days once past 48 h, so a previous best of 72.2 h reads "3d". */
+const hoursLabel = (h: number) => {
+  if (h < 48) return `${Math.round(h * 10) / 10}h`;
+  const whole = Math.round(h);
+  const d = Math.floor(whole / 24);
+  const rest = whole % 24;
+  return rest ? `${d}d ${rest}h` : `${d}d`;
+};
 
 /**
  * "Along the way": a vertical line of what is likely happening, passed points filled
@@ -60,7 +67,7 @@ export function MilestoneList({
                   style={[
                     font.md,
                     tabular,
-                    { color: c.text, fontFamily: serif, fontWeight: '700', minWidth: 40 },
+                    { color: c.text, fontFamily: serif, fontWeight: '700', width: 58 },
                   ]}
                 >
                   {hoursLabel(m.hours)}

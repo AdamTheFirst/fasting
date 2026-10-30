@@ -28,7 +28,7 @@ import {
   startHours,
   streaks,
 } from '../../domain/stats';
-import { DAY, formatDuration } from '../../domain/time';
+import { DAY, formatDuration, formatShort } from '../../domain/time';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
 import { font, radius, serif, space, tabular, useColors } from '../../theme';
@@ -37,7 +37,6 @@ const shortDate = (t: number) =>
   new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 const dayTime = (t: number) =>
   new Date(t).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' });
-const trimMinutes = (s: string) => s.replace(/ \d+m$/, '');
 
 type Range = 30 | 90 | 365;
 
@@ -122,7 +121,7 @@ export default function HistoryScreen() {
           <Stat label="Fasts" value={`${fastsThisMonth}`} color={c.onHero} mutedColor={c.onHeroMuted} />
           <Stat
             label="Longest ever"
-            value={recs.longest ? trimMinutes(formatDuration(elapsedMs(recs.longest, now))) : '–'}
+            value={recs.longest ? formatShort(elapsedMs(recs.longest, now)) : '–'}
             color={c.onHero}
             mutedColor={c.onHeroMuted}
           />
@@ -161,10 +160,7 @@ export default function HistoryScreen() {
         ]}
       />
 
-      <ChartCard
-        title="Fast lengths"
-        subtitle={avg ? `Average ${trimMinutes(formatDuration(avg * 3_600_000))}` : undefined}
-      >
+      <ChartCard title="Fast lengths" subtitle={avg ? `Average ${formatShort(avg * 3_600_000)}` : undefined}>
         <BarChart
           bars={lengths.map((l) => ({
             key: l.id,
@@ -208,6 +204,7 @@ export default function HistoryScreen() {
             detail: `${String(h).padStart(2, '0')}:00 to ${String(h).padStart(2, '0')}:59 · ${n} ${n === 1 ? 'fast' : 'fasts'}`,
           }))}
           tick={(v) => `${Math.round(v)}`}
+          integer
           height={110}
         />
       </ChartCard>
@@ -234,7 +231,7 @@ export default function HistoryScreen() {
             <Icon name="chevron" size={18} color={c.textFaint} />
           </Pressable>
         ) : (
-          <LineChart points={weights.map((w) => ({ t: w.at, v: w.kg }))} format={(v) => v.toFixed(0)} />
+          <LineChart points={weights.map((w) => ({ t: w.at, v: w.kg }))} />
         )}
       </ChartCard>
 

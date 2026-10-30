@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { DateTimeField } from '../../components/DateTimeField';
 import { HorizonTrack } from '../../components/HorizonTrack';
 import { Icon } from '../../components/Icon';
@@ -25,7 +26,7 @@ import { AUTOPHAGY_NOTE, timeline } from '../../domain/milestones';
 import { shouldShowSafetyCard } from '../../domain/safety';
 import { presetForToday } from '../../domain/settings';
 import { hoursByDay, hoursInRange, longestFast, startOfLocalWeek, streaks, dayKey } from '../../domain/stats';
-import { DAY, formatDuration, formatElapsed, HOUR } from '../../domain/time';
+import { DAY, formatDuration, formatElapsed, formatShort, HOUR } from '../../domain/time';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
 import { font, radius, serif, space, tabular, useColors } from '../../theme';
@@ -252,14 +253,14 @@ function StartFast({
         <Card style={{ flex: 1 }}>
           <Stat
             label="Last fast"
-            value={last ? formatDuration(elapsedMs(last, now)).replace(/ \d+m$/, '') : '–'}
+            value={last ? formatShort(elapsedMs(last, now)) : '–'}
             hint={last ? `ended ${when(last.end!)}` : 'none yet'}
           />
         </Card>
         <Card style={{ flex: 1 }}>
           <Stat
             label="Longest"
-            value={best ? formatDuration(elapsedMs(best, now)).replace(/ \d+m$/, '') : '–'}
+            value={best ? formatShort(elapsedMs(best, now)) : '–'}
             hint={
               best
                 ? new Date(best.start).toLocaleDateString(undefined, {
@@ -429,17 +430,7 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
     disabled: settings.safetyCardDisabled,
     dismissedFastIds: settings.safetyCardDismissedFor,
   });
-  const confirmEnd = () =>
-    Alert.alert(`End this fast at ${formatDuration(elapsedMs(fast, Date.now()))}?`, undefined, [
-      { text: 'Keep going', style: 'cancel' },
-      {
-        text: 'End fast',
-        onPress: () => {
-          onEnded(fast.id);
-          void endFast();
-        },
-      },
-    ]);
+  const [confirming, setConfirming] = useState(false);
 
   const goalLine = goalAt
     ? now >= goalAt
@@ -482,7 +473,7 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
       </Card>
 
       <View style={styles.pair}>
-        <Button label="End fast" size="lg" block onPress={confirmEnd} style={{ flex: 1 }} />
+        <Button label="End fast" size="lg" block onPress={() => setConfirming(true)} style={{ flex: 1 }} />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Change start or goal"
@@ -522,6 +513,19 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
       <Text style={[font.xs, { color: c.textMuted, textAlign: 'center' }]}>
         Turn alerts for any of these on in Settings. Not medical advice.
       </Text>
+      <ConfirmDialog
+        visible={confirming}
+        title={`End this fast at ${formatDuration(elapsed)}?`}
+        message={`Started ${when(fast.start)}. You can change the times afterwards.`}
+        confirmLabel="End fast"
+        cancelLabel="Keep going"
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => {
+          setConfirming(false);
+          onEnded(fast.id);
+          void endFast();
+        }}
+      />
     </Screen>
   );
 }

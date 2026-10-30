@@ -29,6 +29,7 @@ export const colors = {
     danger: '#A3302A',
     onDanger: '#FFFFFF',
     ringTrack: '#E6DFD3',
+    switchThumbOff: '#FFFFFF',
   },
   dark: {
     bg: '#16141A',
@@ -53,6 +54,7 @@ export const colors = {
     danger: '#F08A80',
     onDanger: '#2A0603',
     ringTrack: '#2E2A34',
+    switchThumbOff: '#B3ABA0',
   },
 } as const;
 

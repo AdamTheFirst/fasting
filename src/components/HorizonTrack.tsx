@@ -32,7 +32,8 @@ export function HorizonTrack({
   const [width, setWidth] = useState(0);
   const next = marks.find((m) => !m.passed);
   const span = Math.max(24, elapsedHours * 1.12, next ? next.hours * 1.06 : 0);
-  const pad = 8;
+  // Wide enough for the glow around the now dot at 0h.
+  const pad = 13;
   const x = (h: number) => pad + ((width - pad * 2) * Math.min(h, span)) / span;
   const dayStep = span > 24 * 10 ? Math.ceil(span / 24 / 7) * 24 : span > 48 ? 24 : 6;
   const ticks: number[] = [];

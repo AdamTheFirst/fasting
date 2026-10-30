@@ -39,6 +39,8 @@ npm run ios
 npm start
 ```
 
+`expo run:android` skips prebuild when `android/` already exists, so after a change to `app.config.ts`, the icons or a native package, run `npx expo prebuild -p android` first (then re-add the CMake line below) and build again.
+
 Health Connect on an emulator: use a Google Play system image with API 34 or later (Health Connect is built in), then add a weight in the Health Connect app to see it appear in the weight chart.
 
 ### Building on Windows

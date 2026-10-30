@@ -2,6 +2,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { DateTimeField } from '../../components/DateTimeField';
 import { Body, Button, Card, Chip, SectionHeader, Title } from '../../components/ui';
 import {
@@ -46,18 +47,7 @@ export default function EditFast() {
     router.back();
   };
 
-  const remove = () =>
-    Alert.alert('Delete this fast?', formatDuration((draft.end ?? now) - draft.start), [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteFast(draft.id);
-          router.back();
-        },
-      },
-    ]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const saveAsPreset = async () => {
     const preset = presetFromFast(draft, now);
@@ -155,9 +145,22 @@ export default function EditFast() {
               onPress={() => void saveAsPreset()}
             />
           )}
-          <Button label="Delete" size="sm" variant="danger" onPress={remove} />
+          <Button label="Delete" size="sm" variant="danger" onPress={() => setConfirmDelete(true)} />
         </View>
       )}
+      <ConfirmDialog
+        visible={confirmDelete}
+        title="Delete this fast?"
+        message={`${formatDuration(duration)}. This can't be undone.`}
+        confirmLabel="Delete"
+        destructive
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={async () => {
+          setConfirmDelete(false);
+          await deleteFast(draft.id);
+          router.back();
+        }}
+      />
     </ScrollView>
   );
 }
