@@ -2,7 +2,7 @@
 
 Made 2026-10-30 with the replica-brand method, on angle B from [fixes.md](fixes.md): **a tracker for people who already know how they fast**, with "no cap on length" as the headline proof.
 
-"Fast me" is the working title. The section on names below explains why it should not be the store name.
+**Chosen name: Fastaway** (picked by Salih, 2026-10-30). Store title: "Fastaway: Fasting Tracker". "Fast me" was the working title. The name section below shows how we got there; the first rounds (Fallow, Fast Unbound) are kept for the record.
 
 ## 1. What the big apps sound like
 
@@ -94,7 +94,7 @@ This environment blocks outbound connections to USPTO, EUIPO, WIPO, whois and th
 
 To run these in about 20 minutes: search each name at tmsearch.uspto.gov (classes 9, 42, 44), TMview, and the App Store app on your phone, and try `name.app` at any registrar.
 
-**Recommendation: Fallow**, with Longhaul as the backup if the checks fail. Store name format: "Fallow: Fasting Log" (the subtitle can carry "Long & Intermittent Fasts").
+**First-round recommendation was Fallow** (superseded: Salih wants an English name that starts with "Fast"; see below).
 
 
 ### Revised brief (2026-10-30, from Salih)
@@ -130,9 +130,22 @@ Ruled out: **Fastever** (too close to the existing "Intermittent Fasting FastEr 
 
 Search note: the stores match words in the title and subtitle, so "Fastaway: Fasting Tracker" shows for "fast" and "fasting" either way.
 
+
+### Fastaway: screening checks
+
+| Check | Result |
+| --- | --- |
+| Web: "Fastaway" + fasting app | No fasting app found (2026-10-30) |
+| Web: trademark mentions | No "FASTAWAY" mark surfaced. A **FASTWAY** mark exists ([Justia, serial 79326280](https://trademark.justia.com/793/26/fastway-79326280.html)), held for Fastway Couriers. One letter apart, so a lawyer should confirm its classes don't overlap ours (9, 42, 44) (2026-10-30) |
+| Web: handles | Nothing named Fastaway surfaced on Instagram, TikTok or GitHub in search; exact handle checks to run (2026-10-30) |
+| App Store and Play, exact name | to run |
+| US trademark, classes 9, 42, 44 (tmsearch.uspto.gov) | to run |
+| EU (TMview), Turkey (TÜRKPATENT), WIPO | to run |
+| Domains: fastaway.app, fastaway.com, getfastaway.com | to run |
+
 ## 4. Palette
 
-Everyone in the category reaches for "healthy" hues: greens, teals, bright blue, warm orange and coral. None of that was verified to hex today (the brand sites and stores didn't expose colours to my tools), so check against the real icons. We go elsewhere: **plum on oat**, earthy and quiet, which also fits "Fallow".
+Everyone in the category reaches for "healthy" hues: greens, teals, bright blue, warm orange and coral. None of that was verified to hex today (the brand sites and stores didn't expose colours to my tools), so check against the real icons. We go elsewhere: **plum on oat**, earthy and quiet, nothing like the category's greens, teals and oranges.
 
 | Role | Light | Dark |
 | --- | --- | --- |
@@ -149,9 +162,9 @@ WCAG contrast, every text pair checked (2026-10-30): **0 AA failures**. Lowest i
 
 ## 5. Logo brief
 
-- **Idea:** a horizon that keeps going. Three horizontal strokes like furrows in a resting field, the bottom one longer than the frame, so the mark itself has no end. Ties to "Fallow" and to "no ceiling".
+- **Idea:** a road or horizon that keeps going. One long horizontal stroke that runs off the edge of the frame, with two shorter strokes above it, so the mark itself has no end. "Fast away": you set off and keep going as long as you choose.
 - **Type:** symbol plus wordmark. The symbol alone is the app icon.
-- **Wordmark:** lowercase "fallow", a humanist sans or soft serif, no ligature tricks.
+- **Wordmark:** lowercase "fastaway", a humanist sans or soft serif, no ligature tricks.
 - **Must work** at 16px (favicon: the strokes become three bars) and as a 1024px app icon (plum strokes on oat, or oat on plum).
 - **Deliverables:** SVG master, iOS icon 1024x1024 with no transparency, Android adaptive icon, favicon set (16, 32, 180, 512), social image 1200x630.
 - **Must not resemble:** any ring, circle, clock face, stopwatch or "0". No fork and knife, no leaf, no flame, no body silhouette. Put the drafts next to the Zero, Fastic, BodyFast, Simple and LIFE icons before choosing.
