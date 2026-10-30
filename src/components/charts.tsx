@@ -349,7 +349,7 @@ export function DayGrid({
           width={cell}
           height={cell}
           rx={Math.min(3, cell / 3)}
-          fill={h > 0 ? c.accent : c.surface2}
+          fill={h > 0 ? c.accent : c.border}
           opacity={h > 0 ? 0.25 + 0.75 * Math.min(1, h / 24) : 1}
         />,
       );
@@ -369,7 +369,7 @@ export function DayGrid({
             key={o}
             style={[
               styles.legendBox,
-              { backgroundColor: o ? c.accent : c.surface2, opacity: o ? 0.25 + 0.75 * o : 1 },
+              { backgroundColor: o ? c.accent : c.border, opacity: o ? 0.25 + 0.75 * o : 1 },
             ]}
           />
         ))}
