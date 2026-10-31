@@ -4,7 +4,8 @@ import type { LiveActivityLayout } from 'expo-widgets';
 
 export interface FastActivityProps {
   start: number;
-  goalAt: number | null;
+  goalAt?: number;
+  goalText?: string;
   discreet: boolean;
 }
 
@@ -13,7 +14,10 @@ export interface FastActivityProps {
  * 8 to 12 hours, so for multi-day fasts the widget is the dependable surface; opening the app
  * starts the activity again.
  */
-export default function FastActivity(props: FastActivityProps): LiveActivityLayout {
+// An arrow function in a const, not `export default function FastActivity`: the widgets Babel plugin
+// turns the function into a string, and in development React Refresh still registers the
+// function's name, which then no longer exists and crashes the app on launch.
+const FastActivity = (props: FastActivityProps): LiveActivityLayout => {
   'widget';
   const start = new Date(props.start);
   const elapsed = (
@@ -37,18 +41,14 @@ export default function FastActivity(props: FastActivityProps): LiveActivityLayo
           </Text>
           {elapsed}
         </VStack>
-        {props.goalAt !== null && (
+        {props.goalAt !== undefined && (
           <VStack alignment="trailing" spacing={2}>
             <Text
               modifiers={[font({ size: 13 }), foregroundStyle({ type: 'hierarchical', style: 'secondary' })]}
             >
               Goal
             </Text>
-            <Text
-              date={new Date(props.goalAt)}
-              dateStyle="time"
-              modifiers={[font({ size: 17, weight: 'semibold' })]}
-            />
+            <Text modifiers={[font({ size: 17, weight: 'semibold' })]}>{props.goalText ?? ''}</Text>
           </VStack>
         )}
       </HStack>
@@ -62,4 +62,6 @@ export default function FastActivity(props: FastActivityProps): LiveActivityLayo
     minimal: <Text modifiers={[font({ size: 12, weight: 'bold' })]}>·</Text>,
     expandedCenter: elapsed,
   };
-}
+};
+
+export default FastActivity;
