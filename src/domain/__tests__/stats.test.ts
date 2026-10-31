@@ -7,6 +7,8 @@ import {
   hoursInRange,
   hoursPerWeek,
   longestFast,
+  startHours,
+  averageHours,
   streaks,
 } from '../stats';
 import { DAY, HOUR } from '../time';
@@ -74,5 +76,21 @@ describe('stats', () => {
   it('computes BMI', () => {
     expect(bmi(70, 1.75)).toBeCloseTo(22.86, 2);
     expect(bmi(70, 0)).toBeNull();
+  });
+});
+
+describe('startHours and averageHours', () => {
+  const a = fast(local(2026, 10, 1, 20), local(2026, 10, 2, 12));
+  const b = fast(local(2026, 10, 3, 20), local(2026, 10, 5, 20));
+  const running = fast(local(2026, 10, 6, 8), null);
+  it('counts starts per local hour', () => {
+    const hours = startHours([a, b, running], 0);
+    expect(hours[20]).toBe(2);
+    expect(hours[8]).toBe(1);
+    expect(hours.reduce((x, y) => x + y, 0)).toBe(3);
+  });
+  it('averages finished fasts only', () => {
+    expect(averageHours([a, b, running], 0)).toBeCloseTo((16 + 48) / 2);
+    expect(averageHours([running], 0)).toBe(0);
   });
 });

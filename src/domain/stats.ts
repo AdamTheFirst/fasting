@@ -166,3 +166,17 @@ export function records(fasts: readonly Fast[], streakMinHours: number, now: num
     hoursThisMonth: hoursInRange(fasts, monthStart, now, now),
   };
 }
+
+/** How many fasts started in each local hour of the day, 0 to 23. */
+export function startHours(fasts: readonly Fast[], since: number): number[] {
+  const out = Array.from({ length: 24 }, () => 0);
+  for (const f of fasts) if (f.start >= since) out[new Date(f.start).getHours()]! += 1;
+  return out;
+}
+
+/** Mean length in hours of finished fasts started since `since`, or 0 when there are none. */
+export function averageHours(fasts: readonly Fast[], since: number): number {
+  const done = fasts.filter((f) => f.end !== null && f.start >= since);
+  if (done.length === 0) return 0;
+  return done.reduce((sum, f) => sum + (f.end! - f.start), 0) / done.length / HOUR;
+}

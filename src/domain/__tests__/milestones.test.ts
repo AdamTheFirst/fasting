@@ -1,5 +1,5 @@
 import type { Fast } from '../fast';
-import { customMilestone, DEFAULT_MILESTONE_SETTINGS, planAlerts } from '../milestones';
+import { customMilestone, DEFAULT_MILESTONE_SETTINGS, planAlerts, timeline } from '../milestones';
 import { HOUR } from '../time';
 
 const NOW = Date.UTC(2026, 9, 30, 12);
@@ -73,5 +73,25 @@ describe('customMilestone', () => {
     expect(customMilestone(18, '', 'c3')?.body).toBe('You reached 18h.');
     expect(customMilestone(0.5, '', 'c5')?.title).toBe('30m');
     expect(customMilestone(0, '', 'c4')).toBeNull();
+  });
+});
+
+describe('timeline', () => {
+  it('lists built-in milestones, goal and previous best in hour order with passed flags', () => {
+    const fast: Fast = { ...running, goal: { kind: 'duration', ms: 36 * HOUR } };
+    const marks = timeline(fast, [], 30 * HOUR, NOW);
+    expect(marks.map((m) => m.key)).toEqual(['h12', 'h24', 'best', 'goal', 'h48', 'h72']);
+    expect(marks.every((m) => !m.passed)).toBe(true);
+    const later = timeline(fast, [], 30 * HOUR, NOW + 20 * HOUR);
+    expect(later.filter((m) => m.passed).map((m) => m.key)).toEqual(['h12', 'h24', 'best']);
+  });
+
+  it('leaves out goal and best when there are none', () => {
+    expect(timeline(running, [], 0, NOW).map((m) => m.kind)).toEqual([
+      'milestone',
+      'milestone',
+      'milestone',
+      'milestone',
+    ]);
   });
 });

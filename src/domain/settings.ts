@@ -1,3 +1,4 @@
+import type { Appearance, ThemeId } from '../theme/tokens';
 import { DEFAULT_MILESTONE_SETTINGS, type MilestoneSettings } from './milestones';
 
 /** Everything a fresh install starts with. Nothing is on that the person did not turn on. */
@@ -10,6 +11,8 @@ export interface AppSettings {
   showBmi: boolean;
   /** Optional weekly rhythm: weekday (0 = Monday … 6 = Sunday) to the preset picked on the Start screen that day. */
   weekdayPresets: Partial<Record<number, string>>;
+  theme: ThemeId;
+  appearance: Appearance;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -20,6 +23,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   streakMinHours: 16,
   showBmi: false,
   weekdayPresets: {},
+  theme: 'butter',
+  appearance: 'system',
 };
 
 /** Monday-first weekday index for a local time: 0 = Monday … 6 = Sunday. */
