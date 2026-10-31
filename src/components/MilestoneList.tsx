@@ -4,7 +4,7 @@ import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { TimelineMark } from '../domain/milestones';
 import { phaseAt } from '../domain/phases';
 import { formatShort, HOUR } from '../domain/time';
-import { font, inkBorder, medium, phaseColor, radius, space, tabular, useColors } from '../theme';
+import { font, medium, phaseColor, radius, space, tabular, useColors } from '../theme';
 
 /** "12h", "2d", "3d 4h": days once past 48 h, so a previous best of 72.2 h reads "3d". */
 const hoursLabel = (h: number) => {
@@ -64,19 +64,19 @@ export function MilestoneList({
               <View
                 style={[
                   styles.cell,
-                  { backgroundColor: m.passed ? c.period : c.surface2 },
-                  isNext && { backgroundColor: c.surface, borderWidth: inkBorder, borderColor: c.text },
+                  { backgroundColor: m.passed ? c.accentStrong : c.surface2 },
+                  isNext && { backgroundColor: c.primary },
                 ]}
               >
                 <Text
                   numberOfLines={1}
                   adjustsFontSizeToFit
-                  style={[font.xs, medium, tabular, { color: m.passed ? c.onPeriod : c.text }]}
+                  style={[font.xs, medium, tabular, { color: isNext ? c.onPrimary : c.text }]}
                 >
                   {hoursLabel(m.hours)}
                 </Text>
               </View>
-              <View style={[styles.swatch, { backgroundColor: dot, borderColor: c.text }]} />
+              <View style={[styles.swatch, { backgroundColor: dot }]} />
               <Text
                 numberOfLines={1}
                 style={[font.sm, medium, { color: m.passed || isNext ? c.text : c.textMuted, flex: 1 }]}
@@ -111,16 +111,16 @@ export function MilestoneList({
 }
 
 const styles = StyleSheet.create({
-  row: { paddingVertical: space[2], gap: space[2] },
+  row: { paddingVertical: space[3], gap: space[2], minHeight: 56, justifyContent: 'center' },
   head: { flexDirection: 'row', alignItems: 'center', gap: space[3] },
   cell: {
     width: 52,
     height: 36,
-    borderRadius: radius.md - 2,
+    borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  swatch: { width: 10, height: 10, borderRadius: 3, borderWidth: 1 },
+  swatch: { width: 10, height: 10, borderRadius: 5 },
   body: { paddingLeft: 52 + space[3], gap: 4 },
 });

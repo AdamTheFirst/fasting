@@ -13,6 +13,8 @@ interface Base {
   ink: string;
   muted: string;
   accent: string;
+  /** A deeper take on the accent for strokes and bars that must read on white. */
+  accentStrong: string;
   period: string;
   rule: string;
   hatch: string;
@@ -54,7 +56,13 @@ function roles(b: Base, dark: boolean) {
     textFaint: mix(b.muted, b.surface, dark ? 0.25 : 0.2),
     accent: b.accent,
     accentSubtle: mix(b.surface, b.accent, dark ? 0.22 : 0.45),
+    accentStrong: b.accentStrong,
     onAccent: dark ? b.bg : b.ink,
+    /** The main action: an ink pill with the background colour as its label. */
+    primary: b.ink,
+    onPrimary: dark ? b.bg : b.surface,
+    /** Card shadow; dark mode leans on the lighter surface instead. */
+    shadow: dark ? 'transparent' : b.ink,
     period: b.period,
     periodSubtle: mix(b.surface, b.period, dark ? 0.25 : 0.16),
     onPeriod: dark ? b.bg : b.ink,
@@ -74,6 +82,7 @@ const base: Record<ThemeId, { light: Base; dark: Base }> = {
       ink: '#1B2029',
       muted: '#596170',
       accent: '#F3E3A6',
+      accentStrong: '#EACF74',
       period: '#B17B8E',
       rule: '#E4E4E5',
       hatch: '#BDC0C6',
@@ -84,6 +93,7 @@ const base: Record<ThemeId, { light: Base; dark: Base }> = {
       ink: '#EBE9E4',
       muted: '#9DA5B5',
       accent: '#D4C590',
+      accentStrong: '#D9C06A',
       period: '#B1798D',
       rule: '#3A3E46',
       hatch: '#535965',
@@ -96,6 +106,7 @@ const base: Record<ThemeId, { light: Base; dark: Base }> = {
       ink: '#141D18',
       muted: '#55645B',
       accent: '#CFE3D3',
+      accentStrong: '#8BB898',
       period: '#B77672',
       rule: '#E3E4E3',
       hatch: '#BBC1BD',
@@ -106,6 +117,7 @@ const base: Record<ThemeId, { light: Base; dark: Base }> = {
       ink: '#E7EAE6',
       muted: '#97A89E',
       accent: '#B8C9BB',
+      accentStrong: '#9CC4A8',
       period: '#BA7671',
       rule: '#37403A',
       hatch: '#4F5C54',
@@ -118,6 +130,7 @@ const base: Record<ThemeId, { light: Base; dark: Base }> = {
       ink: '#16202C',
       muted: '#576171',
       accent: '#C9DDF2',
+      accentStrong: '#82AAD8',
       period: '#B57C5C',
       rule: '#E3E4E6',
       hatch: '#BCC0C6',
@@ -128,6 +141,7 @@ const base: Record<ThemeId, { light: Base; dark: Base }> = {
       ink: '#E6EAEF',
       muted: '#9BA6B7',
       accent: '#B6C7DA',
+      accentStrong: '#96B7DD',
       period: '#B67B59',
       rule: '#393F48',
       hatch: '#525A66',
@@ -151,7 +165,7 @@ export const themes: Record<ThemeId, { name: string; light: ColorRoles; dark: Co
 export const colors = themes.butter;
 
 export const space = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40, 12: 48 } as const;
-export const radius = { sm: 8, md: 12, lg: 16, xl: 20, full: 9999 } as const;
+export const radius = { sm: 10, md: 14, lg: 20, xl: 24, full: 9999 } as const;
 
 /** The Periodiary type scale: 13/16, 15/20, 17/24, 22/28, 28/36, 40/44, plus 20/26 for card titles. */
 export const font = {
@@ -162,10 +176,14 @@ export const font = {
   xl: { fontSize: 22, lineHeight: 28 },
   '2xl': { fontSize: 28, lineHeight: 36 },
   display: { fontSize: 40, lineHeight: 44 },
+  /** Screen titles, iOS large-title size. */
+  title: { fontSize: 34, lineHeight: 41 },
+  /** The running clock in the dial. */
+  timer: { fontSize: 56, lineHeight: 62 },
 } as const;
 
-/** Weights stop at 600. Titles and big numbers get a slightly tighter track. */
-export const strong = { fontWeight: '600' as const, letterSpacing: -0.4 };
+/** Titles and big numbers: heavier and tighter, the way large type is set on iOS. */
+export const strong = { fontWeight: '700' as const, letterSpacing: -0.6 };
 export const bold = { fontWeight: '600' as const };
 export const medium = { fontWeight: '500' as const };
 
@@ -175,4 +193,11 @@ export const tabular = { fontVariant: ['tabular-nums' as const] };
 /** Periodiary's emphasis border for pastel parts that must stand out. */
 export const inkBorder = 2;
 
-export const layout = { gutter: 20, minTapTarget: 44 } as const;
+export const layout = { gutter: 20, minTapTarget: 56 } as const;
+
+/** One soft, wide shadow for cards. Nothing else casts one. */
+export const elevation = {
+  shadowOpacity: 0.06,
+  shadowRadius: 18,
+  shadowOffset: { width: 0, height: 6 },
+} as const;

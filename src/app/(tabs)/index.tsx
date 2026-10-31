@@ -1,26 +1,15 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { type ReactNode, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { DateTimeField } from '../../components/DateTimeField';
-import { HourStrip } from '../../components/HourStrip';
+import { FastDial } from '../../components/FastDial';
 import { Icon } from '../../components/Icon';
 import { MilestoneBanner, useJustPassed } from '../../components/MilestoneBanner';
 import { MilestoneList } from '../../components/MilestoneList';
 import { SafetyCard } from '../../components/SafetyCard';
-import {
-  Badge,
-  Body,
-  Button,
-  Card,
-  Chip,
-  Screen,
-  SectionHeader,
-  Segmented,
-  Stat,
-  Title,
-} from '../../components/ui';
+import { Body, Button, Card, Screen, SectionHeader, Segmented, Stat, Title } from '../../components/ui';
 import {
   elapsedMs,
   type Fast,
@@ -43,8 +32,8 @@ import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
 import {
   bold,
+  elevation,
   font,
-  inkBorder,
   medium,
   phaseColor,
   radius,
@@ -175,12 +164,18 @@ function StartFast({
   const weekHours = hoursInRange(fasts, startOfLocalWeek(now), now, now);
   const streak = streaks(fasts, settings.streakMinHours, now).current;
   const last = fasts.filter((f) => f.end !== null).sort((a, b) => b.end! - a.end!)[0];
-  const goalH = goal ? goalHoursOf(goal, now) : null;
 
   const plannedEnd = goal ? (goal.kind === 'until' ? goal.at : now + goal.ms) : null;
 
   return (
-    <Screen title="Today" right={<HeaderDate now={now} />}>
+    <Screen
+      title="Today"
+      eyebrow={new Date(now).toLocaleDateString(undefined, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      })}
+    >
       {justEnded && (
         <EndedCard
           fast={justEnded}
@@ -191,53 +186,39 @@ function StartFast({
       )}
 
       <Card style={styles.hero}>
-        <View style={styles.headline}>
-          <Text
-            adjustsFontSizeToFit
-            numberOfLines={1}
-            style={[font.display, strong, tabular, { color: c.text, flexShrink: 1 }]}
-          >
-            {goalWords(goal)}
-          </Text>
-          <Text style={[font.md, { color: c.textMuted }]}>{goal ? 'goal' : ''}</Text>
+        <FastDial progress={null}>
+          <GoalCenter goal={goal} />
+        </FastDial>
+        <View style={[styles.factRow, { borderTopColor: c.border }]}>
+          <Fact label="Start" value="Now" />
+          <View style={[styles.factDivider, { backgroundColor: c.border }]} />
+          <Fact
+            label={plannedEnd ? 'Ends around' : 'Ends'}
+            value={plannedEnd ? when(plannedEnd) : 'When you choose'}
+          />
         </View>
-        <HourStrip elapsedHours={null} goalHours={goalH} />
-        <View style={styles.planRow}>
-          <Badge label={goal ? 'Plan' : 'Open'} tone="estimate" />
-          <Text style={[font.sm, { color: c.text, flex: 1 }]}>
-            {plannedEnd
-              ? `Ends around ${when(plannedEnd)} if you start now`
-              : 'No end time. Stop when you choose.'}
-          </Text>
-        </View>
-        {last ? (
-          <Text style={[font.xs, { color: c.textMuted }]}>
-            Last fast {formatShort(elapsedMs(last, now))}, ended{' '}
-            {new Date(last.end!).toLocaleDateString(undefined, { weekday: 'long' })}
-          </Text>
-        ) : null}
       </Card>
 
-      <Button
-        label="Start fasting"
-        size="lg"
-        block
-        disabled={isCustom && !customGoal}
-        onPress={() => void startFast(goal, presetId)}
-      />
-
       <SectionHeader>Goal</SectionHeader>
-      <View style={styles.row} accessibilityRole="radiogroup">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        accessibilityRole="radiogroup"
+        style={styles.tilesScroll}
+        contentContainerStyle={styles.tiles}
+      >
         {choices.map((ch) => (
-          <Chip
+          <GoalTile
             key={ch.key}
-            label={ch.presetId && ch.presetId === todays ? `${ch.label} · today` : ch.label}
+            label={ch.label}
+            goal={ch.goal}
+            today={ch.presetId !== null && ch.presetId === todays}
             selected={ch.key === selectedKey}
             onPress={() => setPicked(ch.key)}
           />
         ))}
-        <Chip label="Custom" selected={isCustom} onPress={() => setPicked(CUSTOM)} />
-      </View>
+        <GoalTile label="Custom" custom selected={isCustom} onPress={() => setPicked(CUSTOM)} />
+      </ScrollView>
 
       {isCustom && (
         <Card>
@@ -253,7 +234,7 @@ function StartFast({
           {customKind === 'until' ? (
             <DateTimeField label="Fast until" value={customUntil} onChange={setCustomUntil} future />
           ) : (
-            <View style={[styles.amountWrap, { borderColor: c.borderInput, backgroundColor: c.surface }]}>
+            <View style={[styles.amountWrap, { backgroundColor: c.surface2 }]}>
               <TextInput
                 accessibilityLabel={`Goal in ${customKind}`}
                 placeholder={customKind === 'hours' ? '36' : '5'}
@@ -283,12 +264,24 @@ function StartFast({
         </Card>
       )}
 
+      <Button
+        label={startLabel(goal)}
+        size="lg"
+        block
+        disabled={isCustom && !customGoal}
+        onPress={() => void startFast(goal, presetId)}
+      />
+      {last ? (
+        <Text style={[font.xs, { color: c.textMuted, textAlign: 'center' }]}>
+          Last fast {formatShort(elapsedMs(last, now))}, ended{' '}
+          {new Date(last.end!).toLocaleDateString(undefined, { weekday: 'long' })}
+        </Text>
+      ) : null}
+
       <SectionHeader
         action={
           <Pressable accessibilityRole="link" onPress={() => router.push('/history')} hitSlop={8}>
-            <Text key={c.text} style={[font.sm, { color: c.text, textDecorationLine: 'underline' }]}>
-              History
-            </Text>
+            <Text style={[font.sm, { color: c.textMuted, fontWeight: '600' }]}>See all</Text>
           </Pressable>
         }
       >
@@ -296,8 +289,9 @@ function StartFast({
       </SectionHeader>
       <Card>
         <WeekCells days={week} />
-        <View style={styles.weekStats}>
+        <View style={[styles.factRow, { borderTopColor: c.border }]}>
           <Stat label="Fasted this week" value={`${Math.round(weekHours)}`} unit="hours" />
+          <View style={[styles.factDivider, { backgroundColor: c.border }]} />
           <Stat
             label={`Streak at ${settings.streakMinHours}h or more`}
             value={`${streak}`}
@@ -314,16 +308,7 @@ function StartFast({
   );
 }
 
-function HeaderDate({ now }: { now: number }) {
-  const c = useColors();
-  return (
-    <Text style={[font.sm, { color: c.textMuted, paddingBottom: 6 }]}>
-      {new Date(now).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}
-    </Text>
-  );
-}
-
-/** The week as rounded day cells, like Periodiary's calendar: fasted days solid, today ringed. */
+/** The week as seven bars, each filled by the hours fasted that day (a full bar is 24 hours). */
 function WeekCells({
   days,
 }: {
@@ -333,7 +318,7 @@ function WeekCells({
   return (
     <View style={styles.week}>
       {days.map((d, i) => {
-        const fasted = d.hours >= 1;
+        const share = Math.min(1, d.hours / 24);
         return (
           <View
             key={i}
@@ -341,32 +326,146 @@ function WeekCells({
             accessible
             accessibilityLabel={`${d.letter} ${d.date}: ${Math.round(d.hours)} hours${d.today ? ', today' : ''}`}
           >
-            <Text style={[font.xs, { color: c.textMuted }]}>{d.letter}</Text>
+            <Text style={[font.xs, tabular, { color: c.textMuted, fontWeight: '600' }]}>
+              {d.hours >= 1 ? `${Math.round(d.hours)}h` : ' '}
+            </Text>
             <View
               style={[
-                styles.dayCell,
-                { backgroundColor: fasted ? c.period : d.future ? 'transparent' : c.surface2 },
-                d.today && { borderWidth: inkBorder, borderColor: c.text },
+                styles.barTrack,
+                d.future
+                  ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.borderInput }
+                  : { backgroundColor: c.surface2 },
               ]}
             >
-              <Text
-                style={[
-                  font.sm,
-                  medium,
-                  tabular,
-                  { color: fasted ? c.onPeriod : d.future ? c.textMuted : c.text },
-                ]}
-              >
-                {d.date}
+              {!d.future && share > 0 ? (
+                <View
+                  style={[
+                    styles.barFill,
+                    { height: `${Math.max(14, share * 100)}%`, backgroundColor: c.accentStrong },
+                  ]}
+                />
+              ) : null}
+            </View>
+            <View style={[styles.dayLetter, d.today && { backgroundColor: c.primary }]}>
+              <Text style={[font.xs, { color: d.today ? c.onPrimary : c.textMuted, fontWeight: '600' }]}>
+                {d.letter}
               </Text>
             </View>
-            <Text style={[font.xs, tabular, { color: c.textMuted }]}>
-              {fasted ? `${Math.round(d.hours)}h` : ' '}
-            </Text>
           </View>
         );
       })}
     </View>
+  );
+}
+
+const goalParts = (goal: Goal | null) => /^(\d+(?:\.\d+)?) (hours|days)$/.exec(goalWords(goal));
+
+/** "Start 16 hour fast", "Start fasting": the button says what will happen. */
+function startLabel(goal: Goal | null): string {
+  const m = goalParts(goal);
+  if (m) return `Start ${m[1]} ${m[2] === 'hours' ? 'hour' : 'day'} fast`;
+  return 'Start fasting';
+}
+
+/** The goal in the middle of an idle dial: "16 hours", "3 days", or open. */
+function GoalCenter({ goal }: { goal: Goal | null }) {
+  const c = useColors();
+  const words = goalWords(goal);
+  const m = goalParts(goal);
+  return (
+    <View style={{ alignItems: 'center', gap: 2 }} accessible accessibilityLabel={`Goal: ${words}`}>
+      <Text style={[font.xs, styles.kicker, { color: c.textMuted }]}>{goal ? 'GOAL' : 'NO END TIME'}</Text>
+      {m ? (
+        <Text style={[font.timer, strong, tabular, { color: c.text, letterSpacing: -2 }]}>
+          {m[1]}
+          <Text style={[font.xl, { color: c.textMuted, letterSpacing: 0, fontWeight: '600' }]}> {m[2]}</Text>
+        </Text>
+      ) : (
+        <Text
+          adjustsFontSizeToFit
+          numberOfLines={2}
+          style={[font['2xl'], strong, { color: c.text, textAlign: 'center' }]}
+        >
+          {words}
+        </Text>
+      )}
+      <Text style={[font.sm, { color: c.textMuted, textAlign: 'center' }]}>
+        {goal ? 'No upper limit' : 'Stop whenever you like'}
+      </Text>
+    </View>
+  );
+}
+
+/** A label over a value, in a card's fact row. */
+function Fact({ label, value }: { label: string; value: string }) {
+  const c = useColors();
+  return (
+    <View style={{ flex: 1, gap: 2 }} accessible accessibilityLabel={`${label}: ${value}`}>
+      <Text style={[font.xs, medium, { color: c.textMuted }]}>{label}</Text>
+      <Text numberOfLines={1} adjustsFontSizeToFit style={[font.md, bold, tabular, { color: c.text }]}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+/** A square goal choice: the number big, the unit small. */
+function GoalTile({
+  label,
+  goal = null,
+  today,
+  custom,
+  selected,
+  onPress,
+}: {
+  label: string;
+  goal?: Goal | null;
+  today?: boolean;
+  custom?: boolean;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const c = useColors();
+  const fg = selected ? c.onPrimary : c.text;
+  const sub = selected ? c.onPrimary : c.textMuted;
+  const m = custom ? null : goalParts(goal);
+  let big: ReactNode;
+  let small: string;
+  if (custom) {
+    big = <Icon name="plus" size={26} color={fg} />;
+    small = 'Custom';
+  } else if (!goal) {
+    big = <Text style={[font['2xl'], strong, { color: fg }]}>∞</Text>;
+    small = 'Open';
+  } else if (m) {
+    big = <Text style={[font['2xl'], strong, tabular, { color: fg }]}>{m[1]}</Text>;
+    small = m[2] ?? '';
+  } else {
+    big = (
+      <Text numberOfLines={1} adjustsFontSizeToFit style={[font.md, bold, { color: fg }]}>
+        {label}
+      </Text>
+    );
+    small = 'Preset';
+  }
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityLabel={`${custom ? 'Custom goal' : label}${today ? ', today' : ''}`}
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.tile,
+        selected
+          ? { backgroundColor: c.primary }
+          : { backgroundColor: c.surface, ...elevation, shadowColor: c.shadow },
+        pressed && { transform: [{ scale: 0.96 }] },
+      ]}
+    >
+      <View style={styles.tileBig}>{big}</View>
+      <Text style={[font.xs, medium, { color: sub }]}>{small}</Text>
+      {today ? <View style={[styles.todayDot, { backgroundColor: selected ? c.accent : c.period }]} /> : null}
+    </Pressable>
   );
 }
 
@@ -378,10 +477,8 @@ function PhaseSwatch({ phase, size = 14 }: { phase: PhaseKey; size?: number }) {
       style={{
         width: size,
         height: size,
-        borderRadius: size / 3.5,
+        borderRadius: size / 2,
         backgroundColor: phaseColor(c, phase),
-        borderWidth: 1.5,
-        borderColor: c.text,
       }}
     />
   );
@@ -453,6 +550,15 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
   const day = Math.floor(elapsed / DAY) + 1;
   const phase = phaseAt(elapsedHours);
   const next = marks.find((m) => !m.passed);
+  // The ring is the goal; open-ended fasts go round once a day.
+  const ringHours = goalH ?? 24;
+  const lapStart = goalH ? 0 : Math.floor(elapsedHours / 24) * 24;
+  const ring = {
+    progress: goalH ? elapsedHours / goalH : (elapsedHours - lapStart) / 24,
+    marks: marks
+      .filter((m) => m.hours > lapStart && m.hours < lapStart + ringHours)
+      .map((m) => ({ at: (m.hours - lapStart) / ringHours, passed: m.passed })),
+  };
 
   const showCard = shouldShowSafetyCard(fast, now, {
     disabled: settings.safetyCardDisabled,
@@ -462,46 +568,49 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
   // Under a day the seconds tick, set smaller so the hours and minutes stay the headline.
   const [, timerMain = '', timerSeconds] = /^(.*?)(?: (\d+s))?$/.exec(formatElapsed(elapsed)) ?? [];
 
-  const goalLine = goalAt
-    ? now >= goalAt
-      ? `Goal reached ${when(goalAt)}. Everything now is extra.`
-      : `Done around ${when(goalAt)}, ${formatShort(goalAt - now)} to go`
-    : 'Open-ended. Stop when you choose.';
-
   return (
     <Screen title={elapsed >= DAY ? `Day ${day}` : 'Fasting'} eyebrow={`Since ${when(fast.start)}`}>
       {justPassed && <MilestoneBanner mark={justPassed} onClose={closeBanner} />}
 
       <Card style={styles.hero}>
-        <View style={styles.headline} accessible accessibilityLabel={`Fasting ${formatElapsed(elapsed)}`}>
-          <Text
-            adjustsFontSizeToFit
-            numberOfLines={1}
-            style={[font.display, strong, tabular, { color: c.text }]}
+        <FastDial progress={ring.progress} marks={ring.marks}>
+          <View
+            style={{ alignItems: 'center', gap: 2 }}
+            accessible
+            accessibilityLabel={`Fasting ${formatElapsed(elapsed)}`}
           >
-            {timerMain}
-          </Text>
-          {timerSeconds ? (
-            <Text style={[font.md, tabular, { color: c.textMuted, width: 34 }]}>{timerSeconds}</Text>
-          ) : null}
-          <Text style={[font.md, { color: c.textMuted }]}>
-            {goalH ? `of ${goalWords(fast.goal).replace(/^Until /, 'until ')}` : 'fasted'}
-          </Text>
+            <Text style={[font.xs, styles.kicker, { color: c.textMuted }]}>
+              {goalAt && now >= goalAt
+                ? 'GOAL REACHED'
+                : goalH
+                  ? `${goalWords(fast.goal)} goal`.toUpperCase()
+                  : 'OPEN-ENDED'}
+            </Text>
+            <Text
+              adjustsFontSizeToFit
+              numberOfLines={1}
+              style={[font.timer, strong, tabular, { color: c.text, letterSpacing: -2 }]}
+            >
+              {timerMain}
+            </Text>
+            <Text style={[font.sm, tabular, { color: c.textMuted }]}>
+              {timerSeconds ? `${timerSeconds} · ` : ''}
+              {goalAt && now < goalAt ? `${formatShort(goalAt - now)} to go` : `day ${day}`}
+            </Text>
+          </View>
+        </FastDial>
+        <View style={[styles.phasePill, { backgroundColor: c.surface2 }]}>
+          <PhaseSwatch phase={phase.key} size={10} />
+          <Text style={[font.sm, bold, { color: c.text }]}>{phase.label}</Text>
+          <Text style={[font.xs, { color: c.textMuted }]}>likely phase now</Text>
         </View>
-        <HourStrip elapsedHours={elapsedHours} goalHours={goalH} />
-        <View style={styles.planRow}>
-          <Badge
-            label={goalAt && now >= goalAt ? 'Done' : 'Goal'}
-            tone={goalAt && now >= goalAt ? 'accent' : 'estimate'}
+        <View style={[styles.factRow, { borderTopColor: c.border }]}>
+          <Fact label="Started" value={when(fast.start)} />
+          <View style={[styles.factDivider, { backgroundColor: c.border }]} />
+          <Fact
+            label={goalAt ? (now >= goalAt ? 'Goal reached' : 'Goal') : 'Goal'}
+            value={goalAt ? when(goalAt) : 'Open-ended'}
           />
-          <Text style={[font.sm, { color: c.text, flex: 1 }]}>{goalLine}</Text>
-        </View>
-        <View style={[styles.phaseRow, styles.phaseNow, { borderTopColor: c.border }]}>
-          <PhaseSwatch phase={phase.key} />
-          <Text style={[font.sm, { color: c.text, flex: 1 }]}>
-            <Text style={bold}>{phase.label}</Text>
-            <Text style={{ color: c.textMuted }}> · likely phase right now</Text>
-          </Text>
         </View>
       </Card>
 
@@ -520,7 +629,6 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
               styles.nextIcon,
               {
                 backgroundColor: next.kind === 'goal' ? c.accent : phaseColor(c, phaseAt(next.hours).key),
-                borderColor: c.text,
               },
             ]}
           >
@@ -584,39 +692,65 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: space[4], paddingVertical: space[5] },
-  headline: { flexDirection: 'row', alignItems: 'baseline', gap: space[2], flexWrap: 'wrap' },
-  planRow: { flexDirection: 'row', alignItems: 'center', gap: space[3] },
+  hero: { gap: space[5], paddingTop: space[6], paddingBottom: space[5], alignItems: 'stretch' },
+  kicker: { fontWeight: '700', letterSpacing: 1.2 },
+  factRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[4],
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: space[4],
+  },
+  factDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
+  phasePill: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[2],
+    borderRadius: radius.full,
+    paddingHorizontal: space[4],
+    paddingVertical: space[2],
+  },
   phaseRow: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
-  phaseNow: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: space[3] },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2], alignItems: 'center' },
   rowBetween: { flexDirection: 'row', gap: space[3], alignItems: 'center' },
+  tilesScroll: { marginHorizontal: -20, marginVertical: -space[3] },
+  tiles: { gap: space[3], paddingHorizontal: 20, paddingVertical: space[3] },
+  tile: {
+    width: 84,
+    height: 92,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  tileBig: { height: 36, justifyContent: 'center', alignItems: 'center', paddingHorizontal: space[2] },
+  todayDot: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 4 },
   amountWrap: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: space[2],
     borderRadius: radius.md,
-    borderWidth: 1,
     paddingHorizontal: space[4],
     paddingVertical: space[2],
   },
   amount: { flex: 1, paddingVertical: 0 },
-  weekStats: { flexDirection: 'row', gap: space[4] },
   week: { flexDirection: 'row', justifyContent: 'space-between' },
-  weekCol: { alignItems: 'center', gap: 6, flex: 1 },
-  dayCell: {
+  weekCol: { alignItems: 'center', gap: space[2], flex: 1 },
+  barTrack: {
+    width: 26,
+    height: 84,
+    borderRadius: 13,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+  },
+  barFill: { width: '100%', borderRadius: 13 },
+  dayLetter: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  nextCard: { flexDirection: 'row', gap: space[3], alignItems: 'flex-start' },
+  nextIcon: {
     width: 40,
     height: 40,
     borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nextCard: { flexDirection: 'row', gap: space[3], alignItems: 'flex-start' },
-  nextIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.sm,
-    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },

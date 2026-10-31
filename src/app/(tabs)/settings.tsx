@@ -81,19 +81,17 @@ function ThemeRow({ id, selected, onPress }: { id: ThemeId; selected: boolean; o
       onPress={onPress}
       style={({ pressed }) => [styles.themeRow, pressed && { backgroundColor: c.surface2 }]}
     >
-      <View style={[styles.preview, { backgroundColor: t.bg, borderColor: c.border }]}>
-        <View style={[styles.previewBar, { backgroundColor: t.accent, borderColor: t.onAccent }]} />
-        <View style={styles.previewDots}>
-          <View style={[styles.previewDot, { backgroundColor: t.period }]} />
-          <View
-            style={[styles.previewDot, { backgroundColor: t.surface, borderColor: t.text, borderWidth: 1.5 }]}
-          />
-        </View>
+      <View style={[styles.preview, { backgroundColor: t.accent }]}>
+        <View style={[styles.previewDot, { backgroundColor: t.accentStrong }]} />
       </View>
       <Text style={[font.md, { color: c.text, flex: 1, fontWeight: '500' }]}>{themes[id].name}</Text>
-      {selected ? <Text style={[font.sm, { color: c.textMuted }]}>In use</Text> : null}
-      <View style={[styles.radio, { borderColor: selected ? c.text : c.textMuted }]}>
-        {selected ? <View style={[styles.radioDot, { backgroundColor: c.text }]} /> : null}
+      <View
+        style={[
+          styles.radio,
+          selected ? { backgroundColor: c.primary, borderColor: c.primary } : { borderColor: c.borderInput },
+        ]}
+      >
+        {selected ? <Icon name="check" size={16} color={c.onPrimary} /> : null}
       </View>
     </Pressable>
   );
@@ -116,11 +114,7 @@ function MeasureInput({
   return (
     <View style={styles.inline}>
       <TextInput
-        style={[
-          font.md,
-          styles.input,
-          { color: c.text, borderColor: c.borderInput, backgroundColor: c.surface },
-        ]}
+        style={[font.md, styles.input, { color: c.text, backgroundColor: c.surface2 }]}
         value={value}
         onChangeText={setValue}
         placeholder={`New ${label.toLowerCase()} (${unit})`}
@@ -237,11 +231,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const input = [
-    font.md,
-    styles.input,
-    { color: c.text, borderColor: c.borderInput, backgroundColor: c.surface },
-  ];
+  const input = [font.md, styles.input, { color: c.text, backgroundColor: c.surface2 }];
   return (
     <Screen title="Settings">
       <SectionHeader>Theme</SectionHeader>
@@ -487,10 +477,9 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     minWidth: 0,
-    height: 44,
-    borderWidth: 1,
+    height: 48,
     borderRadius: radius.md,
-    paddingHorizontal: space[3],
+    paddingHorizontal: space[4],
   },
   themeRow: {
     flexDirection: 'row',
@@ -500,15 +489,13 @@ const styles = StyleSheet.create({
     paddingVertical: space[3],
     minHeight: 64,
   },
-  preview: { width: 44, height: 40, borderRadius: radius.sm, borderWidth: 1, padding: 5, gap: 4 },
-  previewBar: { height: 10, borderRadius: 3, borderWidth: 1 },
-  previewDots: { flexDirection: 'row', gap: 4 },
-  previewDot: { width: 12, height: 12, borderRadius: 3 },
+  preview: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  previewDot: { width: 14, height: 14, borderRadius: 7 },
   radio: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    borderWidth: 2,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },

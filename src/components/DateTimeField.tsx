@@ -49,11 +49,11 @@ export function DateTimeField({
         style={{
           height: 48,
           borderRadius: radius.md,
-          borderWidth: 1,
-          borderColor: error ? c.danger : c.borderInput,
-          backgroundColor: c.surface,
+          borderWidth: error ? 1.5 : 0,
+          borderColor: c.danger,
+          backgroundColor: c.surface2,
           justifyContent: 'center',
-          paddingHorizontal: space[3],
+          paddingHorizontal: space[4],
         }}
       >
         <Text style={[font.md, { color: c.text }]}>{fmt(value)}</Text>

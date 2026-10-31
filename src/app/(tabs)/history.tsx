@@ -21,7 +21,7 @@ import {
 import { DAY, formatDuration, formatShort } from '../../domain/time';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
-import { bold, font, inkBorder, radius, space, strong, tabular, useColors } from '../../theme';
+import { bold, elevation, font, radius, space, strong, tabular, useColors } from '../../theme';
 
 const shortDate = (t: number) =>
   new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
@@ -60,9 +60,13 @@ export default function HistoryScreen() {
       accessibilityRole="button"
       accessibilityLabel="Add a past fast"
       onPress={() => router.push('/fast/new')}
-      style={[styles.headerBtn, { backgroundColor: c.accent, borderColor: c.onAccent }]}
+      style={({ pressed }) => [
+        styles.headerBtn,
+        { backgroundColor: c.primary },
+        pressed && { opacity: 0.75 },
+      ]}
     >
-      <Icon name="plus" color={c.onAccent} />
+      <Icon name="plus" color={c.onPrimary} />
     </Pressable>
   );
 
@@ -128,9 +132,9 @@ export default function HistoryScreen() {
       </Card>
 
       <View style={styles.legend}>
-        <LegendCell color={c.period} label="12h or more" />
-        <LegendCell color={c.periodSubtle} label="Shorter" />
-        <LegendCell color={c.surface} label="Today" ring />
+        <LegendCell color={c.accentStrong} label="12h or more" />
+        <LegendCell color={c.accentSubtle} label="Shorter" />
+        <LegendCell color="transparent" label="No fast" />
       </View>
 
       <SectionHeader>Insights</SectionHeader>
@@ -241,7 +245,7 @@ export default function HistoryScreen() {
       {[...groups].map(([month, list]) => (
         <View key={month} style={{ gap: space[2] }}>
           <Text style={[font.sm, { color: c.textMuted, paddingHorizontal: space[1] }]}>{month}</Text>
-          <View style={[styles.list, { backgroundColor: c.surface, borderColor: c.border }]}>
+          <View style={[styles.list, { backgroundColor: c.surface, shadowColor: c.shadow, ...elevation }]}>
             {list.map((f, i) => (
               <FastRow key={f.id} fast={f} now={now} first={i === 0} />
             ))}
@@ -268,7 +272,7 @@ function ChartCard({
     <Card>
       <View style={styles.chartHead}>
         <View style={{ flex: 1 }}>
-          <Text accessibilityRole="header" style={[font.md, bold, { color: c.text }]}>
+          <Text accessibilityRole="header" style={[font.lg, strong, { color: c.text }]}>
             {title}
           </Text>
           {subtitle ? <Text style={[font.sm, tabular, { color: c.textMuted }]}>{subtitle}</Text> : null}
@@ -298,15 +302,10 @@ function FastRow({ fast, now, first }: { fast: Fast; now: number; first: boolean
       ]}
     >
       <View
-        style={[
-          styles.dateBlock,
-          running
-            ? { backgroundColor: c.accent, borderWidth: inkBorder, borderColor: c.onAccent }
-            : { backgroundColor: c.surface2 },
-        ]}
+        style={[styles.dateBlock, running ? { backgroundColor: c.primary } : { backgroundColor: c.surface2 }]}
       >
-        <Text style={[font.md, bold, tabular, { color: running ? c.onAccent : c.text }]}>{d.getDate()}</Text>
-        <Text style={[font.xs, { color: running ? c.onAccent : c.textMuted, fontSize: 11 }]}>
+        <Text style={[font.md, bold, tabular, { color: running ? c.onPrimary : c.text }]}>{d.getDate()}</Text>
+        <Text style={[font.xs, { color: running ? c.onPrimary : c.textMuted, fontSize: 11 }]}>
           {d.toLocaleDateString(undefined, { weekday: 'short' })}
         </Text>
       </View>
@@ -320,7 +319,7 @@ function FastRow({ fast, now, first }: { fast: Fast; now: number; first: boolean
         </Text>
       </View>
       {running ? <Badge label="Running" /> : met ? <Badge label="Goal met" tone="muted" /> : null}
-      <Icon name="chevron" size={16} color={c.text} />
+      <Icon name="chevron" size={16} color={c.textFaint} />
     </Pressable>
   );
 }
@@ -331,27 +330,26 @@ function Tile({ label, value, unit, hint }: { label: string; value: string; unit
     <View
       accessible
       accessibilityLabel={`${label}: ${value}${unit ? ` ${unit}` : ''}${hint ? `. ${hint}` : ''}`}
-      style={[styles.tile, { backgroundColor: c.surface, borderColor: c.border }]}
+      style={[styles.tile, { backgroundColor: c.surface, shadowColor: c.shadow, ...elevation }]}
     >
-      <Text style={[font.sm, { color: c.text }]}>{label}</Text>
+      <Text style={[font.xs, { color: c.textMuted, fontWeight: '600' }]}>{label}</Text>
       <Text numberOfLines={1} adjustsFontSizeToFit style={[font['2xl'], strong, tabular, { color: c.text }]}>
         {value}
-        {unit ? <Text style={[font.md, { color: c.text, fontWeight: '400' }]}> {unit}</Text> : null}
+        {unit ? <Text style={[font.md, { color: c.textMuted, fontWeight: '600' }]}> {unit}</Text> : null}
       </Text>
       {hint ? <Text style={[font.xs, { color: c.textMuted }]}>{hint}</Text> : null}
     </View>
   );
 }
 
-function LegendCell({ color, label, ring }: { color: string; label: string; ring?: boolean }) {
+function LegendCell({ color, label }: { color: string; label: string }) {
   const c = useColors();
   return (
     <View style={styles.legendItem}>
       <View
         style={[
           styles.legendSwatch,
-          { backgroundColor: color },
-          ring ? { borderWidth: inkBorder, borderColor: c.text } : null,
+          { backgroundColor: color, borderWidth: StyleSheet.hairlineWidth, borderColor: c.borderInput },
         ]}
       />
       <Text style={[font.xs, { color: c.textMuted }]}>{label}</Text>
@@ -363,8 +361,7 @@ const styles = StyleSheet.create({
   headerBtn: {
     width: 44,
     height: 44,
-    borderRadius: radius.md,
-    borderWidth: inkBorder,
+    borderRadius: radius.full,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
@@ -374,17 +371,16 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexBasis: '45%',
     borderRadius: radius.lg,
-    borderWidth: 1,
     padding: space[4],
     gap: 2,
   },
   legend: { flexDirection: 'row', gap: space[4], paddingHorizontal: space[1] },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendSwatch: { width: 16, height: 16, borderRadius: 5 },
+  legendSwatch: { width: 14, height: 14, borderRadius: 7 },
   empty: { alignItems: 'center', paddingVertical: space[10], gap: space[3] },
   chartHead: { flexDirection: 'row', alignItems: 'flex-start', gap: space[2] },
   cta: { flexDirection: 'row', alignItems: 'center', gap: space[3], paddingVertical: space[2] },
-  list: { borderRadius: radius.md, borderWidth: 1, overflow: 'hidden' },
+  list: { borderRadius: radius.lg },
   row: { flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[3], minHeight: 68 },
   dateBlock: {
     width: 46,

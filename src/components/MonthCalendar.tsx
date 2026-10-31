@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { dayKey } from '../domain/stats';
-import { font, inkBorder, radius, space, strong, useColors } from '../theme';
+import { font, radius, space, strong, useColors } from '../theme';
 import { Icon } from './Icon';
 
 const GAP = 4;
@@ -83,24 +83,21 @@ export function MonthCalendar({
               key={key}
               accessibilityLabel={`${key}: ${Math.round(hours)} hours fasted`}
               onPress={() => onPressDay?.(key)}
-              style={[
-                styles.cell,
-                {
-                  width: size,
-                  height: size,
-                  backgroundColor: hours >= 12 ? c.period : hours > 0 ? c.periodSubtle : c.surface2,
-                },
-                isToday && { borderWidth: inkBorder, borderColor: c.text },
-              ]}
+              style={[styles.cell, { width: size, height: size }]}
             >
-              <Text
+              <View
                 style={[
-                  font.sm,
-                  { color: hours >= 12 ? c.onPeriod : c.text, fontWeight: isToday ? '600' : '400' },
+                  styles.disc,
+                  {
+                    width: size - 8,
+                    height: size - 8,
+                    backgroundColor:
+                      hours >= 12 ? c.accentStrong : hours > 0 ? c.accentSubtle : 'transparent',
+                  },
                 ]}
-              >
-                {d}
-              </Text>
+              />
+              <Text style={[font.sm, { color: c.text, fontWeight: isToday ? '700' : '500' }]}>{d}</Text>
+              {isToday ? <View style={[styles.todayDot, { backgroundColor: c.primary }]} /> : null}
             </Pressable>
           );
         })}
@@ -114,5 +111,7 @@ const styles = StyleSheet.create({
   arrow: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   weekday: { alignItems: 'center', paddingBottom: 2 },
-  cell: { borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  todayDot: { position: 'absolute', bottom: 5, width: 5, height: 5, borderRadius: 3 },
+  disc: { position: 'absolute', borderRadius: radius.full },
+  cell: { borderRadius: radius.full, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
 });

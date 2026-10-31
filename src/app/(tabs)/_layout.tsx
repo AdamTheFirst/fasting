@@ -16,14 +16,18 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: c.bg,
-          borderTopColor: c.border,
+          backgroundColor: c.surface,
+          borderTopWidth: 0,
+          shadowColor: c.shadow,
+          shadowOpacity: 0.05,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: -2 },
           height: 64 + insets.bottom,
-          paddingTop: 6,
+          paddingTop: 8,
         },
         tabBarActiveTintColor: c.text,
         tabBarInactiveTintColor: c.textMuted,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '500', marginTop: 2 },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600', marginTop: 4 },
         sceneStyle: { backgroundColor: c.bg },
       }}
     >
@@ -60,21 +64,21 @@ export default function TabsLayout() {
   );
 }
 
-/** Periodiary's active tab: the icon sits in a pastel pill. */
+/** The active tab: the icon sits in a soft accent pill. */
 function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
   const c = useColors();
   return (
     <View
       style={{
-        width: 56,
-        height: 30,
+        width: 60,
+        height: 32,
         borderRadius: radius.full,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: focused ? c.accent : 'transparent',
+        backgroundColor: focused ? c.accentSubtle : 'transparent',
       }}
     >
-      <Icon name={name} color={focused ? c.onAccent : c.textMuted} size={22} />
+      <Icon name={name} color={focused ? c.text : c.textMuted} size={22} />
     </View>
   );
 }

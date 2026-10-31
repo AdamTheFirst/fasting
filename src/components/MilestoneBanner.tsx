@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { TimelineMark } from '../domain/milestones';
 import { formatDuration, HOUR } from '../domain/time';
-import { font, radius, strong, space, useColors } from '../theme';
+import { elevation, font, radius, strong, space, useColors } from '../theme';
 import { Icon } from './Icon';
 
 /**
@@ -49,9 +49,9 @@ export function MilestoneBanner({ mark, onClose }: { mark: TimelineMark; onClose
     <View
       accessibilityLiveRegion="polite"
       accessibilityRole="alert"
-      style={[styles.banner, { backgroundColor: c.accentSubtle, borderColor: c.text }]}
+      style={[styles.banner, { backgroundColor: c.surface, shadowColor: c.shadow, ...elevation }]}
     >
-      <View style={[styles.icon, { backgroundColor: c.accent, borderColor: c.onAccent }]}>
+      <View style={[styles.icon, { backgroundColor: c.accent }]}>
         <Icon
           name={mark.kind === 'goal' ? 'flag' : mark.kind === 'best' ? 'trophy' : 'check'}
           size={18}
@@ -74,15 +74,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: space[3],
     padding: space[4],
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
+    borderRadius: radius.xl,
     alignItems: 'flex-start',
   },
   icon: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.sm,
-    borderWidth: 1.5,
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },

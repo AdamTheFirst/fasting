@@ -2,7 +2,7 @@ import React, { type ReactNode, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, Line, Path, Pattern, Rect, Text as SvgText } from 'react-native-svg';
 
-import { font, inkBorder, space, tabular, useColors } from '../theme';
+import { font, space, tabular, useColors } from '../theme';
 
 const AXIS_W = 44;
 const LABEL_H = 20;
@@ -99,7 +99,7 @@ export function BarChart({
     <View onLayout={onLayout}>
       <View style={styles.readout}>
         <Text
-          style={[font.sm, tabular, { color: sel ? c.text : c.textMuted, fontWeight: sel ? '600' : '400' }]}
+          style={[font.xs, tabular, { color: sel ? c.text : c.textFaint, fontWeight: sel ? '600' : '500' }]}
         >
           {sel ? (sel.detail ?? `${sel.label}: ${tick(sel.value, max)}`) : 'Tap a bar to read it'}
         </Text>
@@ -127,24 +127,23 @@ export function BarChart({
                   x2={width}
                   y1={y(v)}
                   y2={y(v)}
-                  stroke={i === 0 ? c.text : c.border}
-                  strokeWidth={i === 0 ? 1.5 : 1}
+                  stroke={c.border}
+                  strokeWidth={1}
+                  strokeDasharray={i === 0 ? undefined : '2 4'}
                 />
               );
             })}
             {bars.map((b, i) => {
               const h = Math.max(b.value > 0 ? 3 : 0, (b.value / max) * height);
               const x = AXIS_W + slot * i + (slot - barW) / 2;
-              const r = Math.min(4, barW / 2, h);
+              const r = Math.min(6, barW / 2, h);
               const soft = b.strong === false;
               const showValue = barW >= 20 && h >= 26;
               return (
                 <React.Fragment key={b.key}>
                   <Path
                     d={`M${x} ${height} V${height - h + r} Q${x} ${height - h} ${x + r} ${height - h} H${x + barW - r} Q${x + barW} ${height - h} ${x + barW} ${height - h + r} V${height}`}
-                    fill={soft ? 'url(#barHatch)' : c.accent}
-                    stroke={soft ? c.textMuted : c.onAccent}
-                    strokeWidth={barW >= 8 ? inkBorder : 1}
+                    fill={soft ? 'url(#barHatch)' : c.accentStrong}
                     opacity={selected && selected !== b.key ? 0.4 : 1}
                   />
                   {showValue && (
@@ -152,8 +151,8 @@ export function BarChart({
                       x={x + barW / 2}
                       y={height - h + 16}
                       fontSize={12}
-                      fontWeight="500"
-                      fill={soft ? c.text : c.onAccent}
+                      fontWeight="600"
+                      fill={c.text}
                       textAnchor="middle"
                     >
                       {tick(b.value, max)}
@@ -169,8 +168,9 @@ export function BarChart({
                 y1={y(average)}
                 y2={y(average)}
                 stroke={c.text}
-                strokeWidth={1.5}
-                strokeDasharray="5 4"
+                strokeWidth={1.25}
+                strokeDasharray="4 4"
+                opacity={0.7}
               />
             )}
           </Svg>
@@ -294,7 +294,7 @@ export function LineChart({
                 y={4}
                 height={height - 8}
                 rx={2}
-                fill={c.periodSubtle}
+                fill={c.accentSubtle}
               />
             ))}
             {[0, 1, 2].map((i) => (
@@ -308,7 +308,14 @@ export function LineChart({
                 strokeDasharray="3 5"
               />
             ))}
-            <Path d={line} stroke={c.text} strokeWidth={2} fill="none" strokeLinejoin="round" />
+            <Path
+              d={line}
+              stroke={c.text}
+              strokeWidth={2.25}
+              fill="none"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
             {points.length <= 40 &&
               points.map((p) => (
                 <Circle
@@ -326,9 +333,9 @@ export function LineChart({
                 cx={x(lastP.t)}
                 cy={y(lastP.v)}
                 r={6}
-                fill={c.accent}
-                stroke={c.onAccent}
-                strokeWidth={inkBorder}
+                fill={c.primary}
+                stroke={c.surface}
+                strokeWidth={2.5}
               />
             )}
           </Svg>
@@ -365,7 +372,7 @@ export function LineChart({
       ) : null}
       {shown.length > 0 && spansLabel ? (
         <View style={styles.legend}>
-          <View style={[styles.legendBox, { backgroundColor: c.periodSubtle }]} />
+          <View style={[styles.legendBox, { backgroundColor: c.accentSubtle }]} />
           <Text style={[font.xs, { color: c.textMuted, flex: 1 }]}>{spansLabel}</Text>
         </View>
       ) : null}
@@ -412,7 +419,7 @@ export function DayGrid({
           width={cell}
           height={cell}
           rx={Math.min(3, cell / 3)}
-          fill={h >= 12 ? c.period : h > 0 ? c.periodSubtle : c.surface2}
+          fill={h >= 12 ? c.accentStrong : h > 0 ? c.accentSubtle : c.surface2}
         />,
       );
     }
@@ -427,8 +434,8 @@ export function DayGrid({
       <View style={[styles.legend, { justifyContent: 'flex-end', gap: space[3] }]}>
         {[
           { fill: c.surface2, label: 'None' },
-          { fill: c.periodSubtle, label: 'Under 12h' },
-          { fill: c.period, label: '12h or more' },
+          { fill: c.accentSubtle, label: 'Under 12h' },
+          { fill: c.accentStrong, label: '12h or more' },
         ].map((l) => (
           <View key={l.label} style={styles.legendItem}>
             <View style={[styles.legendBox, { backgroundColor: l.fill }]} />

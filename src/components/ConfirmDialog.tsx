@@ -44,7 +44,7 @@ export function ConfirmDialog({
         <Pressable
           accessibilityViewIsModal
           onPress={() => {}}
-          style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}
+          style={[styles.card, { backgroundColor: c.surface }]}
         >
           <Text accessibilityRole="header" style={[font.xl, { color: c.text, ...strong }]}>
             {title}
@@ -67,6 +67,6 @@ export function ConfirmDialog({
 
 const styles = StyleSheet.create({
   scrim: { flex: 1, justifyContent: 'flex-end', padding: space[4], paddingBottom: space[10] },
-  card: { borderRadius: radius.xl, borderWidth: StyleSheet.hairlineWidth, padding: space[6], gap: space[3] },
+  card: { borderRadius: radius.xl, padding: space[6], gap: space[3] },
   actions: { gap: space[2], marginTop: space[2] },
 });

@@ -1,7 +1,7 @@
 import { Linking, StyleSheet, View } from 'react-native';
 
 import { SAFETY_CARD } from '../domain/safety';
-import { font, radius, space, useColors } from '../theme';
+import { elevation, font, radius, space, useColors } from '../theme';
 import { Icon } from './Icon';
 import { Body, Button, Title } from './ui';
 
@@ -11,7 +11,7 @@ export function SafetyCard({ onDismiss, onTurnOff }: { onDismiss: () => void; on
   return (
     <View
       accessibilityRole="summary"
-      style={[styles.card, { backgroundColor: c.surface, borderColor: c.border }]}
+      style={[styles.card, { backgroundColor: c.surface, shadowColor: c.shadow, ...elevation }]}
     >
       <View style={styles.head}>
         <Icon name="info" color={c.text} />
@@ -39,7 +39,7 @@ export function SafetyCard({ onDismiss, onTurnOff }: { onDismiss: () => void; on
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.lg, borderWidth: 1, padding: space[5], gap: space[3] },
+  card: { borderRadius: radius.xl, padding: space[5], gap: space[3] },
   head: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
   links: { gap: space[1] },
   row: { flexDirection: 'row', gap: space[2], flexWrap: 'wrap' },

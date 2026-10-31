@@ -15,9 +15,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  bold,
+  elevation,
   font,
-  inkBorder,
   layout,
   medium,
   radius,
@@ -52,19 +51,23 @@ export function Button({
   style?: StyleProp<ViewStyle>;
 } & Omit<PressableProps, 'children' | 'style'>) {
   const c = useColors();
-  // Periodiary buttons: a pastel fill with ink text for the main action, an ink outline for the
-  // second one, and plain ink text for the rest. Text is never coloured by the accent.
+  // Pills only. The main action is solid ink; the second one is a raised white pill; the rest are
+  // plain text. Pastels never carry a label.
   const bg = {
-    primary: c.accent,
+    primary: c.primary,
     secondary: c.surface,
     ghost: 'transparent',
     quiet: c.surface2,
-    danger: 'transparent',
+    danger: c.surface2,
   }[variant];
-  const fg = { primary: c.onAccent, secondary: c.text, ghost: c.text, quiet: c.text, danger: c.danger }[
-    variant
-  ];
-  const height = { sm: 36, md: 48, lg: caption ? 64 : 56 }[size];
+  const fg = {
+    primary: c.onPrimary,
+    secondary: c.text,
+    ghost: c.text,
+    quiet: c.text,
+    danger: c.danger,
+  }[variant];
+  const height = { sm: 40, md: 52, lg: caption ? 68 : 60 }[size];
   return (
     <Pressable
       accessibilityRole="button"
@@ -73,14 +76,12 @@ export function Button({
         styles.button,
         {
           backgroundColor: bg,
-          minHeight: Math.max(height, size === 'sm' ? 36 : layout.minTapTarget),
-          paddingHorizontal: size === 'sm' ? space[3] : space[5],
+          minHeight: height,
+          paddingHorizontal: size === 'sm' ? space[4] : space[6],
           alignSelf: block ? 'stretch' : 'center',
         },
-        variant === 'secondary' && { borderWidth: 1.5, borderColor: c.text },
-        variant === 'danger' && { borderWidth: 1.5, borderColor: c.danger },
-        size === 'sm' && { borderRadius: radius.full },
-        pressed && { opacity: 0.8 },
+        variant === 'secondary' && { ...elevation, shadowColor: c.shadow },
+        pressed && { opacity: 0.75, transform: [{ scale: 0.985 }] },
         rest.disabled && { opacity: 0.4 },
         style,
       ]}
@@ -91,11 +92,7 @@ export function Button({
         <Text
           // Android drops an underline when only the colour changes (a theme switch); remount per colour.
           key={fg}
-          style={[
-            size === 'sm' ? font.sm : font.md,
-            { color: fg, fontWeight: '600' },
-            variant === 'ghost' && { textDecorationLine: 'underline' },
-          ]}
+          style={[size === 'sm' ? font.sm : font.md, { color: fg, fontWeight: '600', letterSpacing: -0.2 }]}
         >
           {label}
         </Text>
@@ -125,17 +122,16 @@ export function Chip({
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ selected }}
       onPress={onPress}
-      hitSlop={compact ? 4 : 0}
+      hitSlop={6}
       style={[
         styles.chip,
         compact && styles.chipCompact,
         selected
-          ? { borderWidth: inkBorder, borderColor: c.onAccent, backgroundColor: c.accent }
-          : { borderWidth: 1, borderColor: c.textMuted, backgroundColor: c.surface },
+          ? { backgroundColor: c.primary }
+          : { backgroundColor: c.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: c.borderInput },
       ]}
     >
-      {selected && !compact ? <Icon name="check" size={16} color={c.onAccent} /> : null}
-      <Text style={[font.sm, medium, { color: selected ? c.onAccent : c.text }]}>{label}</Text>
+      <Text style={[font.sm, medium, { color: selected ? c.onPrimary : c.text }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -152,10 +148,7 @@ export function Segmented<T extends string | number>({
 }) {
   const c = useColors();
   return (
-    <View
-      accessibilityRole="radiogroup"
-      style={[styles.segmented, { backgroundColor: c.surface, borderColor: c.border }]}
-    >
+    <View accessibilityRole="radiogroup" style={[styles.segmented, { backgroundColor: c.surface2 }]}>
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -166,11 +159,12 @@ export function Segmented<T extends string | number>({
             onPress={() => onChange(o.value)}
             style={[
               styles.segment,
-              on && { backgroundColor: c.accent, borderWidth: inkBorder, borderColor: c.onAccent },
+              on && { backgroundColor: c.surface, ...elevation, shadowOpacity: 0.1, shadowColor: c.shadow },
             ]}
           >
-            {on ? <Icon name="check" size={14} color={c.onAccent} /> : null}
-            <Text style={[font.sm, medium, { color: on ? c.onAccent : c.text }]}>{o.label}</Text>
+            <Text style={[font.sm, { color: on ? c.text : c.textMuted, fontWeight: on ? '600' : '500' }]}>
+              {o.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -180,7 +174,7 @@ export function Segmented<T extends string | number>({
 
 type Tone = 'plain' | 'accent' | 'period' | 'flat';
 
-/** A flat white card on the chalk background. No gradients, glows or shadows. */
+/** A white card on the oat background, lifted by one soft shadow. No gradients, no outlines. */
 export function Card({
   children,
   tone = 'plain',
@@ -199,7 +193,7 @@ export function Card({
   const body = [
     styles.card,
     { backgroundColor: bg },
-    tone === 'plain' && { borderWidth: 1, borderColor: c.border },
+    tone === 'plain' && { ...elevation, shadowColor: c.shadow },
     style,
   ];
   if (!onPress) return <View style={body}>{children}</View>;
@@ -208,7 +202,7 @@ export function Card({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
-      style={({ pressed }) => [body, pressed && { opacity: 0.85 }]}
+      style={({ pressed }) => [body, pressed && { opacity: 0.85, transform: [{ scale: 0.99 }] }]}
     >
       {children}
     </Pressable>
@@ -241,7 +235,7 @@ export function SectionHeader({ children, action }: { children: string; action?:
   const c = useColors();
   return (
     <View style={styles.sectionHeader}>
-      <Text accessibilityRole="header" style={[font.md, bold, { color: c.text, flex: 1 }]}>
+      <Text accessibilityRole="header" style={[font.lg, strong, { color: c.text, flex: 1 }]}>
         {children}
       </Text>
       {action}
@@ -274,8 +268,8 @@ export function Stat({
       accessibilityLabel={`${label}: ${value}${unit ? ` ${unit}` : ''}${hint ? `. ${hint}` : ''}`}
       style={{ flex: 1, alignItems: align === 'center' ? 'center' : 'flex-start', gap: 2 }}
     >
-      <Text style={[font.xs, { color: mutedColor ?? c.textMuted }]}>{label}</Text>
-      <Text style={[font.xl, tabular, { color: color ?? c.text, ...strong }]}>
+      <Text style={[font.xs, medium, { color: mutedColor ?? c.textMuted }]}>{label}</Text>
+      <Text style={[font['2xl'], tabular, { color: color ?? c.text, ...strong }]}>
         {value}
         {unit ? <Text style={[font.sm, { color: mutedColor ?? c.textMuted }]}> {unit}</Text> : null}
       </Text>
@@ -290,13 +284,19 @@ export function ListGroup({ children, footer }: { children: ReactNode; footer?: 
   const items = (Array.isArray(children) ? children.flat() : [children]).filter(Boolean);
   return (
     <View style={{ gap: space[2] }}>
-      <View style={[styles.group, { backgroundColor: c.surface, borderColor: c.border }]}>
+      <View style={[styles.group, { backgroundColor: c.surface, ...elevation, shadowColor: c.shadow }]}>
         <View>
           {items.map((child, i) => (
-            <View
-              key={i}
-              style={i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }}
-            >
+            <View key={i}>
+              {i > 0 && (
+                <View
+                  style={{
+                    height: StyleSheet.hairlineWidth,
+                    backgroundColor: c.border,
+                    marginLeft: space[4],
+                  }}
+                />
+              )}
               {child}
             </View>
           ))}
@@ -337,8 +337,8 @@ export function ListRow({
     <>
       <View style={styles.row}>
         {icon ? (
-          <View style={styles.rowIcon}>
-            <Icon name={icon} size={20} color={iconColor ?? c.textMuted} />
+          <View style={[styles.rowIcon, { backgroundColor: c.accentSubtle }]}>
+            <Icon name={icon} size={18} color={iconColor ?? c.text} />
           </View>
         ) : null}
         <View style={{ flex: 1, gap: 2 }}>
@@ -353,7 +353,7 @@ export function ListRow({
         </View>
         {value ? <Text style={[font.md, tabular, { color: c.textMuted }]}>{value}</Text> : null}
         {right}
-        {chevron ? <Icon name="chevron" size={18} color={c.text} /> : null}
+        {chevron ? <Icon name="chevron" size={18} color={c.textFaint} /> : null}
       </View>
       {children}
     </>
@@ -397,8 +397,8 @@ export function SwitchRow({
           accessibilityLabel={label}
           value={value}
           onValueChange={onChange}
-          trackColor={{ false: c.border, true: c.accent }}
-          thumbColor={value ? (dark ? '#FFFFFF' : c.onAccent) : c.switchThumbOff}
+          trackColor={{ false: c.border, true: c.primary }}
+          thumbColor={value ? (dark ? c.bg : '#FFFFFF') : c.switchThumbOff}
           ios_backgroundColor={c.border}
         />
       }
@@ -414,17 +414,13 @@ export function Badge({
   tone?: 'accent' | 'period' | 'muted' | 'estimate';
 }) {
   const c = useColors();
-  const bg = { accent: c.accent, period: c.period, muted: c.surface2, estimate: c.surface }[tone];
-  const fg = { accent: c.onAccent, period: c.onPeriod, muted: c.textMuted, estimate: c.text }[tone];
+  const bg = { accent: c.accentSubtle, period: c.periodSubtle, muted: c.surface2, estimate: c.surface2 }[
+    tone
+  ];
+  const fg = { accent: c.text, period: c.text, muted: c.textMuted, estimate: c.textMuted }[tone];
   return (
-    <View
-      style={[
-        styles.badge,
-        { backgroundColor: bg },
-        tone === 'estimate' && { borderWidth: 1.5, borderStyle: 'dashed', borderColor: c.textMuted },
-      ]}
-    >
-      <Text style={[font.xs, medium, { color: fg }]}>{label}</Text>
+    <View style={[styles.badge, { backgroundColor: bg }]}>
+      <Text style={[font.xs, { color: fg, fontWeight: '600' }]}>{label}</Text>
     </View>
   );
 }
@@ -452,8 +448,10 @@ export function Screen({
   const header = (
     <View style={[styles.header, { paddingTop: space[3] }]}>
       <View style={{ flex: 1, gap: 2 }}>
-        <Title size="2xl">{title}</Title>
-        {eyebrow ? <Text style={[font.sm, { color: c.textMuted }]}>{eyebrow}</Text> : null}
+        {eyebrow ? (
+          <Text style={[font.xs, styles.eyebrow, { color: c.textMuted }]}>{eyebrow.toUpperCase()}</Text>
+        ) : null}
+        <Title size="title">{title}</Title>
       </View>
       {right}
     </View>
@@ -465,6 +463,7 @@ export function Screen({
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: space[12] }}
+          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           {...rest}
         >
@@ -489,7 +488,7 @@ const styles = StyleSheet.create({
   },
   buttonRow: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
   chip: {
-    height: 40,
+    height: 44,
     borderRadius: radius.full,
     paddingHorizontal: space[4],
     flexDirection: 'row',
@@ -498,7 +497,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipCompact: { height: 36, minWidth: 36, paddingHorizontal: space[2] },
-  segmented: { flexDirection: 'row', borderRadius: radius.md, borderWidth: 1, padding: 3 },
+  segmented: { flexDirection: 'row', borderRadius: radius.full, padding: 4 },
   segment: {
     flex: 1,
     minHeight: 40,
@@ -506,20 +505,20 @@ const styles = StyleSheet.create({
     gap: space[1],
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.sm,
+    borderRadius: radius.full,
   },
   card: {
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: space[5],
     gap: space[3],
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: space[4],
+    marginTop: space[5],
     paddingHorizontal: space[1],
   },
-  group: { borderRadius: radius.md, borderWidth: 1, overflow: 'hidden' },
+  group: { borderRadius: radius.lg },
   rowWrap: {
     paddingHorizontal: space[4],
     paddingVertical: space[3],
@@ -528,19 +527,20 @@ const styles = StyleSheet.create({
     gap: space[3],
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: space[3] },
-  rowIcon: { width: 24, alignItems: 'center', justifyContent: 'center' },
+  rowIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   badge: {
     borderRadius: radius.full,
     paddingHorizontal: space[2],
-    paddingVertical: 3,
+    paddingVertical: 4,
     alignSelf: 'flex-start',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: layout.gutter,
-    paddingBottom: space[4],
+    paddingBottom: space[5],
     gap: space[3],
   },
-  content: { paddingHorizontal: layout.gutter, gap: space[3] },
+  content: { paddingHorizontal: layout.gutter, gap: space[4] },
+  eyebrow: { fontWeight: '600', letterSpacing: 0.6 },
 });

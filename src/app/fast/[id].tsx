@@ -122,7 +122,7 @@ export default function EditFast() {
         value={draft.note ?? ''}
         onChangeText={(note) => setDraft({ ...draft, note: note || null })}
         multiline
-        style={[font.md, styles.note, { color: c.text, borderColor: c.border, backgroundColor: c.surface }]}
+        style={[font.md, styles.note, { color: c.text, backgroundColor: c.surface2 }]}
       />
       <Button
         label={isNew ? 'Add fast' : 'Save'}
@@ -169,7 +169,6 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2] },
   note: {
     minHeight: 96,
-    borderWidth: 1,
     borderRadius: radius.lg,
     padding: space[4],
     textAlignVertical: 'top',
