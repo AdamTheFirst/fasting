@@ -1,0 +1,8 @@
+{
+  "_comment": "The app's name lives here and only here. Fastaway was picked on 2026-10-30 ('Fast me' was the working title). Trademark, store-name and domain checks are still open. Change name, slug, scheme and bundleId together, before the first store upload.",
+  "name": "Fastaway",
+  "tagline": "Fasting Tracker",
+  "slug": "fastaway",
+  "scheme": "fastaway",
+  "bundleId": "com.adamthefirst.fastaway"
+}

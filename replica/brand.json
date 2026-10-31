@@ -1,0 +1,13 @@
+{
+  "name": "Fastaway",
+  "name_status": "chosen by Salih 2026-10-30; trademark, store and domain checks to run",
+  "working_title": "Fast me",
+  "avoid": ["Fastway", "Zero", "Zero Longevity", "Fastic", "BodyFast", "Simple", "Avo", "Blinky", "Suavita", "LIFE Fasting", "LifeOmic", "MyFast", "Fastient", "FastEasy", "DoFasting", "FitFast", "Yazio", "Fasty", "Fasta", "FastTrack"],
+  "domains": ["zerolongevity.com", "fastic.com", "bodyfast.app", "simple.life", "dofasting.com", "fasteasy.io", "fitfast.com", "yazio.com", "lifeomic.com"],
+  "colors": [],
+  "colors_note": "Competitor hex values not verified this session; add them from the real icons so the sweep can catch them.",
+  "tokens": {
+    "light": {"bg": "#F6F2EA", "surface": "#FFFFFF", "ink": "#1F1C19", "muted": "#5E5850", "primary": "#5E3A6E", "on_primary": "#FFFFFF", "accent": "#8A5A00", "danger": "#A3302A"},
+    "dark": {"bg": "#16141A", "surface": "#211E26", "ink": "#F1ECE4", "muted": "#B3ABA0", "primary": "#C8A6D8", "on_primary": "#24152B", "accent": "#E0B25C", "danger": "#F08A80"}
+  }
+}

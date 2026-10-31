@@ -1,11 +1,11 @@
 # Feedback ranking
 
-68 rows from 5 source types, 11 pages, 11 apps.
+79 rows from 6 source types, 13 pages, 14 apps.
 
 
 ## billing_dark_patterns
 
-score 38.6, 22 rows, 4 source types (app-store, pissedconsumer, reddit, trustpilot), 7 pages
+score 40.6, 24 rows, 5 source types (app-store, justuseapp, pissedconsumer, reddit, trustpilot), 9 pages
 
 - [FastEasy, 2025-06-10, 1★](https://www.trustpilot.com/review/fasteasy.io?page=5): "Total scam! Canceled immediately and they still keep charging my card without my permission."
 - [FastEasy, 2024-11-25, 1★](https://www.trustpilot.com/review/fasteasy.io?page=5): "they set up an automatic payment of 53.45 CAD, even though I had signed for 30.99 CAD."
@@ -28,14 +28,17 @@ score 38.6, 22 rows, 4 source types (app-store, pissedconsumer, reddit, trustpil
 - [general, 2024-03-05](https://nyc1.lr.ggtyler.dev/r/fasting/comments/1b779dt/i_made_a_free_weight_loss_fasting_app): "predatory"
 - [general, 2024-03-05](https://nyc1.lr.ggtyler.dev/r/fasting/comments/1b779dt/i_made_a_free_weight_loss_fasting_app): "worth even a penny"
 - [Suavita, 2024-07-23](https://apps.apple.com/us/app/-/id1568443548): "This app comes the closest to ease of use without a paywall which is nice."
+- [BodyFast, 2026-10](https://reddit.birdcat.cafe/r/fasting/comments/1lbp7ir/fasting_apps): "I downloaded body fast, but it looks like you need to pay to use the OMAD schedule."
+- [Easy Fast, 2025](https://justuseapp.com/en/app/6478773954/easy-fast-fasting-tracker-app/reviews): "hoping it never goes in the direction of all those other fremium fasting apps that are horrible"
 - [MyFast, 2020-06-05](https://apps.apple.com/app/id1218416683): "The subscription showed that it would expire 1 year from now - so, not taking the trial period in consideration."
 
 ## rigid_schedule_no_control
 
-score 13.5, 20 rows, 3 source types (app-store, cronometer-forum, trustpilot), 5 pages
+score 15.2, 22 rows, 4 source types (app-store, cronometer-forum, reddit, trustpilot), 6 pages
 
 - [FitFast, 2025-10-20, 2★](https://www.trustpilot.com/review/fitfast.com?page=4): "This app is frustrating.It won't let me track water or edit my fasting time."
 - [FitFast, 2025-11-07, 5★](https://www.trustpilot.com/review/fitfast.com?page=4): "At first, I found it really motivating, but after a few weeks I started craving more flexibility."
+- [BodyFast, 2026-10](https://reddit.birdcat.cafe/r/fasting/comments/1lbp7ir/fasting_apps): "I downloaded body fast, but it looks like you need to pay to use the OMAD schedule."
 - [Cronometer, 2022-11](https://forums.cronometer.com/discussion/comment/18470): "I'd like to be able to edit Duration in Days and Hours (and Minutes) ideally, not just Hours."
 - [Cronometer, 2022-11](https://forums.cronometer.com/discussion/comment/18470): "Sometimes I go until a milestone like a certain meal in the future and I don't want to calculate the hours."
 - [Cronometer, 2022-11](https://forums.cronometer.com/discussion/comment/18470): "The fact that I can't edit End Date and End Time ruins it for me."
@@ -54,10 +57,11 @@ score 13.5, 20 rows, 3 source types (app-store, cronometer-forum, trustpilot), 5
 - [Cronometer, 2021-05](https://forums.cronometer.com/discussion/4351/is-it-just-me-or-is-the-fasting-function-with-this-app-clunky-and-inconsistent): "I change my fasting length and save it but the original fasting length is still there."
 - [MyFast, 2020-03-10](https://apps.apple.com/app/id1218416683): "it doesn’t store your history whatsoever and if you transition from schedule to manual"
 - [MyFast, 2018-04-29](https://apps.apple.com/app/id1218416683): "this is the best simply to use fast timer that goes over 12 or 24 and is customizable without paying!"
+- [Cronometer, 2021-05](https://forums.cronometer.com/discussion/4351/is-it-just-me-or-is-the-fasting-function-with-this-app-clunky-and-inconsistent): "I change my fasting length and save it but the original fasting length is still there."
 
 ## clunky_ux_bugs
 
-score 11.1, 10 rows, 4 source types (app-store, cronometer-forum, pissedconsumer, trustpilot), 6 pages
+score 13.5, 14 rows, 4 source types (app-store, cronometer-forum, pissedconsumer, trustpilot), 7 pages
 
 - [FastEasy, 2026-06-13, 1★](https://www.trustpilot.com/review/fasteasy.io?page=5): "This app is terrible so is the customer service department!!!"
 - [FastEasy, 2024-11-01, 1★](https://www.trustpilot.com/review/fasteasy.io?page=5): "It's often not working and once I set my fast to 16/8 or 18/6 or anything"
@@ -68,7 +72,11 @@ score 11.1, 10 rows, 4 source types (app-store, cronometer-forum, pissedconsumer
 - [Cronometer, 2020-07](https://forums.cronometer.com/discussion/3506/changes-to-fasting): "Starting a fast seems harder than it should be"
 - [Cronometer, 2020-10](https://forums.cronometer.com/discussion/3506/changes-to-fasting): "the fasting feature is painful to use"
 - [Cronometer, 2021-04](https://forums.cronometer.com/discussion/3506/changes-to-fasting): "I stopped using it; it was too cumbersome."
+- [Cronometer, 2021-05](https://forums.cronometer.com/discussion/4351/is-it-just-me-or-is-the-fasting-function-with-this-app-clunky-and-inconsistent): "I change my fasting length and save it but the original fasting length is still there."
 - [Zero, 2023-05-01](https://apps.apple.com/us/app/-/id1168348542): "I have been trying to log a fast for over 24hrs."
+- [Cronometer, 2021-05](https://forums.cronometer.com/discussion/4351/is-it-just-me-or-is-the-fasting-function-with-this-app-clunky-and-inconsistent): "I change my fasting length and save it but the original fasting length is still there."
+- [Cronometer, 2021-05](https://forums.cronometer.com/discussion/4351/is-it-just-me-or-is-the-fasting-function-with-this-app-clunky-and-inconsistent): "I stop a fast online and yet the mobile app says I'm still fasting."
+- [Cronometer, 2021-05](https://forums.cronometer.com/discussion/4351/is-it-just-me-or-is-the-fasting-function-with-this-app-clunky-and-inconsistent): "it seems like an afterthought without much thought put into it."
 
 ## clutter_nags_ads (THIN)
 
@@ -97,12 +105,21 @@ score 5.2, 8 rows, 2 source types (app-store, cronometer-forum), 5 pages
 
 ## history_and_insights
 
-score 2.4, 4 rows, 2 source types (app-store, cronometer-forum), 3 pages
+score 3.0, 5 rows, 2 source types (app-store, cronometer-forum), 3 pages
 
 - [Cronometer, 2020-10](https://forums.cronometer.com/discussion/3506/changes-to-fasting): "I don't see any way to correlate it with my weight loss"
 - [Cronometer, 2021-06](https://forums.cronometer.com/discussion/4351/is-it-just-me-or-is-the-fasting-function-with-this-app-clunky-and-inconsistent): "I hope Cronometer can improve the fasting piece to be more visual."
 - [Cronometer, 2022-03](https://forums.cronometer.com/discussion/4351/is-it-just-me-or-is-the-fasting-function-with-this-app-clunky-and-inconsistent): "You can't see a chart, in fact I don't think there an actual chart"
 - [MyFast, 2020-03-10](https://apps.apple.com/app/id1218416683): "it doesn’t store your history whatsoever and if you transition from schedule to manual"
+- [Cronometer, 2022-03](https://forums.cronometer.com/discussion/4351/is-it-just-me-or-is-the-fasting-function-with-this-app-clunky-and-inconsistent): "You can't see a chart; in fact I don't think there an actual chart"
+
+## integrations_widget (THIN)
+
+score 3.0, 3 rows, 1 source types (justuseapp), 1 pages
+
+- [Easy Fast, 2025](https://justuseapp.com/en/app/6478773954/easy-fast-fasting-tracker-app/reviews): "Some things I would add are a home screen widget, and other stages like peak growth hormone and lowest insulin levels."
+- [Easy Fast, 2025](https://justuseapp.com/en/app/6478773954/easy-fast-fasting-tracker-app/reviews): "It would be cool if you could link it to the Health app in the iOS program"
+- [Easy Fast, 2025](https://justuseapp.com/en/app/6478773954/easy-fast-fasting-tracker-app/reviews): "is there anyway to integrate it more with apples iHealth stat monitors?"
 
 ## privacy (THIN)
 
@@ -120,3 +137,5 @@ score 1.0, 1 rows, 1 source types (trustpilot), 1 pages
 
 - [DoFasting, 2026-01-03](https://ie.trustpilot.com/review/dofasting.com): "BEWARE! I purchased Burnbox on Facebook and was immediately sent to this app."
 - [DoFasting, 2025-08-20](https://ie.trustpilot.com/review/dofasting.com): "I just wish I could scan barcodes on food to get accurate health info for the food log"
+- [Sunrise, 2026-10](https://reddit.birdcat.cafe/r/fasting/comments/1lbp7ir/fasting_apps): "I use sunrise. I like the hourglass."
+- [Easy Fast, 2025](https://justuseapp.com/en/app/6478773954/easy-fast-fasting-tracker-app/reviews): "Please keep FastingTrackerEasyFast running!"
