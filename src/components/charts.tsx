@@ -70,8 +70,17 @@ export function BarChart({
   const [width, onLayout] = useWidth();
   const [selected, setSelected] = useState<string | null>(null);
   const top = Math.max(...bars.map((b) => b.value), average ?? 0, 1);
-  // Past 4 days the axis steps in whole days, so it reads 1d 2d 3d 4d rather than 0.8d 1.7d.
-  const max = dayAxis && top > 96 ? Math.ceil(top / 96) * 96 : niceMax(integer ? Math.max(top, 4) : top);
+  // Past 4 days the axis steps in whole days, so it reads 2d 4d 6d rather than 1.7d 3.3d, with as
+  // few gridlines as it takes to clear the tallest bar.
+  let steps = 4;
+  let max = niceMax(integer ? Math.max(top, 4) : top);
+  if (dayAxis && top > 96) {
+    const days = Math.ceil(top / 24);
+    const step = [1, 2, 3, 5, 7, 10, 14].find((d) => d * 4 >= days) ?? Math.ceil(days / 4);
+    steps = Math.ceil(days / step);
+    max = steps * step * 24;
+  }
+  const gridSteps = Array.from({ length: steps + 1 }, (_, i) => i);
   const plotW = Math.max(0, width - AXIS_W);
   const slot = bars.length ? plotW / bars.length : 0;
   const barW = Math.max(3, Math.min(maxBarWidth, slot * 0.62));
@@ -96,14 +105,7 @@ export function BarChart({
     );
 
   return (
-    <View onLayout={onLayout}>
-      <View style={styles.readout}>
-        <Text
-          style={[font.xs, tabular, { color: sel ? c.text : c.textFaint, fontWeight: sel ? '600' : '500' }]}
-        >
-          {sel ? (sel.detail ?? `${sel.label}: ${tick(sel.value, max)}`) : 'Tap a bar to read it'}
-        </Text>
-      </View>
+    <View onLayout={onLayout} style={{ paddingTop: space[2] }}>
       {width > 0 && (
         <View>
           <Svg width={width} height={height + LABEL_H}>
@@ -118,8 +120,8 @@ export function BarChart({
                 <Line x1={0} y1={0} x2={0} y2={7} stroke={c.hatch} strokeWidth={2} />
               </Pattern>
             </Defs>
-            {[0, 1, 2, 3, 4].map((i) => {
-              const v = (max / 4) * i;
+            {gridSteps.map((i) => {
+              const v = (max / steps) * i;
               return (
                 <Line
                   key={i}
@@ -174,12 +176,12 @@ export function BarChart({
               />
             )}
           </Svg>
-          {[1, 2, 3, 4].map((i) => (
+          {gridSteps.slice(1).map((i) => (
             <Text
               key={i}
-              style={[font.xs, tabular, styles.yLabel, { color: c.textMuted, top: y((max / 4) * i) - 8 }]}
+              style={[font.xs, tabular, styles.yLabel, { color: c.textMuted, top: y((max / steps) * i) - 8 }]}
             >
-              {tick((max / 4) * i, max)}
+              {tick((max / steps) * i, max)}
             </Text>
           ))}
           {bars.map((b, i) =>
@@ -208,6 +210,13 @@ export function BarChart({
               />
             ))}
           </View>
+          {sel ? (
+            <View pointerEvents="none" style={[styles.readout, { backgroundColor: c.primary }]}>
+              <Text style={[font.xs, tabular, { color: c.onPrimary, fontWeight: '600' }]}>
+                {sel.detail ?? `${sel.label}: ${tick(sel.value, max)}`}
+              </Text>
+            </View>
+          ) : null}
         </View>
       )}
       {average !== undefined && average > 0 && averageLabel ? (
@@ -448,7 +457,14 @@ export function DayGrid({
 }
 
 const styles = StyleSheet.create({
-  readout: { minHeight: 22, marginBottom: space[2] },
+  readout: {
+    position: 'absolute',
+    top: -space[2],
+    right: 0,
+    borderRadius: 9999,
+    paddingHorizontal: space[3],
+    paddingVertical: 5,
+  },
   yLabel: { position: 'absolute', left: 0, width: AXIS_W - 6 },
   xLabel: { position: 'absolute', width: 60, textAlign: 'center' },
   legend: { flexDirection: 'row', alignItems: 'center', gap: space[2], marginTop: space[2] },

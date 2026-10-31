@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
 
 import { dayKey } from '../domain/stats';
-import { font, radius, space, strong, useColors } from '../theme';
+import { font, space, strong, tabular, useColors } from '../theme';
 import { Icon } from './Icon';
 
 const GAP = 4;
@@ -12,7 +13,10 @@ const WEEKDAYS = Array.from({ length: 7 }, (_, i) =>
   new Date(2026, 0, 5 + i).toLocaleDateString(undefined, { weekday: 'narrow' }),
 );
 
-/** Month grid, each day shaded by hours fasted (full at 24 h). A multi-day fast fills every day it touches. */
+/**
+ * Month grid. Each day wears a thin ring that fills with the hours fasted that day, so 12 h is half
+ * a ring; a day fasted end to end becomes a solid disc. A multi-day fast reads as a run of discs.
+ */
 export function MonthCalendar({
   month,
   hoursByDay,
@@ -78,26 +82,33 @@ export function MonthCalendar({
           const key = dayKey(new Date(month.getFullYear(), month.getMonth(), d).getTime());
           const hours = hoursByDay.get(key) ?? 0;
           const isToday = key === todayKey;
+          const isFuture = key > todayKey;
+          const full = hours >= 23.9;
           return (
             <Pressable
               key={key}
-              accessibilityLabel={`${key}: ${Math.round(hours)} hours fasted`}
+              accessibilityRole={onPressDay && hours > 0 ? 'button' : undefined}
+              accessibilityLabel={`${new Date(month.getFullYear(), month.getMonth(), d).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}: ${hours > 0 ? `${Math.round(hours)} hours fasted` : 'no fast'}${isToday ? ', today' : ''}`}
+              disabled={!onPressDay || hours === 0}
               onPress={() => onPressDay?.(key)}
-              style={[styles.cell, { width: size, height: size }]}
+              style={({ pressed }) => [styles.cell, { width: size, height: size }, pressed && { opacity: 0.6 }]}
             >
-              <View
+              {size > 0 && <DayRing size={size - 6} hours={hours} full={full} />}
+              <Text
                 style={[
-                  styles.disc,
+                  font.sm,
+                  tabular,
                   {
-                    width: size - 8,
-                    height: size - 8,
-                    backgroundColor:
-                      hours >= 12 ? c.accentStrong : hours > 0 ? c.accentSubtle : 'transparent',
+                    color: full ? c.onAccent : isFuture ? c.textFaint : c.text,
+                    fontWeight: isToday || full ? '700' : '500',
                   },
                 ]}
-              />
-              <Text style={[font.sm, { color: c.text, fontWeight: isToday ? '700' : '500' }]}>{d}</Text>
-              {isToday ? <View style={[styles.todayDot, { backgroundColor: c.primary }]} /> : null}
+              >
+                {d}
+              </Text>
+              {isToday ? (
+                <View style={[styles.todayDot, { backgroundColor: full ? c.onAccent : c.primary }]} />
+              ) : null}
             </Pressable>
           );
         })}
@@ -106,12 +117,45 @@ export function MonthCalendar({
   );
 }
 
+function DayRing({ size, hours, full }: { size: number; hours: number; full: boolean }) {
+  const c = useColors();
+  const stroke = 3;
+  const r = (size - stroke) / 2;
+  const mid = size / 2;
+  const circ = 2 * Math.PI * r;
+  const p = Math.min(1, hours / 24);
+  return (
+    <Svg width={size} height={size} style={{ position: 'absolute', top: 3, left: 3 }}>
+      {full ? (
+        <Circle cx={mid} cy={mid} r={size / 2} fill={c.accentStrong} />
+      ) : (
+        <>
+          <Circle cx={mid} cy={mid} r={r} stroke={c.surface2} strokeWidth={stroke} fill="none" />
+          {p > 0 && (
+            <G rotation={-90} origin={`${mid}, ${mid}`}>
+              <Circle
+                cx={mid}
+                cy={mid}
+                r={r}
+                stroke={c.accentStrong}
+                strokeWidth={stroke}
+                strokeLinecap="round"
+                strokeDasharray={`${Math.max(circ * p, stroke)} ${circ}`}
+                fill="none"
+              />
+            </G>
+          )}
+        </>
+      )}
+    </Svg>
+  );
+}
+
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: space[2], gap: space[2] },
   arrow: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   weekday: { alignItems: 'center', paddingBottom: 2 },
-  todayDot: { position: 'absolute', bottom: 5, width: 5, height: 5, borderRadius: 3 },
-  disc: { position: 'absolute', borderRadius: radius.full },
-  cell: { borderRadius: radius.full, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  todayDot: { position: 'absolute', bottom: 9, width: 4, height: 4, borderRadius: 2 },
+  cell: { alignItems: 'center', justifyContent: 'center' },
 });

@@ -246,7 +246,7 @@ export function SectionHeader({ children, action }: { children: string; action?:
   const c = useColors();
   return (
     <View style={styles.sectionHeader}>
-      <Text accessibilityRole="header" style={[font.lg, strong, { color: c.text, flex: 1 }]}>
+      <Text accessibilityRole="header" style={[font.xl, strong, { color: c.text, flex: 1 }]}>
         {children}
       </Text>
       {action}

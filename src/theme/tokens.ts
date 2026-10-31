@@ -82,7 +82,7 @@ const base: Record<ThemeId, { light: Base; dark: Base }> = {
       ink: '#1B2029',
       muted: '#596170',
       accent: '#F3E3A6',
-      accentStrong: '#EACF74',
+      accentStrong: '#E6C65C',
       period: '#B17B8E',
       rule: '#E4E4E5',
       hatch: '#BDC0C6',

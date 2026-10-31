@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { type ReactNode, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, G } from 'react-native-svg';
 
 import { BodySignals } from '../../components/BodySignals';
 import { BarChart, DayGrid, hoursTick, LineChart } from '../../components/charts';
@@ -14,12 +15,13 @@ import {
   fastLengths,
   HEALTHY_BMI,
   hoursByDay,
+  hoursInRange,
   hoursPerWeek,
   records,
   startHours,
   streaks,
 } from '../../domain/stats';
-import { DAY, formatDuration, formatShort } from '../../domain/time';
+import { DAY, formatDuration, formatShort, HOUR } from '../../domain/time';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
 import { bold, elevation, font, radius, space, strong, tabular, useColors } from '../../theme';
@@ -54,7 +56,21 @@ export default function HistoryScreen() {
   const latestWeight = weights.at(-1);
   const firstWeight = weights[0];
   const monthStart = new Date(new Date(now).getFullYear(), new Date(now).getMonth(), 1).getTime();
+  const prevMonth = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - 1, 1);
   const fastsThisMonth = fasts.filter((f) => f.start >= monthStart).length;
+  const hoursLastMonth = hoursInRange(fasts, prevMonth.getTime(), monthStart, now);
+  const avg30 = averageHours(fasts, now - 30 * DAY);
+
+  // Tapping a day opens the longest fast that touched it.
+  const openDay = (key: string) => {
+    const [y, m, d] = key.split('-').map(Number);
+    const from = new Date(y!, m! - 1, d!).getTime();
+    const to = new Date(y!, m! - 1, d! + 1).getTime();
+    const hit = fasts
+      .filter((f) => f.start < to && (f.end ?? now) > from)
+      .sort((a, b) => elapsedMs(b, now) - elapsedMs(a, now))[0];
+    if (hit) router.push(`/fast/${hit.id}`);
+  };
 
   const addPast = (
     <Pressable
@@ -97,46 +113,41 @@ export default function HistoryScreen() {
 
   return (
     <Screen title="History" right={addPast}>
-      <View style={styles.tiles}>
-        <Tile
-          label="This month"
-          value={`${Math.round(recs.hoursThisMonth)}`}
-          unit="hours"
-          hint={`${fastsThisMonth} ${fastsThisMonth === 1 ? 'fast' : 'fasts'}`}
-        />
-        <Tile
-          label="Average fast"
-          value={avg ? formatShort(avg * 3_600_000) : '–'}
-          hint={`Last ${range === 365 ? 'year' : `${range} days`}`}
-        />
-        <Tile
-          label="Longest ever"
-          value={recs.longest ? formatShort(elapsedMs(recs.longest, now)) : '–'}
-          hint={recs.longest ? shortDate(recs.longest.start) : undefined}
-        />
-        <Tile
-          label="Streak"
-          value={`${streak}`}
-          unit={streak === 1 ? 'day' : 'days'}
-          hint={`Best ${recs.longestStreakDays}, at ${settings.streakMinHours}h or more`}
-        />
-      </View>
+      <Summary
+        hours={recs.hoursThisMonth}
+        fastCount={fastsThisMonth}
+        lastMonthHours={hoursLastMonth}
+        lastMonthName={prevMonth.toLocaleDateString(undefined, { month: 'long' })}
+        stats={[
+          { label: 'Average', value: avg30 ? formatShort(avg30 * HOUR) : '–', hint: 'Last 30 days' },
+          {
+            label: 'Longest',
+            value: recs.longest ? formatShort(elapsedMs(recs.longest, now)) : '–',
+            hint: recs.longest ? shortDate(recs.longest.start) : undefined,
+          },
+          {
+            label: 'Streak',
+            value: `${streak} ${streak === 1 ? 'day' : 'days'}`,
+            hint: `Best ${recs.longestStreakDays}`,
+          },
+        ]}
+      />
 
       <Card>
         <MonthCalendar
           month={shownMonth}
           hoursByDay={byDay}
+          onPressDay={openDay}
           onChangeMonth={(delta) => setMonthOffset((m) => Math.max(0, m - delta))}
           canGoForward={monthOffset > 0}
           now={now}
         />
+        <View style={[styles.legend, { borderTopColor: c.border }]}>
+          <LegendRing p={0.5} label="12 hours" />
+          <LegendRing p={1} label="Whole day" />
+          <Text style={[font.xs, { color: c.textMuted, flex: 1, textAlign: 'right' }]}>Tap a day to open it</Text>
+        </View>
       </Card>
-
-      <View style={styles.legend}>
-        <LegendCell color={c.accentStrong} label="12h or more" />
-        <LegendCell color={c.accentSubtle} label="Shorter" />
-        <LegendCell color="transparent" label="No fast" />
-      </View>
 
       <SectionHeader>Insights</SectionHeader>
       <Segmented<Range>
@@ -163,7 +174,7 @@ export default function HistoryScreen() {
           tick={hoursTick}
           dayAxis
           average={avg}
-          averageLabel="Dashed line: average. Hatched bars ended before their goal."
+          averageLabel="Average · hatched bars ended before their goal"
           maxBarWidth={22}
         />
       </ChartCard>
@@ -252,7 +263,9 @@ export default function HistoryScreen() {
       <SectionHeader>All fasts</SectionHeader>
       {[...groups].map(([month, list]) => (
         <View key={month} style={{ gap: space[2] }}>
-          <Text style={[font.sm, { color: c.textMuted, paddingHorizontal: space[1] }]}>{month}</Text>
+          <Text style={[font.xs, styles.eyebrow, { color: c.textMuted, paddingHorizontal: space[1] }]}>
+            {month.toUpperCase()}
+          </Text>
           <View style={[styles.list, { backgroundColor: c.surface, shadowColor: c.shadow, ...elevation }]}>
             {list.map((f, i) => (
               <FastRow key={f.id} fast={f} now={now} first={i === 0} />
@@ -280,7 +293,7 @@ function ChartCard({
     <Card>
       <View style={styles.chartHead}>
         <View style={{ flex: 1 }}>
-          <Text accessibilityRole="header" style={[font.lg, strong, { color: c.text }]}>
+          <Text accessibilityRole="header" style={[font.md, bold, { color: c.text, letterSpacing: -0.2 }]}>
             {title}
           </Text>
           {subtitle ? <Text style={[font.sm, tabular, { color: c.textMuted }]}>{subtitle}</Text> : null}
@@ -301,7 +314,7 @@ function FastRow({ fast, now, first }: { fast: Fast; now: number; first: boolean
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${formatDuration(elapsedMs(fast, now))}, started ${dayTime(fast.start)}${running ? ', running' : ''}`}
+      accessibilityLabel={`${formatDuration(elapsedMs(fast, now))}, started ${dayTime(fast.start)}${running ? ', running' : met ? ', goal met' : ''}`}
       onPress={() => router.push(`/fast/${fast.id}`)}
       style={({ pressed }) => [
         styles.row,
@@ -310,7 +323,10 @@ function FastRow({ fast, now, first }: { fast: Fast; now: number; first: boolean
       ]}
     >
       <View
-        style={[styles.dateBlock, running ? { backgroundColor: c.primary } : { backgroundColor: c.surface2 }]}
+        style={[
+          styles.dateBlock,
+          { backgroundColor: running ? c.primary : met ? c.accentSubtle : c.surface2 },
+        ]}
       >
         <Text style={[font.md, bold, tabular, { color: running ? c.onPrimary : c.text }]}>{d.getDate()}</Text>
         <Text style={[font.xs, { color: running ? c.onPrimary : c.textMuted, fontSize: 11 }]}>
@@ -326,40 +342,117 @@ function FastRow({ fast, now, first }: { fast: Fast; now: number; first: boolean
           {fast.note ? ` · ${fast.note}` : ''}
         </Text>
       </View>
-      {running ? <Badge label="Running" /> : met ? <Badge label="Goal met" tone="muted" /> : null}
+      {running ? (
+        <Badge label="Running" />
+      ) : met ? (
+        <View accessibilityLabel="Goal met" style={[styles.met, { backgroundColor: c.accentStrong }]}>
+          <Icon name="check" size={14} color={c.onAccent} />
+        </View>
+      ) : null}
       <Icon name="chevron" size={16} color={c.textFaint} />
     </Pressable>
   );
 }
 
-function Tile({ label, value, unit, hint }: { label: string; value: string; unit?: string; hint?: string }) {
+function Summary({
+  hours,
+  fastCount,
+  lastMonthHours,
+  lastMonthName,
+  stats,
+}: {
+  hours: number;
+  fastCount: number;
+  lastMonthHours: number;
+  lastMonthName: string;
+  stats: { label: string; value: string; hint?: string }[];
+}) {
   const c = useColors();
+  const diff = Math.round(hours - lastMonthHours);
+  const compare =
+    lastMonthHours <= 0
+      ? null
+      : diff === 0
+        ? `Level with ${lastMonthName}`
+        : `${Math.abs(diff)}h ${diff > 0 ? 'more' : 'less'} than ${lastMonthName}`;
+  const fastsLine = `${fastCount} ${fastCount === 1 ? 'fast' : 'fasts'}`;
   return (
-    <View
-      accessible
-      accessibilityLabel={`${label}: ${value}${unit ? ` ${unit}` : ''}${hint ? `. ${hint}` : ''}`}
-      style={[styles.tile, { backgroundColor: c.surface, shadowColor: c.shadow, ...elevation }]}
-    >
-      <Text style={[font.xs, { color: c.textMuted, fontWeight: '600' }]}>{label}</Text>
-      <Text numberOfLines={1} adjustsFontSizeToFit style={[font['2xl'], strong, tabular, { color: c.text }]}>
-        {value}
-        {unit ? <Text style={[font.md, { color: c.textMuted, fontWeight: '600' }]}> {unit}</Text> : null}
-      </Text>
-      {hint ? <Text style={[font.xs, { color: c.textMuted }]}>{hint}</Text> : null}
-    </View>
+    <Card style={{ gap: space[4] }}>
+      <View
+        accessible
+        accessibilityLabel={`This month: ${Math.round(hours)} hours fasted, ${fastsLine}${compare ? `. ${compare}` : ''}`}
+        style={{ gap: 2 }}
+      >
+        <Text style={[font.xs, styles.eyebrow, { color: c.textMuted }]}>THIS MONTH</Text>
+        <Text style={[font.display, strong, tabular, { color: c.text, letterSpacing: -1.2 }]}>
+          {Math.round(hours)}
+          <Text style={[font.lg, { color: c.textMuted, fontWeight: '600', letterSpacing: 0 }]}> hours</Text>
+        </Text>
+        <View style={styles.summaryLine}>
+          <Text style={[font.sm, { color: c.textMuted }]}>{fastsLine}</Text>
+          {compare ? (
+            <View style={[styles.pill, { backgroundColor: diff >= 0 ? c.accentSubtle : c.surface2 }]}>
+              <Text style={[font.xs, tabular, { color: c.text, fontWeight: '600' }]}>{compare}</Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+      <View style={[styles.statRow, { borderTopColor: c.border }]}>
+        {stats.map((st, i) => (
+          <View
+            key={st.label}
+            accessible
+            accessibilityLabel={`${st.label}: ${st.value}${st.hint ? `. ${st.hint}` : ''}`}
+            style={[
+              styles.statCell,
+              i === 0 && { paddingLeft: 0 },
+              i > 0 && { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: c.border },
+            ]}
+          >
+            <Text style={[font.xs, { color: c.textMuted, fontWeight: '600' }]}>{st.label}</Text>
+            <Text numberOfLines={1} adjustsFontSizeToFit style={[font.xl, strong, tabular, { color: c.text }]}>
+              {st.value}
+            </Text>
+            {st.hint ? (
+              <Text numberOfLines={1} style={[font.xs, { color: c.textMuted }]}>
+                {st.hint}
+              </Text>
+            ) : null}
+          </View>
+        ))}
+      </View>
+    </Card>
   );
 }
 
-function LegendCell({ color, label }: { color: string; label: string }) {
+function LegendRing({ p, label }: { p: number; label: string }) {
   const c = useColors();
+  const size = 16;
+  const stroke = 2.5;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
   return (
     <View style={styles.legendItem}>
-      <View
-        style={[
-          styles.legendSwatch,
-          { backgroundColor: color, borderWidth: StyleSheet.hairlineWidth, borderColor: c.borderInput },
-        ]}
-      />
+      <Svg width={size} height={size}>
+        {p >= 1 ? (
+          <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={c.accentStrong} />
+        ) : (
+          <>
+            <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.surface2} strokeWidth={stroke} fill="none" />
+            <G rotation={-90} origin={`${size / 2}, ${size / 2}`}>
+              <Circle
+                cx={size / 2}
+                cy={size / 2}
+                r={r}
+                stroke={c.accentStrong}
+                strokeWidth={stroke}
+                strokeDasharray={`${circ * p} ${circ}`}
+                fill="none"
+              />
+            </G>
+          </>
+        )}
+      </Svg>
       <Text style={[font.xs, { color: c.textMuted }]}>{label}</Text>
     </View>
   );
@@ -374,22 +467,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 2,
   },
-  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: space[3] },
-  tile: {
-    flexGrow: 1,
-    flexBasis: '45%',
-    borderRadius: radius.lg,
-    padding: space[4],
-    gap: 2,
+  eyebrow: { fontWeight: '600', letterSpacing: 0.6 },
+  summaryLine: { flexDirection: 'row', alignItems: 'center', gap: space[2], flexWrap: 'wrap', marginTop: 2 },
+  pill: { borderRadius: radius.full, paddingHorizontal: space[2], paddingVertical: 3 },
+  statRow: {
+    flexDirection: 'row',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: space[4],
   },
-  legend: { flexDirection: 'row', gap: space[4], paddingHorizontal: space[1] },
+  statCell: { flex: 1, paddingHorizontal: space[3], gap: 2 },
+  legend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[4],
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: space[3],
+  },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendSwatch: { width: 14, height: 14, borderRadius: 7 },
   empty: { alignItems: 'center', paddingVertical: space[10], gap: space[3] },
   chartHead: { flexDirection: 'row', alignItems: 'flex-start', gap: space[2] },
   cta: { flexDirection: 'row', alignItems: 'center', gap: space[3], paddingVertical: space[2] },
   list: { borderRadius: radius.lg },
   row: { flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[3], minHeight: 68 },
+  met: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   dateBlock: {
     width: 46,
     height: 46,
