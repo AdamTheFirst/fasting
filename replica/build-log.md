@@ -12,3 +12,15 @@
   - Haptics (`expo-haptics`): a selection tick on choices and a light tap on main buttons. Needs a native rebuild.
 - Decision: kept Butter, Sage and Powder blue; moved "fasting" from the period colour to the theme's accent so one colour means "fasted" everywhere.
 - Self-score from Simulator screenshots: Fast 8.5, running fast 8.5, History 8, Settings 8. Dark mode checked.
+
+## 2026-10-31 · Minimal, premium pass
+
+- Feedback: Settings and the icon looked bad and every screen was cluttered. Goal: minimalism, one idea per screen.
+- Settings: five rows (Appearance, Fasting, Reminders, Health, Your data), each opening its own page under `src/app/settings/`. Group labels are small caps, as in iOS Settings.
+- History: a single summary card (hours this month, comparison with last month, then average, longest and streak), then a ring calendar where each day's ring fills with hours fasted and a whole day becomes a solid disc. Tap a day to open that fast. All charts moved to a separate Insights page, where each chart opens with one plain number.
+- Fast: the idle screen is the dial, goal tiles and start button only. The running screen dropped the duplicate start/goal row, the week card and the extra info card. The ring sweeps in when the screen opens, and this is skipped when Reduce Motion is on.
+- Icon and splash: one gold ring on ink, with no track or knob; the splash uses the same ring on the light and dark backgrounds (`expo-splash-screen`). The brand mark and the Fast tab glyph are now the ring as well.
+- Live Activity and widget: ink banner, a large timer, the goal on the right and a gold progress bar toward the goal (SwiftUI `ProgressView` timer, so it updates with the app closed). Checked on the iPhone 17 lock screen.
+- Confirm sheets: centred text, a grabber, and a quiet text button for cancel.
+- Decision: kept every feature and moved it one tap deeper instead of deleting it.
+- Self-score from Simulator screenshots: Settings 8.5, Fast 8.5, History 8.5, Insights 8, Live Activity 8.5, icon 8. Dark mode checked.

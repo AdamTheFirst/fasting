@@ -155,6 +155,7 @@ export function Segmented<T extends string | number>({
   onChange: (v: T) => void;
 }) {
   const c = useColors();
+  const dark = useIsDark();
   return (
     <View accessibilityRole="radiogroup" style={[styles.segmented, { backgroundColor: c.surface2 }]}>
       {options.map((o) => {
@@ -170,7 +171,12 @@ export function Segmented<T extends string | number>({
             }}
             style={[
               styles.segment,
-              on && { backgroundColor: c.surface, ...elevation, shadowOpacity: 0.1, shadowColor: c.shadow },
+              on && {
+                backgroundColor: dark ? c.border : c.surface,
+                ...elevation,
+                shadowOpacity: 0.1,
+                shadowColor: c.shadow,
+              },
             ]}
           >
             <Text style={[font.sm, { color: on ? c.text : c.textMuted, fontWeight: on ? '600' : '500' }]}>
