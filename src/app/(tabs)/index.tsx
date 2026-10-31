@@ -10,7 +10,7 @@ import { BrandMark, Icon } from '../../components/Icon';
 import { MilestoneBanner, useJustPassed } from '../../components/MilestoneBanner';
 import { MilestoneList } from '../../components/MilestoneList';
 import { SafetyCard } from '../../components/SafetyCard';
-import { Body, Button, Card, Screen, SectionHeader, Segmented, Stat, Title } from '../../components/ui';
+import { Body, Button, Card, Screen, SectionHeader, Segmented, Title } from '../../components/ui';
 import {
   elapsedMs,
   type Fast,
@@ -28,7 +28,7 @@ import { noteFromPastYou } from '../../domain/notes';
 import { phaseAt, type PhaseKey } from '../../domain/phases';
 import { shouldShowSafetyCard } from '../../domain/safety';
 import { presetForToday } from '../../domain/settings';
-import { dayKey, hoursByDay, hoursInRange, longestFast, startOfLocalWeek, streaks } from '../../domain/stats';
+import { longestFast } from '../../domain/stats';
 import { DAY, formatDuration, formatElapsed, formatShort, HOUR } from '../../domain/time';
 import { tick } from '../../services/haptics';
 import { useStore } from '../../state/store';
@@ -152,23 +152,6 @@ function StartFast({
     clearJustEnded();
   };
 
-  const week = useMemo(() => {
-    const byDay = hoursByDay(fasts, now);
-    const monday = startOfLocalWeek(now);
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(monday);
-      d.setDate(d.getDate() + i);
-      return {
-        letter: d.toLocaleDateString(undefined, { weekday: 'narrow' }),
-        date: d.getDate(),
-        hours: byDay.get(dayKey(d.getTime())) ?? 0,
-        today: dayKey(d.getTime()) === dayKey(now),
-        future: d.getTime() > now,
-      };
-    });
-  }, [fasts, now]);
-  const weekHours = hoursInRange(fasts, startOfLocalWeek(now), now, now);
-  const streak = streaks(fasts, settings.streakMinHours, now).current;
   const last = fasts.filter((f) => f.end !== null).sort((a, b) => b.end! - a.end!)[0];
 
   const plannedEnd = goal ? (goal.kind === 'until' ? goal.at : now + goal.ms) : null;
@@ -283,84 +266,7 @@ function StartFast({
           {new Date(last.end!).toLocaleDateString(undefined, { weekday: 'long' })}
         </Text>
       ) : null}
-
-      <SectionHeader
-        action={
-          <Pressable accessibilityRole="link" onPress={() => router.push('/history')} hitSlop={8}>
-            <Text style={[font.sm, { color: c.textMuted, fontWeight: '600' }]}>See all</Text>
-          </Pressable>
-        }
-      >
-        This week
-      </SectionHeader>
-      <Card>
-        <WeekCells days={week} />
-        <View style={[styles.factRow, { borderTopColor: c.border }]}>
-          <Stat label="Fasted this week" value={`${Math.round(weekHours)}`} unit="hours" />
-          <View style={[styles.factDivider, { backgroundColor: c.border }]} />
-          <Stat
-            label={`Streak at ${settings.streakMinHours}h or more`}
-            value={`${streak}`}
-            unit={streak === 1 ? 'day' : 'days'}
-          />
-        </View>
-      </Card>
-
-      <Button label="Log a past fast" variant="secondary" block onPress={() => router.push('/fast/new')} />
-      <Text style={[font.xs, { color: c.textMuted, textAlign: 'center' }]}>
-        No account, no ads, no tracking. Your data stays on this phone.
-      </Text>
     </Screen>
-  );
-}
-
-/** The week as seven bars, each filled by the hours fasted that day (a full bar is 24 hours). */
-function WeekCells({
-  days,
-}: {
-  days: { letter: string; date: number; hours: number; today: boolean; future: boolean }[];
-}) {
-  const c = useColors();
-  return (
-    <View style={styles.week}>
-      {days.map((d, i) => {
-        const share = Math.min(1, d.hours / 24);
-        return (
-          <View
-            key={i}
-            style={styles.weekCol}
-            accessible
-            accessibilityLabel={`${d.letter} ${d.date}: ${Math.round(d.hours)} hours${d.today ? ', today' : ''}`}
-          >
-            <Text style={[font.xs, tabular, { color: c.textMuted, fontWeight: '600' }]}>
-              {d.hours >= 1 ? `${Math.round(d.hours)}h` : ' '}
-            </Text>
-            <View
-              style={[
-                styles.barTrack,
-                d.future
-                  ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.borderInput }
-                  : { backgroundColor: c.surface2 },
-              ]}
-            >
-              {!d.future && share > 0 ? (
-                <View
-                  style={[
-                    styles.barFill,
-                    { height: `${Math.max(14, share * 100)}%`, backgroundColor: c.accentStrong },
-                  ]}
-                />
-              ) : null}
-            </View>
-            <View style={[styles.dayLetter, d.today && { backgroundColor: c.primary }]}>
-              <Text style={[font.xs, { color: d.today ? c.onPrimary : c.textMuted, fontWeight: '600' }]}>
-                {d.letter}
-              </Text>
-            </View>
-          </View>
-        );
-      })}
-    </View>
   );
 }
 
@@ -616,14 +522,6 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
           <Text style={[font.sm, bold, { color: c.text }]}>{phase.label}</Text>
           <Text style={[font.xs, { color: c.textMuted }]}>likely phase now</Text>
         </View>
-        <View style={[styles.factRow, { borderTopColor: c.border }]}>
-          <Fact label="Started" value={when(fast.start)} />
-          <View style={[styles.factDivider, { backgroundColor: c.border }]} />
-          <Fact
-            label={goalAt ? (now >= goalAt ? 'Goal reached' : 'Goal') : 'Goal'}
-            value={goalAt ? when(goalAt) : 'Open-ended'}
-          />
-        </View>
       </Card>
 
       <Button label="End fast" size="lg" block onPress={() => setConfirming(true)} />
@@ -672,22 +570,14 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
       )}
 
       {past && <PastYouCard past={past} onHide={() => setPastHiddenFor(fast.id)} />}
-      <SectionHeader>Notes</SectionHeader>
       <FastNotesCard fast={fast} onSave={(f) => void saveFast(f)} />
 
       <SectionHeader>Along the way</SectionHeader>
       <Card style={{ paddingVertical: space[1] }}>
         <MilestoneList marks={marks} elapsedHours={elapsedHours} start={fast.start} />
       </Card>
-      <Card tone="flat" style={styles.note}>
-        <Icon name="info" size={18} color={c.textMuted} />
-        <Text style={[font.sm, { color: c.textMuted, flex: 1 }]}>
-          <Text style={[bold, { color: c.text }]}>Autophagy. </Text>
-          {AUTOPHAGY_NOTE}
-        </Text>
-      </Card>
-      <Text style={[font.xs, { color: c.textMuted, textAlign: 'center' }]}>
-        Phases are likely and vary by person. Fastaway is not a medical device.
+      <Text style={[font.xs, { color: c.textMuted, textAlign: 'center', paddingHorizontal: space[4] }]}>
+        Phases are likely and vary by person. {AUTOPHAGY_NOTE} Fastaway is not a medical device.
       </Text>
 
       <ConfirmDialog

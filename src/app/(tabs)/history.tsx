@@ -1,24 +1,17 @@
 import { router } from 'expo-router';
-import { type ReactNode, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 
-import { BodySignals } from '../../components/BodySignals';
-import { BarChart, DayGrid, hoursTick, LineChart } from '../../components/charts';
 import { BrandMark, Icon } from '../../components/Icon';
 import { MonthCalendar } from '../../components/MonthCalendar';
-import { Badge, Body, Button, Card, Screen, SectionHeader, Segmented, Title } from '../../components/ui';
+import { Badge, Body, Button, Card, Screen, SectionHeader, Title } from '../../components/ui';
 import { elapsedMs, type Fast, goalReachedAt } from '../../domain/fast';
 import {
   averageHours,
-  bmi,
-  fastLengths,
-  HEALTHY_BMI,
   hoursByDay,
   hoursInRange,
-  hoursPerWeek,
   records,
-  startHours,
   streaks,
 } from '../../domain/stats';
 import { DAY, formatDuration, formatShort, HOUR } from '../../domain/time';
@@ -31,30 +24,20 @@ const shortDate = (t: number) =>
 const dayTime = (t: number) =>
   new Date(t).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' });
 
-type Range = 30 | 90 | 365;
-
 export default function HistoryScreen() {
-  const { fasts, weights, heights, settings } = useStore();
+  const { fasts, settings } = useStore();
   const c = useColors();
   const now = useNow(60_000);
-  const [range, setRange] = useState<Range>(30);
   // Months back from the current one: 0 is this month.
   const [monthOffset, setMonthOffset] = useState(0);
   const shownMonth = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - monthOffset, 1);
 
   const byDay = useMemo(() => hoursByDay(fasts, now), [fasts, now]);
-  const lengths = useMemo(() => fastLengths(fasts, range, now), [fasts, range, now]);
-  const weeks = useMemo(() => hoursPerWeek(fasts, 12, now), [fasts, now]);
-  const starts = useMemo(() => startHours(fasts, now - range * DAY), [fasts, range, now]);
-  const avg = averageHours(fasts, now - range * DAY);
   const recs = useMemo(
     () => records(fasts, settings.streakMinHours, now),
     [fasts, settings.streakMinHours, now],
   );
   const streak = streaks(fasts, settings.streakMinHours, now).current;
-  const height = heights.at(-1)?.m ?? null;
-  const latestWeight = weights.at(-1);
-  const firstWeight = weights[0];
   const monthStart = new Date(new Date(now).getFullYear(), new Date(now).getMonth(), 1).getTime();
   const prevMonth = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - 1, 1);
   const fastsThisMonth = fasts.filter((f) => f.start >= monthStart).length;
@@ -151,116 +134,18 @@ export default function HistoryScreen() {
         </View>
       </Card>
 
-      <SectionHeader>Insights</SectionHeader>
-      <Segmented<Range>
-        value={range}
-        onChange={setRange}
-        options={[
-          { value: 30, label: '30 days' },
-          { value: 90, label: '90 days' },
-          { value: 365, label: 'Year' },
-        ]}
-      />
-
-      <ChartCard title="Fast lengths" subtitle={avg ? `Average ${formatShort(avg * 3_600_000)}` : undefined}>
-        <BarChart
-          bars={lengths.map((l) => ({
-            key: l.id,
-            value: l.hours,
-            label: shortDate(l.start),
-            strong: l.goalHours === null || l.hours >= l.goalHours,
-            detail: `${shortDate(l.start)} · ${formatDuration(l.hours * 3_600_000)}${
-              l.goalHours !== null ? (l.hours >= l.goalHours ? ' · goal met' : ' · ended before goal') : ''
-            }`,
-          }))}
-          tick={hoursTick}
-          dayAxis
-          average={avg}
-          averageLabel="Average · hatched bars ended before their goal"
-          maxBarWidth={22}
-        />
-      </ChartCard>
-
-      <ChartCard title="Hours per week" subtitle="Last 12 weeks">
-        <BarChart
-          bars={weeks.map((w) => ({
-            key: String(w.weekStart),
-            value: w.hours,
-            label: shortDate(w.weekStart),
-            detail: `Week of ${shortDate(w.weekStart)} · ${Math.round(w.hours)}h`,
-          }))}
-          tick={(v) => `${Math.round(v)}h`}
-        />
-      </ChartCard>
-
-      <ChartCard title="Your rhythm" subtitle="Last 26 weeks, one square per day">
-        <DayGrid hoursByDay={byDay} now={now} />
-      </ChartCard>
-
-      <ChartCard title="When you start" subtitle="Fasts started, by hour of day">
-        <BarChart
-          bars={starts.map((n, h) => ({
-            key: String(h),
-            value: n,
-            label: h % 6 === 0 ? `${String(h).padStart(2, '0')}:00` : undefined,
-            detail: `${String(h).padStart(2, '0')}:00 to ${String(h).padStart(2, '0')}:59 · ${n} ${n === 1 ? 'fast' : 'fasts'}`,
-          }))}
-          tick={(v) => `${Math.round(v)}`}
-          integer
-          height={110}
-        />
-      </ChartCard>
-
-      <ChartCard
-        title="Weight"
-        subtitle={
-          latestWeight
-            ? `${latestWeight.kg.toFixed(1)} kg${
-                firstWeight && firstWeight !== latestWeight
-                  ? ` · ${latestWeight.kg - firstWeight.kg >= 0 ? '+' : ''}${(latestWeight.kg - firstWeight.kg).toFixed(1)} since ${shortDate(firstWeight.at)}`
-                  : ''
-              }`
-            : undefined
-        }
-        right={settings.healthSyncEnabled ? <Badge label="Health sync on" /> : undefined}
-      >
-        {weights.length === 0 ? (
-          <Pressable onPress={() => router.push('/settings')} style={styles.cta}>
-            <Icon name="heart" color={c.text} />
-            <Body style={[font.sm, { flex: 1 }]}>
-              Add a weight in Settings, or turn on Health sync, to see this chart.
-            </Body>
-            <Icon name="chevron" size={18} color={c.text} />
-          </Pressable>
-        ) : (
-          <LineChart
-            points={weights.map((w) => ({ t: w.at, v: w.kg }))}
-            spans={fasts.map((f) => ({ start: f.start, end: f.end ?? now }))}
-            spansLabel="Shaded: when you were fasting"
-          />
-        )}
-      </ChartCard>
-
-      {settings.showBmi && height && weights.length > 0 && (
-        <ChartCard
-          title="BMI"
-          subtitle={`${(bmi(latestWeight!.kg, height) ?? 0).toFixed(1)} now · height ${Math.round(height * 100)} cm`}
-        >
-          <LineChart
-            points={weights.map((w) => ({ t: w.at, v: bmi(w.kg, height) ?? 0 }))}
-            format={(v) => v.toFixed(1)}
-            band={HEALTHY_BMI}
-            bandLabel={`${HEALTHY_BMI.min} to ${HEALTHY_BMI.max}, the usual adult range`}
-          />
-        </ChartCard>
-      )}
-
-      {settings.healthSignals && (
-        <>
-          <SectionHeader>Body signals</SectionHeader>
-          <BodySignals fasts={fasts} now={now} />
-        </>
-      )}
+      <Card onPress={() => router.push('/insights')} accessibilityLabel="Insights: charts and trends">
+        <View style={styles.insightsRow}>
+          <View style={[styles.insightsIcon, { backgroundColor: c.accentSubtle }]}>
+            <Icon name="history" size={20} color={c.text} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={[font.md, bold, { color: c.text }]}>Insights</Text>
+            <Text style={[font.sm, { color: c.textMuted }]}>Lengths, weekly hours, rhythm and weight</Text>
+          </View>
+          <Icon name="chevron" size={18} color={c.textFaint} />
+        </View>
+      </Card>
 
       <SectionHeader>All fasts</SectionHeader>
       {[...groups].map(([month, list]) => (
@@ -276,34 +161,6 @@ export default function HistoryScreen() {
         </View>
       ))}
     </Screen>
-  );
-}
-
-function ChartCard({
-  title,
-  subtitle,
-  right,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  right?: ReactNode;
-  children: ReactNode;
-}) {
-  const c = useColors();
-  return (
-    <Card>
-      <View style={styles.chartHead}>
-        <View style={{ flex: 1 }}>
-          <Text accessibilityRole="header" style={[font.md, bold, { color: c.text, letterSpacing: -0.2 }]}>
-            {title}
-          </Text>
-          {subtitle ? <Text style={[font.sm, tabular, { color: c.textMuted }]}>{subtitle}</Text> : null}
-        </View>
-        {right}
-      </View>
-      {children}
-    </Card>
   );
 }
 
@@ -494,6 +351,8 @@ const styles = StyleSheet.create({
   chartHead: { flexDirection: 'row', alignItems: 'flex-start', gap: space[2] },
   cta: { flexDirection: 'row', alignItems: 'center', gap: space[3], paddingVertical: space[2] },
   list: { borderRadius: radius.lg },
+  insightsRow: { flexDirection: 'row', alignItems: 'center', gap: space[3] },
+  insightsIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: space[3], padding: space[3], minHeight: 68 },
   met: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   dateBlock: {

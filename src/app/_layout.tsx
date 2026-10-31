@@ -31,6 +31,18 @@ function Root() {
         <Stack.Screen name="action/[verb]" options={{ headerShown: false }} />
         <Stack.Screen name="shortcuts" options={{ title: 'Shortcuts and Siri' }} />
         <Stack.Screen name="privacy" options={{ title: 'Privacy' }} />
+        <Stack.Screen name="insights" options={{ title: 'Insights', headerBackTitle: 'History' }} />
+        <Stack.Screen
+          name="settings/appearance"
+          options={{ title: 'Appearance', headerBackTitle: 'Settings' }}
+        />
+        <Stack.Screen name="settings/fasting" options={{ title: 'Fasting', headerBackTitle: 'Settings' }} />
+        <Stack.Screen
+          name="settings/reminders"
+          options={{ title: 'Reminders', headerBackTitle: 'Settings' }}
+        />
+        <Stack.Screen name="settings/health" options={{ title: 'Health', headerBackTitle: 'Settings' }} />
+        <Stack.Screen name="settings/data" options={{ title: 'Your data', headerBackTitle: 'Settings' }} />
       </Stack>
     </>
   );

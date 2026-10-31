@@ -20,7 +20,9 @@ export type IconName =
   | 'clock'
   | 'close'
   | 'scale'
-  | 'ruler';
+  | 'ruler'
+  | 'sun'
+  | 'folder';
 
 /** Line icons drawn for Fastaway: 24 px grid, 1.75 stroke, round caps. No rings, no clocks faces as heroes. */
 export function Icon({ name, size = 22, color }: { name: IconName; size?: number; color: string }) {
@@ -94,6 +96,18 @@ export function Icon({ name, size = 22, color }: { name: IconName; size?: number
       )}
       {name === 'clock' && <Path d="M12 7v5l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z" {...p} />}
       {name === 'ruler' && <Path d="M4 16L16 4l4 4L8 20l-4-4zM8 12l2 2M11 9l2 2M14 6l2 2" {...p} />}
+      {name === 'sun' && (
+        <>
+          <Circle cx="12" cy="12" r="4" {...p} />
+          <Path
+            d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+            {...p}
+          />
+        </>
+      )}
+      {name === 'folder' && (
+        <Path d="M3.5 7.5a2 2 0 012-2h4l2 2.5h7a2 2 0 012 2V17a2 2 0 01-2 2h-13a2 2 0 01-2-2V7.5z" {...p} />
+      )}
       {name === 'scale' && (
         <>
           <Rect x="3.5" y="4" width="17" height="16" rx="4" {...p} />
@@ -104,20 +118,14 @@ export function Icon({ name, size = 22, color }: { name: IconName; size?: number
   );
 }
 
-/**
- * The Fastaway mark from the logo brief: one long stroke that runs off the right edge
- * (a road or horizon that keeps going) with two shorter strokes above it.
- */
-/** The Fastaway mark: the goal ring, most of the way round, as on the app icon. */
+/** The Fastaway mark: one ring, most of the way round, as on the app icon. */
 export function BrandMark({ size = 28, color, accent }: { size?: number; color: string; accent?: string }) {
   const stroke = size * 0.2;
   const r = (size - stroke) / 2;
   const mid = size / 2;
   const circ = 2 * Math.PI * r;
-  const sweep = 290 / 360;
   return (
     <Svg width={size} height={size}>
-      <Circle cx={mid} cy={mid} r={r} stroke={color} strokeOpacity={0.15} strokeWidth={stroke} fill="none" />
       <Circle
         cx={mid}
         cy={mid}
@@ -125,7 +133,7 @@ export function BrandMark({ size = 28, color, accent }: { size?: number; color: 
         stroke={accent ?? color}
         strokeWidth={stroke}
         strokeLinecap="round"
-        strokeDasharray={`${circ * sweep} ${circ}`}
+        strokeDasharray={`${circ * (300 / 360)} ${circ}`}
         transform={`rotate(-90 ${mid} ${mid})`}
         fill="none"
       />
