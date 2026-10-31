@@ -35,13 +35,7 @@ export function Icon({ name, size = 22, color }: { name: IconName; size?: number
   };
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
-      {name === 'fast' && (
-        <>
-          <Line x1="2" y1="17" x2="22" y2="17" {...p} />
-          <Line x1="6" y1="12" x2="16" y2="12" {...p} />
-          <Line x1="9" y1="7" x2="13" y2="7" {...p} />
-        </>
-      )}
+      {name === 'fast' && <Path d="M12 4a8 8 0 1 1-6.93 4" {...p} strokeWidth={2.25} />}
       {name === 'history' && (
         <>
           <Rect x="3.5" y="5" width="17" height="15" rx="3" {...p} />

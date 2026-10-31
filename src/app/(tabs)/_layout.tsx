@@ -38,7 +38,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => <TabIcon name="fast" focused={focused} />,
           tabBarBadge: running ? '' : undefined,
           tabBarBadgeStyle: {
-            backgroundColor: c.period,
+            backgroundColor: c.accentStrong,
             minWidth: 8,
             maxHeight: 8,
             borderRadius: 4,

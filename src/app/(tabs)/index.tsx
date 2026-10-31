@@ -603,7 +603,7 @@ function AdultGate({ onConfirm }: { onConfirm: () => void }) {
   return (
     <Screen title="Welcome" scroll={false}>
       <Card style={{ alignItems: 'center', gap: space[4], paddingVertical: space[8] }}>
-        <BrandMark size={44} color={c.text} />
+        <BrandMark size={44} color={c.text} accent={c.accentStrong} />
         <Title size="xl" style={{ textAlign: 'center' }}>
           Fastaway is for adults
         </Title>
