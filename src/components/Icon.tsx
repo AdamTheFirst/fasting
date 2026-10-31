@@ -108,29 +108,27 @@ export function Icon({ name, size = 22, color }: { name: IconName; size?: number
  * The Fastaway mark from the logo brief: one long stroke that runs off the right edge
  * (a road or horizon that keeps going) with two shorter strokes above it.
  */
-export function BrandMark({
-  size = 28,
-  color,
-  bleed = true,
-}: {
-  size?: number;
-  color: string;
-  bleed?: boolean;
-}) {
-  const w = size * 1.25;
+/** The Fastaway mark: the goal ring, most of the way round, as on the app icon. */
+export function BrandMark({ size = 28, color, accent }: { size?: number; color: string; accent?: string }) {
+  const stroke = size * 0.2;
+  const r = (size - stroke) / 2;
+  const mid = size / 2;
+  const circ = 2 * Math.PI * r;
+  const sweep = 290 / 360;
   return (
-    <Svg width={w} height={size} viewBox="0 0 40 32">
-      <Line
-        x1="4"
-        y1="25"
-        x2={bleed ? 40 : 36}
-        y2="25"
-        stroke={color}
-        strokeWidth={4.5}
+    <Svg width={size} height={size}>
+      <Circle cx={mid} cy={mid} r={r} stroke={color} strokeOpacity={0.15} strokeWidth={stroke} fill="none" />
+      <Circle
+        cx={mid}
+        cy={mid}
+        r={r}
+        stroke={accent ?? color}
+        strokeWidth={stroke}
         strokeLinecap="round"
+        strokeDasharray={`${circ * sweep} ${circ}`}
+        transform={`rotate(-90 ${mid} ${mid})`}
+        fill="none"
       />
-      <Line x1="10" y1="16" x2="28" y2="16" stroke={color} strokeWidth={4.5} strokeLinecap="round" />
-      <Line x1="15" y1="7" x2="22" y2="7" stroke={color} strokeWidth={4.5} strokeLinecap="round" />
     </Svg>
   );
 }

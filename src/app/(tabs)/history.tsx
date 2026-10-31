@@ -91,12 +91,12 @@ export default function HistoryScreen() {
     return (
       <Screen title="History" right={addPast}>
         <Card style={styles.empty}>
-          <BrandMark size={40} color={c.textMuted} />
-          <Title size="lg" style={{ textAlign: 'center' }}>
-            Nothing here yet
+          <BrandMark size={64} color={c.text} accent={c.accentStrong} />
+          <Title size="xl" style={{ textAlign: 'center', marginTop: space[2] }}>
+            Your fasts gather here
           </Title>
-          <Body muted style={{ textAlign: 'center' }}>
-            Your fasts will show up as days on a calendar, with charts once there are a few.
+          <Body muted style={{ textAlign: 'center', maxWidth: 300 }}>
+            Each day gets a ring that fills with the hours you fasted. Charts appear once there are a few.
           </Body>
           <Button label="Add a past fast" variant="secondary" onPress={() => router.push('/fast/new')} />
         </Card>

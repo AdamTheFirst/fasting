@@ -34,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: `${identity.bundleId}${suffix}`.replace(/-/g, '_'),
     adaptiveIcon: {
-      backgroundColor: '#F6F4EE',
+      backgroundColor: '#1B2029',
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
       monochromeImage: './assets/android-icon-monochrome.png',
@@ -57,6 +57,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/splash-icon.png',
+        imageWidth: 120,
+        backgroundColor: '#F6F4EE',
+        dark: { image: './assets/splash-icon-dark.png', backgroundColor: '#151920' },
+      },
+    ],
     'expo-sqlite',
     'expo-sharing',
     '@react-native-community/datetimepicker',

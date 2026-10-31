@@ -7,10 +7,10 @@ import { BrandMark, Icon } from '../../components/Icon';
 import {
   Button,
   Chip,
+  GroupLabel,
   ListGroup,
   ListRow,
   Screen,
-  SectionHeader,
   Segmented,
   SwitchRow,
 } from '../../components/ui';
@@ -280,7 +280,7 @@ export default function SettingsScreen() {
   const input = [font.md, styles.input, { color: c.text, backgroundColor: c.surface2 }];
   return (
     <Screen title="Settings">
-      <SectionHeader>Theme</SectionHeader>
+      <GroupLabel>Theme</GroupLabel>
       <ListGroup>
         {(Object.keys(themes) as ThemeId[]).map((id) => (
           <ThemeRow
@@ -292,7 +292,7 @@ export default function SettingsScreen() {
         ))}
       </ListGroup>
 
-      <SectionHeader>Appearance</SectionHeader>
+      <GroupLabel>Appearance</GroupLabel>
       <Segmented<Appearance>
         value={settings.appearance}
         onChange={(appearance) => void updateSettings({ appearance })}
@@ -303,7 +303,7 @@ export default function SettingsScreen() {
         ]}
       />
 
-      <SectionHeader>Health</SectionHeader>
+      <GroupLabel>Health</GroupLabel>
       <ListGroup footer="Reads and writes weight and height only. Nothing leaves this phone otherwise.">
         <SwitchRow
           icon="heart"
@@ -341,7 +341,7 @@ export default function SettingsScreen() {
         />
       </ListGroup>
 
-      <SectionHeader>Milestone alerts</SectionHeader>
+      <GroupLabel>Milestone alerts</GroupLabel>
       <ListGroup footer={`All off unless you turn them on. ${AUTOPHAGY_NOTE}`}>
         {BUILT_IN_MILESTONES.map((m) => (
           <SwitchRow
@@ -371,7 +371,7 @@ export default function SettingsScreen() {
         />
       </ListGroup>
 
-      <SectionHeader>Your own milestones</SectionHeader>
+      <GroupLabel>Your own milestones</GroupLabel>
       <ListGroup footer="Any hour, any note, e.g. 36 h: walk and electrolytes.">
         {ms.custom.map((m) => (
           <ListRow
@@ -416,7 +416,7 @@ export default function SettingsScreen() {
         </View>
       </ListGroup>
 
-      <SectionHeader>Presets and weekly rhythm</SectionHeader>
+      <GroupLabel>Presets and weekly rhythm</GroupLabel>
       <ListGroup
         footer={
           presets.length
@@ -473,7 +473,7 @@ export default function SettingsScreen() {
         )}
       </ListGroup>
 
-      <SectionHeader>Streaks and long fasts</SectionHeader>
+      <GroupLabel>Streaks and long fasts</GroupLabel>
       <ListGroup footer="No penalties. A gap is just data.">
         <ListRow
           label="Hours that make a streak day"
@@ -503,7 +503,7 @@ export default function SettingsScreen() {
         />
       </ListGroup>
 
-      <SectionHeader>Widget and shortcuts</SectionHeader>
+      <GroupLabel>Widget and shortcuts</GroupLabel>
       <ListGroup footer="Add the Fast timer widget from your home screen or lock screen.">
         <SwitchRow
           label="Discreet widget"
@@ -519,7 +519,7 @@ export default function SettingsScreen() {
         />
       </ListGroup>
 
-      <SectionHeader>Your data</SectionHeader>
+      <GroupLabel>Your data</GroupLabel>
       <ListGroup footer="A Fastaway CSV replaces your history after you confirm. A file from another app, such as a Zero CSV or any spreadsheet with start and end times, is added to it.">
         <ListRow
           icon="export"
@@ -541,7 +541,7 @@ export default function SettingsScreen() {
       </Text>
 
       <View style={styles.about}>
-        <BrandMark size={28} color={c.text} />
+        <BrandMark size={32} color={c.text} accent={c.accentStrong} />
         <Text style={[font.lg, { color: c.text, ...strong }]}>Fastaway</Text>
         <Text style={[font.xs, { color: c.textMuted, textAlign: 'center' }]}>
           Version {Constants.expoConfig?.version ?? '0.1.0'}. A fasting log, not medical advice.{'\n'}

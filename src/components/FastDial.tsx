@@ -1,8 +1,11 @@
-import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { type ReactNode, useEffect, useState } from 'react';
+import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 
 import { useColors } from '../theme';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedG = Animated.createAnimatedComponent(G);
 
 export interface DialMark {
   /** Where the mark sits, 0 to 1 round the dial from the top. */
@@ -39,6 +42,25 @@ export function FastDial({
     y: mid - r * Math.cos(t * 2 * Math.PI),
   });
   const head = point(p);
+  // The ring sweeps in once when the screen opens; minute ticks after that just move.
+  const [sweep] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    let live = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
+      if (!live) return;
+      if (reduce) sweep.setValue(1);
+      else
+        Animated.timing(sweep, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: false,
+        }).start();
+    });
+    return () => {
+      live = false;
+    };
+  }, [sweep]);
 
   return (
     <View style={{ width: size, height: size, alignSelf: 'center' }}>
@@ -46,41 +68,47 @@ export function FastDial({
         <Circle cx={mid} cy={mid} r={r} stroke={c.surface2} strokeWidth={stroke} fill="none" />
         {p > 0 && (
           <G rotation={-90} origin={`${mid}, ${mid}`}>
-            <Circle
+            <AnimatedCircle
               cx={mid}
               cy={mid}
               r={r}
               stroke={c.accentStrong}
               strokeWidth={stroke}
               strokeLinecap="round"
-              strokeDasharray={`${circ * p} ${circ}`}
+              strokeDasharray={`${circ} ${circ}`}
+              strokeDashoffset={sweep.interpolate({
+                inputRange: [0, 1],
+                outputRange: [circ, circ * (1 - p)],
+              })}
               fill="none"
             />
           </G>
         )}
-        {marks.map((m, i) => {
-          const q = point(m.at);
-          return (
+        <AnimatedG opacity={sweep.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0, 0, 1] })}>
+          {marks.map((m, i) => {
+            const q = point(m.at);
+            return (
+              <Circle
+                key={i}
+                cx={q.x}
+                cy={q.y}
+                r={3}
+                fill={m.passed ? c.onAccent : c.textFaint}
+                opacity={m.passed ? 0.45 : 0.6}
+              />
+            );
+          })}
+          {progress !== null && (
             <Circle
-              key={i}
-              cx={q.x}
-              cy={q.y}
-              r={3.5}
-              fill={m.passed ? c.surface : c.textFaint}
-              opacity={m.passed ? 0.95 : 0.7}
+              cx={head.x}
+              cy={head.y}
+              r={stroke / 2 - 4}
+              fill={c.surface}
+              stroke={c.primary}
+              strokeWidth={2.5}
             />
-          );
-        })}
-        {progress !== null && (
-          <Circle
-            cx={head.x}
-            cy={head.y}
-            r={stroke / 2 - 4}
-            fill={c.surface}
-            stroke={c.primary}
-            strokeWidth={2.5}
-          />
-        )}
+          )}
+        </AnimatedG>
       </Svg>
       <View style={[StyleSheet.absoluteFill, styles.center, { padding: stroke + 18 }]}>{children}</View>
     </View>

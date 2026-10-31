@@ -254,6 +254,16 @@ export function SectionHeader({ children, action }: { children: string; action?:
   );
 }
 
+/** The small caps label over an inset group, as in iOS Settings. */
+export function GroupLabel({ children }: { children: string }) {
+  const c = useColors();
+  return (
+    <Text accessibilityRole="header" style={[font.xs, styles.groupLabel, { color: c.textMuted }]}>
+      {children.toUpperCase()}
+    </Text>
+  );
+}
+
 /** Label over a big number. */
 export function Stat({
   label,
@@ -557,4 +567,11 @@ const styles = StyleSheet.create({
   },
   content: { paddingHorizontal: layout.gutter, gap: space[4] },
   eyebrow: { fontWeight: '600', letterSpacing: 0.6 },
+  groupLabel: {
+    fontWeight: '600',
+    letterSpacing: 0.6,
+    marginTop: space[5],
+    marginBottom: -space[2],
+    paddingHorizontal: space[4],
+  },
 });
