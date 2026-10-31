@@ -26,6 +26,7 @@ import {
   useColors,
   useIsDark,
 } from '../theme';
+import { press, tick } from '../services/haptics';
 import { Icon, type IconName } from './Icon';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'quiet';
@@ -86,6 +87,10 @@ export function Button({
         style,
       ]}
       {...rest}
+      onPress={(e) => {
+        if (variant === 'primary' || variant === 'secondary') press();
+        rest.onPress?.(e);
+      }}
     >
       <View style={styles.buttonRow}>
         {icon ? <Icon name={icon} size={size === 'sm' ? 18 : 20} color={fg} /> : null}
@@ -121,7 +126,10 @@ export function Chip({
       accessibilityRole="radio"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ selected }}
-      onPress={onPress}
+      onPress={() => {
+        tick();
+        onPress();
+      }}
       hitSlop={6}
       style={[
         styles.chip,
@@ -156,7 +164,10 @@ export function Segmented<T extends string | number>({
             key={String(o.value)}
             accessibilityRole="radio"
             accessibilityState={{ selected: on }}
-            onPress={() => onChange(o.value)}
+            onPress={() => {
+              tick();
+              onChange(o.value);
+            }}
             style={[
               styles.segment,
               on && { backgroundColor: c.surface, ...elevation, shadowOpacity: 0.1, shadowColor: c.shadow },
@@ -391,7 +402,10 @@ export function SwitchRow({
       icon={icon}
       label={label}
       detail={detail}
-      onPress={() => onChange(!value)}
+      onPress={() => {
+        tick();
+        onChange(!value);
+      }}
       right={
         <Switch
           accessibilityLabel={label}

@@ -28,6 +28,7 @@ import { shouldShowSafetyCard } from '../../domain/safety';
 import { presetForToday } from '../../domain/settings';
 import { dayKey, hoursByDay, hoursInRange, longestFast, startOfLocalWeek, streaks } from '../../domain/stats';
 import { DAY, formatDuration, formatElapsed, formatShort, HOUR } from '../../domain/time';
+import { tick } from '../../services/haptics';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
 import {
@@ -453,7 +454,10 @@ function GoalTile({
       accessibilityRole="radio"
       accessibilityLabel={`${custom ? 'Custom goal' : label}${today ? ', today' : ''}`}
       accessibilityState={{ selected }}
-      onPress={onPress}
+      onPress={() => {
+        tick();
+        onPress();
+      }}
       style={({ pressed }) => [
         styles.tile,
         selected
