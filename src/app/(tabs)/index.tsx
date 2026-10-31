@@ -6,7 +6,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { DateTimeField } from '../../components/DateTimeField';
 import { FastDial } from '../../components/FastDial';
 import { FastNotesCard, PastYouCard } from '../../components/FastNotes';
-import { Icon } from '../../components/Icon';
+import { BrandMark, Icon } from '../../components/Icon';
 import { MilestoneBanner, useJustPassed } from '../../components/MilestoneBanner';
 import { MilestoneList } from '../../components/MilestoneList';
 import { SafetyCard } from '../../components/SafetyCard';
@@ -26,7 +26,7 @@ import {
 import { AUTOPHAGY_NOTE, timeline } from '../../domain/milestones';
 import { noteFromPastYou } from '../../domain/notes';
 import { phaseAt, type PhaseKey } from '../../domain/phases';
-import { needsAdultConfirmation, shouldShowSafetyCard } from '../../domain/safety';
+import { shouldShowSafetyCard } from '../../domain/safety';
 import { presetForToday } from '../../domain/settings';
 import { dayKey, hoursByDay, hoursInRange, longestFast, startOfLocalWeek, streaks } from '../../domain/stats';
 import { DAY, formatDuration, formatElapsed, formatShort, HOUR } from '../../domain/time';
@@ -75,9 +75,12 @@ function previousBest(fasts: readonly Fast[], now: number, exceptId?: string) {
 }
 
 export default function FastScreen() {
-  const { loaded, running } = useStore();
+  const { loaded, running, settings, updateSettings } = useStore();
   const [justEndedId, setJustEndedId] = useState<string | null>(null);
   if (!loaded) return null;
+  if (!settings.adultConfirmed) {
+    return <AdultGate onConfirm={() => void updateSettings({ adultConfirmed: true })} />;
+  }
   return running ? (
     <RunningFast fast={running} onEnded={setJustEndedId} />
   ) : (
@@ -568,7 +571,6 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
 
   const [pastHiddenFor, setPastHiddenFor] = useState<string | null>(null);
   const past = settings.showPastNotes && pastHiddenFor !== fast.id ? noteFromPastYou(fast, fasts, now) : null;
-  const askAdult = needsAdultConfirmation(settings.adultConfirmed, fast, now);
 
   const showCard = shouldShowSafetyCard(fast, now, {
     disabled: settings.safetyCardDisabled,
@@ -581,7 +583,6 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
   return (
     <Screen title={elapsed >= DAY ? `Day ${day}` : 'Fasting'} eyebrow={`Since ${when(fast.start)}`}>
       {justPassed && <MilestoneBanner mark={justPassed} onClose={closeBanner} />}
-      {askAdult && <AdultCard onConfirm={() => void updateSettings({ adultConfirmed: true })} />}
 
       <Card style={styles.hero}>
         <FastDial progress={ring.progress} marks={ring.marks}>
@@ -706,18 +707,22 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
   );
 }
 
-/** The one-time adult confirmation, the first time a fast passes 24 hours. It never blocks the fast. */
-function AdultCard({ onConfirm }: { onConfirm: () => void }) {
+/** First launch only: one tap that says you're an adult. No questions, no account; one flag on the phone. */
+function AdultGate({ onConfirm }: { onConfirm: () => void }) {
   const c = useColors();
   return (
-    <Card>
-      <Title size="lg">Fastaway is for adults</Title>
-      <Text style={[font.sm, { color: c.textMuted }]}>
-        Fasts past a day are for adults. If you&apos;re under 18, please talk to a doctor before fasting this
-        long.
-      </Text>
-      <Button label="I'm 18 or older" size="sm" onPress={onConfirm} />
-    </Card>
+    <Screen title="Welcome" scroll={false}>
+      <Card style={{ alignItems: 'center', gap: space[4], paddingVertical: space[8] }}>
+        <BrandMark size={44} color={c.text} />
+        <Title size="xl" style={{ textAlign: 'center' }}>
+          Fastaway is for adults
+        </Title>
+        <Text style={[font.md, { color: c.textMuted, textAlign: 'center' }]}>
+          It tracks fasts of any length. If you&apos;re under 18, please talk to a doctor before fasting.
+        </Text>
+        <Button label="I'm 18 or older" size="lg" block onPress={onConfirm} />
+      </Card>
+    </Screen>
   );
 }
 

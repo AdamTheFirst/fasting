@@ -91,7 +91,11 @@ export function MonthCalendar({
               accessibilityLabel={`${new Date(month.getFullYear(), month.getMonth(), d).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}: ${hours > 0 ? `${Math.round(hours)} hours fasted` : 'no fast'}${isToday ? ', today' : ''}`}
               disabled={!onPressDay || hours === 0}
               onPress={() => onPressDay?.(key)}
-              style={({ pressed }) => [styles.cell, { width: size, height: size }, pressed && { opacity: 0.6 }]}
+              style={({ pressed }) => [
+                styles.cell,
+                { width: size, height: size },
+                pressed && { opacity: 0.6 },
+              ]}
             >
               {size > 0 && <DayRing size={size - 6} hours={hours} full={full} />}
               <Text

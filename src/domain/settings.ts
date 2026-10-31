@@ -15,7 +15,7 @@ export interface AppSettings {
   appearance: Appearance;
   /** "Notes from past you" on the running fast. */
   showPastNotes: boolean;
-  /** The one-time "I'm 18 or older" tap. */
+  /** The one-time "I'm 18 or older" tap on first launch. */
   adultConfirmed: boolean;
   /** Read sleep, resting heart rate and HRV (asked when turned on). */
   healthSignals: boolean;

@@ -145,7 +145,9 @@ export default function HistoryScreen() {
         <View style={[styles.legend, { borderTopColor: c.border }]}>
           <LegendRing p={0.5} label="12 hours" />
           <LegendRing p={1} label="Whole day" />
-          <Text style={[font.xs, { color: c.textMuted, flex: 1, textAlign: 'right' }]}>Tap a day to open it</Text>
+          <Text style={[font.xs, { color: c.textMuted, flex: 1, textAlign: 'right' }]}>
+            Tap a day to open it
+          </Text>
         </View>
       </Card>
 
@@ -410,7 +412,11 @@ function Summary({
             ]}
           >
             <Text style={[font.xs, { color: c.textMuted, fontWeight: '600' }]}>{st.label}</Text>
-            <Text numberOfLines={1} adjustsFontSizeToFit style={[font.xl, strong, tabular, { color: c.text }]}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              style={[font.xl, strong, tabular, { color: c.text }]}
+            >
               {st.value}
             </Text>
             {st.hint ? (

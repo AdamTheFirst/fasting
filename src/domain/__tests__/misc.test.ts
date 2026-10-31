@@ -1,6 +1,5 @@
 import { parseAction } from '../actions';
 import type { Fast } from '../fast';
-import { needsAdultConfirmation } from '../safety';
 import { compareSignals, dailyAverage, mergeSignals } from '../signals';
 import { DAY, HOUR } from '../time';
 
@@ -28,16 +27,6 @@ describe('link actions', () => {
     expect(parseAction('start', { preset: 'p1' })).toMatchObject({ presetId: 'p1' });
     expect(parseAction('end', {})).toEqual({ kind: 'end' });
     expect(parseAction('dance', {})).toEqual({ kind: 'unknown' });
-  });
-});
-
-describe('safety extras', () => {
-  it('asks the adult question once, past 24 h', () => {
-    expect(needsAdultConfirmation(false, fast('a', NOW - 23 * HOUR, null), NOW)).toBe(false);
-    expect(needsAdultConfirmation(false, fast('a', NOW - 25 * HOUR, null), NOW)).toBe(true);
-    expect(needsAdultConfirmation(true, fast('a', NOW - 25 * HOUR, null), NOW)).toBe(false);
-    const longGoal = { ...fast('a', NOW, null), goal: { kind: 'duration' as const, ms: 36 * HOUR } };
-    expect(needsAdultConfirmation(false, longGoal, NOW)).toBe(true);
   });
 });
 

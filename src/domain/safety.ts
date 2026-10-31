@@ -24,25 +24,6 @@ export const HELPLINE = {
   url: 'https://findahelpline.com',
 } as const;
 
-export const ADULT_THRESHOLD_MS = 24 * HOUR;
-
-/**
- * Fastaway is for adults. The first time a fast runs past 24 h, one tap
- * confirms "I'm 18 or older". It is stored as one flag on the phone and asked once.
- */
-export function needsAdultConfirmation(
-  confirmed: boolean,
-  fast: Pick<Fast, 'start' | 'end' | 'goal'> | null,
-  now: number,
-): boolean {
-  if (confirmed || !fast) return false;
-  const goalAt = goalReachedAt(fast);
-  const until = fast.end ?? now;
-  return (
-    until - fast.start >= ADULT_THRESHOLD_MS || (goalAt !== null && goalAt - fast.start > ADULT_THRESHOLD_MS)
-  );
-}
-
 /**
  * The card shows once per fast when the running fast or its goal passes 72 h.
  * It never blocks anything, and the person can turn it off for good.
