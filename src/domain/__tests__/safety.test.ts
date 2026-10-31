@@ -10,6 +10,7 @@ const f = (over: Partial<Fast>): Fast => ({
   goal: null,
   presetId: null,
   note: null,
+  log: [],
   ...over,
 });
 const on = { disabled: false, dismissedFastIds: [] };

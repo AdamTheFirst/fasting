@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { DateTimeField } from '../../components/DateTimeField';
 import { FastDial } from '../../components/FastDial';
+import { FastNotesCard, PastYouCard } from '../../components/FastNotes';
 import { Icon } from '../../components/Icon';
 import { MilestoneBanner, useJustPassed } from '../../components/MilestoneBanner';
 import { MilestoneList } from '../../components/MilestoneList';
@@ -23,8 +24,9 @@ import {
   presetFromFast,
 } from '../../domain/fast';
 import { AUTOPHAGY_NOTE, timeline } from '../../domain/milestones';
+import { noteFromPastYou } from '../../domain/notes';
 import { phaseAt, type PhaseKey } from '../../domain/phases';
-import { shouldShowSafetyCard } from '../../domain/safety';
+import { needsAdultConfirmation, shouldShowSafetyCard } from '../../domain/safety';
 import { presetForToday } from '../../domain/settings';
 import { dayKey, hoursByDay, hoursInRange, longestFast, startOfLocalWeek, streaks } from '../../domain/stats';
 import { DAY, formatDuration, formatElapsed, formatShort, HOUR } from '../../domain/time';
@@ -537,7 +539,7 @@ function EndedCard({
 }
 
 function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => void }) {
-  const { fasts, settings, endFast, updateSettings } = useStore();
+  const { fasts, settings, endFast, updateSettings, saveFast } = useStore();
   const now = useNow();
   const c = useColors();
   const elapsed = elapsedMs(fast, now);
@@ -564,6 +566,10 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
       .map((m) => ({ at: (m.hours - lapStart) / ringHours, passed: m.passed })),
   };
 
+  const [pastHiddenFor, setPastHiddenFor] = useState<string | null>(null);
+  const past = settings.showPastNotes && pastHiddenFor !== fast.id ? noteFromPastYou(fast, fasts, now) : null;
+  const askAdult = needsAdultConfirmation(settings.adultConfirmed, fast, now);
+
   const showCard = shouldShowSafetyCard(fast, now, {
     disabled: settings.safetyCardDisabled,
     dismissedFastIds: settings.safetyCardDismissedFor,
@@ -575,6 +581,7 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
   return (
     <Screen title={elapsed >= DAY ? `Day ${day}` : 'Fasting'} eyebrow={`Since ${when(fast.start)}`}>
       {justPassed && <MilestoneBanner mark={justPassed} onClose={closeBanner} />}
+      {askAdult && <AdultCard onConfirm={() => void updateSettings({ adultConfirmed: true })} />}
 
       <Card style={styles.hero}>
         <FastDial progress={ring.progress} marks={ring.marks}>
@@ -663,6 +670,10 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
         />
       )}
 
+      {past && <PastYouCard past={past} onHide={() => setPastHiddenFor(fast.id)} />}
+      <SectionHeader>Notes</SectionHeader>
+      <FastNotesCard fast={fast} onSave={(f) => void saveFast(f)} />
+
       <SectionHeader>Along the way</SectionHeader>
       <Card style={{ paddingVertical: space[1] }}>
         <MilestoneList marks={marks} elapsedHours={elapsedHours} start={fast.start} />
@@ -692,6 +703,21 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
         }}
       />
     </Screen>
+  );
+}
+
+/** The one-time adult confirmation, the first time a fast passes 24 hours. It never blocks the fast. */
+function AdultCard({ onConfirm }: { onConfirm: () => void }) {
+  const c = useColors();
+  return (
+    <Card>
+      <Title size="lg">Fastaway is for adults</Title>
+      <Text style={[font.sm, { color: c.textMuted }]}>
+        Fasts past a day are for adults. If you&apos;re under 18, please talk to a doctor before fasting this
+        long.
+      </Text>
+      <Button label="I'm 18 or older" size="sm" onPress={onConfirm} />
+    </Card>
   );
 }
 

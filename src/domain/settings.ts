@@ -13,6 +13,14 @@ export interface AppSettings {
   weekdayPresets: Partial<Record<number, string>>;
   theme: ThemeId;
   appearance: Appearance;
+  /** "Notes from past you" on the running fast. */
+  showPastNotes: boolean;
+  /** The one-time "I'm 18 or older" tap. */
+  adultConfirmed: boolean;
+  /** Read sleep, resting heart rate and HRV (asked when turned on). */
+  healthSignals: boolean;
+  /** Widget and lock screen show only the time, never the word "fast". */
+  discreetWidget: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -25,6 +33,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   weekdayPresets: {},
   theme: 'butter',
   appearance: 'system',
+  showPastNotes: true,
+  adultConfirmed: false,
+  healthSignals: false,
+  discreetWidget: false,
 };
 
 /** Monday-first weekday index for a local time: 0 = Monday … 6 = Sunday. */

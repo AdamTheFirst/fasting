@@ -9,6 +9,7 @@ const fasts: Fast[] = [
     goal: { kind: 'duration', ms: 259_200_000 },
     presetId: 'p1',
     note: 'felt "great", tired day 2\nslept well',
+    log: [{ id: 'n1', at: Date.UTC(2026, 9, 2, 10), text: 'headache, salt helped' }],
   },
   {
     id: 'b',
@@ -17,6 +18,7 @@ const fasts: Fast[] = [
     goal: { kind: 'until', at: Date.UTC(2026, 9, 15, 8) },
     presetId: null,
     note: null,
+    log: [],
   },
 ];
 

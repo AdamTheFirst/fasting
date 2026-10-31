@@ -5,7 +5,7 @@ export const SAFETY_THRESHOLD_MS = 72 * HOUR;
 
 export const SAFETY_CARD = {
   title: 'Past three days',
-  body: 'Keep electrolytes up (sodium, potassium, magnesium) and break the fast gently with small meals. Stop and get help if you feel faint, confused or your heart races. If you take insulin or blood-sugar medication, are pregnant, under 18, underweight or have had an eating disorder, talk to a doctor before fasting this long. This is not medical advice.',
+  body: 'Keep electrolytes up (sodium, potassium, magnesium) and break the fast gently with small meals. Stop and get help if you feel faint, confused or your heart races. If you take insulin or blood-sugar medication, take blood-pressure medication or diuretics, have kidney disease or a heart condition, are pregnant, under 18, underweight or have had an eating disorder, talk to a doctor before fasting this long. This is not medical advice.',
   sources: [
     {
       label: 'NHS Highland: refeeding syndrome',
@@ -17,6 +17,31 @@ export const SAFETY_CARD = {
     },
   ],
 } as const;
+
+/** Shown on the safety card and in Settings. Covers every country. */
+export const HELPLINE = {
+  label: 'Struggling with food or eating? Find a helpline',
+  url: 'https://findahelpline.com',
+} as const;
+
+export const ADULT_THRESHOLD_MS = 24 * HOUR;
+
+/**
+ * Fastaway is for adults. The first time a fast runs past 24 h, one tap
+ * confirms "I'm 18 or older". It is stored as one flag on the phone and asked once.
+ */
+export function needsAdultConfirmation(
+  confirmed: boolean,
+  fast: Pick<Fast, 'start' | 'end' | 'goal'> | null,
+  now: number,
+): boolean {
+  if (confirmed || !fast) return false;
+  const goalAt = goalReachedAt(fast);
+  const until = fast.end ?? now;
+  return (
+    until - fast.start >= ADULT_THRESHOLD_MS || (goalAt !== null && goalAt - fast.start > ADULT_THRESHOLD_MS)
+  );
+}
 
 /**
  * The card shows once per fast when the running fast or its goal passes 72 h.

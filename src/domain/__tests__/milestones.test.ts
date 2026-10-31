@@ -3,7 +3,15 @@ import { customMilestone, DEFAULT_MILESTONE_SETTINGS, planAlerts, timeline } fro
 import { HOUR } from '../time';
 
 const NOW = Date.UTC(2026, 9, 30, 12);
-const running: Fast = { id: 'f', start: NOW - 10 * HOUR, end: null, goal: null, presetId: null, note: null };
+const running: Fast = {
+  id: 'f',
+  start: NOW - 10 * HOUR,
+  end: null,
+  goal: null,
+  presetId: null,
+  note: null,
+  log: [],
+};
 
 describe('planAlerts', () => {
   it('schedules nothing on a fresh install', () => {

@@ -8,7 +8,11 @@ const isRelease = variant === 'production';
 const suffix = isRelease ? '' : `.${variant}`;
 const displayName = isRelease ? identity.name : `${identity.name} (${variant})`;
 
-const healthReadWhy = `${identity.name} reads your weight and height to draw your weight and BMI charts. It never reads anything else.`;
+const healthReadWhy = `${identity.name} reads your weight and height to draw your weight and BMI charts. If you turn on body signals, it also reads sleep, resting heart rate and heart rate variability to draw them next to your fasts. Nothing leaves your phone.`;
+// The iOS widget and Live Activity add a widget extension target. FASTAWAY_WIDGETS=0 builds without
+// it, for a quick local build without an Apple team set up for app groups.
+const withWidgets = process.env.FASTAWAY_WIDGETS !== '0';
+
 const healthWriteWhy = `${identity.name} saves the weight and height you enter so other health apps can use them.`;
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
@@ -40,6 +44,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'android.permission.health.WRITE_WEIGHT',
       'android.permission.health.READ_HEIGHT',
       'android.permission.health.WRITE_HEIGHT',
+      'android.permission.health.READ_RESTING_HEART_RATE',
+      'android.permission.health.READ_HEART_RATE_VARIABILITY',
+      'android.permission.health.READ_SLEEP',
       'android.permission.POST_NOTIFICATIONS',
       'android.permission.SCHEDULE_EXACT_ALARM',
     ],
@@ -69,6 +76,28 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     'react-native-health-connect',
+    ...(withWidgets
+      ? [
+          [
+            'expo-widgets',
+            {
+              widgets: [
+                {
+                  name: 'FastWidget',
+                  displayName: 'Fast timer',
+                  description: 'How long your current fast has been running.',
+                  supportedFamilies: [
+                    'systemSmall',
+                    'accessoryRectangular',
+                    'accessoryInline',
+                    'accessoryCircular',
+                  ],
+                },
+              ],
+            },
+          ] as [string, unknown],
+        ]
+      : []),
     [
       'expo-build-properties',
       {

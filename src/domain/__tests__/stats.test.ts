@@ -23,6 +23,7 @@ const fast = (start: number, end: number | null): Fast => ({
   goal: null,
   presetId: null,
   note: null,
+  log: [],
 });
 
 describe('stats', () => {

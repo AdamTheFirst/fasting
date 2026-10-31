@@ -7,6 +7,9 @@ import {
   SdkAvailabilityStatus,
 } from 'react-native-health-connect';
 
+import { dailyAverage, mergeSignals } from '../../domain/signals';
+import { dayKey } from '../../domain/stats';
+import { HOUR } from '../../domain/time';
 import type { HealthBridge } from './types';
 
 const PERMISSIONS = [
@@ -14,6 +17,12 @@ const PERMISSIONS = [
   { accessType: 'write', recordType: 'Weight' },
   { accessType: 'read', recordType: 'Height' },
   { accessType: 'write', recordType: 'Height' },
+] as const;
+
+const SIGNAL_PERMISSIONS = [
+  { accessType: 'read', recordType: 'RestingHeartRate' },
+  { accessType: 'read', recordType: 'HeartRateVariabilityRmssd' },
+  { accessType: 'read', recordType: 'SleepSession' },
 ] as const;
 
 let ready: Promise<boolean> | null = null;
@@ -76,5 +85,40 @@ export const health: HealthBridge = {
     await insertRecords([
       { recordType: 'Height', height: { value: m, unit: 'meters' }, time: new Date(at).toISOString() },
     ]);
+  },
+  async requestSignalsAccess() {
+    if (!(await ensureInitialized())) return false;
+    const granted = await requestPermission([...SIGNAL_PERMISSIONS]);
+    // Any one of the three is enough to draw something.
+    return granted.some(
+      (g) => 'recordType' in g && SIGNAL_PERMISSIONS.some((p) => p.recordType === g.recordType),
+    );
+  },
+  async readSignals(since) {
+    await ensureInitialized();
+    const timeRangeFilter = {
+      operator: 'between' as const,
+      startTime: new Date(since).toISOString(),
+      endTime: now(),
+    };
+    // A type the person didn't allow throws; it just stays empty.
+    const [hr, hrv, sleep] = await Promise.all([
+      readRecords('RestingHeartRate', { timeRangeFilter }).catch(() => ({ records: [] })),
+      readRecords('HeartRateVariabilityRmssd', { timeRangeFilter }).catch(() => ({ records: [] })),
+      readRecords('SleepSession', { timeRangeFilter }).catch(() => ({ records: [] })),
+    ]);
+    const sleepByDay = new Map<string, number>();
+    for (const s of sleep.records) {
+      const end = Date.parse(s.endTime);
+      const k = dayKey(end);
+      sleepByDay.set(k, (sleepByDay.get(k) ?? 0) + (end - Date.parse(s.startTime)) / HOUR);
+    }
+    return mergeSignals({
+      restingHr: dailyAverage(hr.records.map((r) => ({ at: Date.parse(r.time), value: r.beatsPerMinute }))),
+      hrv: dailyAverage(
+        hrv.records.map((r) => ({ at: Date.parse(r.time), value: r.heartRateVariabilityMillis })),
+      ),
+      sleepHours: [...sleepByDay].map(([day, value]) => ({ day, value })),
+    });
   },
 };

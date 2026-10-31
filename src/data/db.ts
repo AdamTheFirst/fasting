@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
 import type { HeightEntry, WeightEntry } from '../domain/body';
-import type { Fast, Goal, Preset } from '../domain/fast';
+import type { Fast, FastNote, Goal, Preset } from '../domain/fast';
 
 /** Everything lives on the phone. No account, no server. */
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
@@ -20,6 +20,7 @@ const MIGRATIONS: string[] = [
    CREATE TABLE weights (id TEXT PRIMARY KEY NOT NULL, at INTEGER NOT NULL, kg REAL NOT NULL, source TEXT NOT NULL);
    CREATE TABLE heights (id TEXT PRIMARY KEY NOT NULL, at INTEGER NOT NULL, m REAL NOT NULL, source TEXT NOT NULL);
    CREATE TABLE settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);`,
+  `ALTER TABLE fasts ADD COLUMN log TEXT;`,
 ];
 
 // The first screen fires several queries at once, so share one open-and-migrate promise
@@ -52,6 +53,7 @@ interface FastRow {
   goal: string | null;
   preset_id: string | null;
   note: string | null;
+  log: string | null;
 }
 
 const toFast = (r: FastRow): Fast => ({
@@ -61,6 +63,7 @@ const toFast = (r: FastRow): Fast => ({
   goal: r.goal ? (JSON.parse(r.goal) as Goal) : null,
   presetId: r.preset_id,
   note: r.note,
+  log: r.log ? (JSON.parse(r.log) as FastNote[]) : [],
 });
 
 export async function listFasts(): Promise<Fast[]> {
@@ -72,13 +75,14 @@ export async function saveFast(f: Fast): Promise<void> {
   await (
     await getDb()
   ).runAsync(
-    'INSERT OR REPLACE INTO fasts (id, start, end, goal, preset_id, note) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT OR REPLACE INTO fasts (id, start, end, goal, preset_id, note, log) VALUES (?, ?, ?, ?, ?, ?, ?)',
     f.id,
     f.start,
     f.end,
     f.goal ? JSON.stringify(f.goal) : null,
     f.presetId,
     f.note,
+    f.log.length ? JSON.stringify(f.log) : null,
   );
 }
 
@@ -159,4 +163,14 @@ export async function setSetting<T>(key: string, value: T): Promise<void> {
   await (
     await getDb()
   ).runAsync('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', key, JSON.stringify(value));
+}
+
+/** Deletes every record and setting on this phone. */
+export async function deleteEverything(): Promise<void> {
+  const d = await getDb();
+  await d.withTransactionAsync(async () => {
+    for (const t of ['fasts', 'presets', 'weights', 'heights', 'settings']) {
+      await d.runAsync(`DELETE FROM ${t}`);
+    }
+  });
 }

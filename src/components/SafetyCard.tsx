@@ -1,6 +1,6 @@
 import { Linking, StyleSheet, View } from 'react-native';
 
-import { SAFETY_CARD } from '../domain/safety';
+import { HELPLINE, SAFETY_CARD } from '../domain/safety';
 import { elevation, font, radius, space, useColors } from '../theme';
 import { Icon } from './Icon';
 import { Body, Button, Title } from './ui';
@@ -19,7 +19,7 @@ export function SafetyCard({ onDismiss, onTurnOff }: { onDismiss: () => void; on
       </View>
       <Body style={font.sm}>{SAFETY_CARD.body}</Body>
       <View style={styles.links}>
-        {SAFETY_CARD.sources.map((s) => (
+        {[...SAFETY_CARD.sources, HELPLINE].map((s) => (
           <Body
             key={`${s.url}${c.text}`}
             accessibilityRole="link"

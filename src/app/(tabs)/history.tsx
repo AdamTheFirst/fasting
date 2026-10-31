@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { type ReactNode, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { BodySignals } from '../../components/BodySignals';
 import { BarChart, DayGrid, hoursTick, LineChart } from '../../components/charts';
 import { BrandMark, Icon } from '../../components/Icon';
 import { MonthCalendar } from '../../components/MonthCalendar';
@@ -239,6 +240,13 @@ export default function HistoryScreen() {
             bandLabel={`${HEALTHY_BMI.min} to ${HEALTHY_BMI.max}, the usual adult range`}
           />
         </ChartCard>
+      )}
+
+      {settings.healthSignals && (
+        <>
+          <SectionHeader>Body signals</SectionHeader>
+          <BodySignals fasts={fasts} now={now} />
+        </>
       )}
 
       <SectionHeader>All fasts</SectionHeader>

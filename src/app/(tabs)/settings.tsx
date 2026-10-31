@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -14,7 +15,9 @@ import {
   SwitchRow,
 } from '../../components/ui';
 import { APP_NAME } from '../../config/identity';
-import { csvToFasts, fastsToCsv } from '../../domain/csv';
+import { fastsToCsv } from '../../domain/csv';
+import { importFasts, mergeImported } from '../../domain/importers';
+import { HELPLINE } from '../../domain/safety';
 import { goalLabel, newId } from '../../domain/fast';
 import {
   AUTOPHAGY_NOTE,
@@ -137,6 +140,8 @@ export default function SettingsScreen() {
     settings,
     updateSettings,
     replaceAllFasts,
+    addFasts,
+    deleteEverything,
     addWeight,
     addHeight,
     savePreset,
@@ -218,11 +223,33 @@ export default function SettingsScreen() {
     const text = await pickCsv();
     if (text === null) return;
     try {
-      const imported = csvToFasts(text);
-      Alert.alert(`Replace your history with ${imported.length} fasts from this file?`, undefined, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Replace', style: 'destructive', onPress: () => void replaceAllFasts(imported) },
-      ]);
+      const now = Date.now();
+      const result = importFasts(text, now);
+      if (result.source === 'fastaway') {
+        Alert.alert(`Replace your history with ${result.fasts.length} fasts from this file?`, undefined, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Replace', style: 'destructive', onPress: () => void replaceAllFasts(result.fasts) },
+        ]);
+        return;
+      }
+      // Another app's file: add to your history, never replace it.
+      const { added, duplicates } = mergeImported(fasts, result.fasts, now);
+      const notes = [
+        duplicates ? `${duplicates} already in your history.` : null,
+        result.skipped.length ? `${result.skipped.length} rows without a usable time were skipped.` : null,
+      ].filter(Boolean);
+      if (added.length === 0) {
+        Alert.alert('Nothing new to add from this file.', notes.join(' ') || undefined);
+        return;
+      }
+      Alert.alert(
+        `Add ${added.length} ${added.length === 1 ? 'fast' : 'fasts'} to your history?`,
+        notes.join(' ') || undefined,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Add', onPress: () => void addFasts(added) },
+        ],
+      );
     } catch (e) {
       Alert.alert(
         "Couldn't read that file. Nothing was changed.",
@@ -230,6 +257,25 @@ export default function SettingsScreen() {
       );
     }
   };
+
+  const toggleSignals = async (on: boolean) => {
+    if (on) {
+      if (!(await health.isAvailable())) return Alert.alert(`${health.name} isn't available on this phone.`);
+      if (!(await health.requestSignalsAccess()))
+        return Alert.alert(`${APP_NAME} wasn't given access to ${health.name}.`);
+    }
+    await updateSettings({ healthSignals: on });
+  };
+
+  const confirmDeleteEverything = () =>
+    Alert.alert(
+      'Delete everything?',
+      'Every fast, note, preset, weight and setting on this phone. Export a CSV first if you want a copy. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete everything', style: 'destructive', onPress: () => void deleteEverything() },
+      ],
+    );
 
   const input = [font.md, styles.input, { color: c.text, backgroundColor: c.surface2 }];
   return (
@@ -286,6 +332,12 @@ export default function SettingsScreen() {
           detail={currentBmi ? `BMI ${currentBmi.toFixed(1)} now` : 'Needs a weight and a height'}
           value={settings.showBmi}
           onChange={(v) => void updateSettings({ showBmi: v })}
+        />
+        <SwitchRow
+          label="Body signals"
+          detail="Sleep, resting heart rate and HRV next to your fasts, in History. Read only."
+          value={settings.healthSignals}
+          onChange={(v) => void toggleSignals(v)}
         />
       </ListGroup>
 
@@ -443,10 +495,32 @@ export default function SettingsScreen() {
           value={!settings.safetyCardDisabled}
           onChange={(v) => void updateSettings({ safetyCardDisabled: !v })}
         />
+        <SwitchRow
+          label="Notes from past you"
+          detail="While fasting, what you wrote at the same hour of an earlier fast."
+          value={settings.showPastNotes}
+          onChange={(v) => void updateSettings({ showPastNotes: v })}
+        />
+      </ListGroup>
+
+      <SectionHeader>Widget and shortcuts</SectionHeader>
+      <ListGroup footer="Add the Fast timer widget from your home screen or lock screen.">
+        <SwitchRow
+          label="Discreet widget"
+          detail="The widget and lock screen show only the time, never the word fast."
+          value={settings.discreetWidget}
+          onChange={(v) => void updateSettings({ discreetWidget: v })}
+        />
+        <ListRow
+          label="Shortcuts and Siri"
+          detail="Start or end a fast without opening the app"
+          chevron
+          onPress={() => router.push('/shortcuts')}
+        />
       </ListGroup>
 
       <SectionHeader>Your data</SectionHeader>
-      <ListGroup footer="Import replaces your history after you confirm.">
+      <ListGroup footer="A Fastaway CSV replaces your history after you confirm. A file from another app, such as a Zero CSV or any spreadsheet with start and end times, is added to it.">
         <ListRow
           icon="export"
           label="Export CSV"
@@ -455,7 +529,16 @@ export default function SettingsScreen() {
           onPress={() => void shareCsv(`${APP_NAME.toLowerCase()}-fasts.csv`, fastsToCsv(fasts))}
         />
         <ListRow icon="import" label="Import CSV" chevron onPress={() => void importCsv()} />
+        <ListRow label="Privacy" chevron onPress={() => router.push('/privacy')} />
+        <ListRow label="Delete everything" destructive onPress={confirmDeleteEverything} />
       </ListGroup>
+      <Text
+        accessibilityRole="link"
+        style={[font.sm, { color: c.text, textDecorationLine: 'underline', textAlign: 'center' }]}
+        onPress={() => void Linking.openURL(HELPLINE.url)}
+      >
+        {HELPLINE.label}
+      </Text>
 
       <View style={styles.about}>
         <BrandMark size={28} color={c.text} />

@@ -3,6 +3,13 @@ import { DAY, HOUR } from './time';
 /** All timestamps are UTC epoch milliseconds. Elapsed time is always derived from start, never counted. */
 export type Goal = { kind: 'duration'; ms: number } | { kind: 'until'; at: number };
 
+/** A line written during a fast, kept with the moment it was written. */
+export interface FastNote {
+  id: string;
+  at: number;
+  text: string;
+}
+
 export interface Fast {
   id: string;
   start: number;
@@ -11,6 +18,8 @@ export interface Fast {
   goal: Goal | null;
   presetId: string | null;
   note: string | null;
+  /** Timestamped notes written along the way, oldest first. */
+  log: FastNote[];
 }
 
 export interface Preset {

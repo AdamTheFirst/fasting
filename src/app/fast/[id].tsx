@@ -36,6 +36,7 @@ export default function EditFast() {
         goal: null,
         presetId: null,
         note: null,
+        log: [],
       },
   );
   const now = useNow(30_000);

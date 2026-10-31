@@ -9,6 +9,8 @@ export const health: HealthBridge = {
   readLatestHeight: async () => null,
   writeWeight: async () => {},
   writeHeight: async () => {},
+  requestSignalsAccess: async () => false,
+  readSignals: async () => [],
 };
 
 export type { HealthBridge };

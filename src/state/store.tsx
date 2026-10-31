@@ -7,6 +7,7 @@ import { planAlerts } from '../domain/milestones';
 import { type AppSettings, DEFAULT_SETTINGS } from '../domain/settings';
 import { longestFast } from '../domain/stats';
 import { syncMilestoneAlerts } from '../services/notifications';
+import { syncWidgets } from '../services/widgets';
 
 interface Store {
   loaded: boolean;
@@ -21,6 +22,10 @@ interface Store {
   saveFast(fast: Fast): Promise<void>;
   deleteFast(id: string): Promise<void>;
   replaceAllFasts(fasts: Fast[]): Promise<void>;
+  /** Adds fasts from another app without touching the ones you have. */
+  addFasts(fasts: readonly Fast[]): Promise<void>;
+  /** Deletes every fast, preset, weight and setting on this phone. */
+  deleteEverything(): Promise<void>;
   savePreset(preset: Preset): Promise<void>;
   deletePreset(id: string): Promise<void>;
   addWeight(entry: WeightEntry): Promise<void>;
@@ -72,6 +77,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     void syncMilestoneAlerts(alerts);
   }, [loaded, fasts, running, settings.milestones]);
 
+  // The widget and lock screen follow the running fast, its goal and the discreet setting.
+  useEffect(() => {
+    if (loaded) syncWidgets(running, settings.discreetWidget);
+  }, [loaded, running, settings.discreetWidget]);
+
   const reloadFasts = useCallback(async () => setFasts(await db.listFasts()), []);
 
   const store = useMemo<Store>(
@@ -85,7 +95,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       settings,
       async startFast(goal, presetId = null) {
         if (running) return;
-        await db.saveFast({ id: newId(), start: Date.now(), end: null, goal, presetId, note: null });
+        await db.saveFast({ id: newId(), start: Date.now(), end: null, goal, presetId, note: null, log: [] });
         await reloadFasts();
       },
       async endFast(at = Date.now()) {
@@ -104,6 +114,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       async replaceAllFasts(next) {
         await db.replaceAllFasts(next);
         await reloadFasts();
+      },
+      async addFasts(added) {
+        for (const f of added) await db.saveFast(f);
+        await reloadFasts();
+      },
+      async deleteEverything() {
+        await db.deleteEverything();
+        setFasts([]);
+        setPresets([]);
+        setWeights([]);
+        setHeights([]);
+        setSettings(DEFAULT_SETTINGS);
       },
       async savePreset(preset) {
         await db.savePreset(preset);
