@@ -5,10 +5,11 @@ import { router } from 'expo-router';
 import { BodySignals } from '../components/BodySignals';
 import { BarChart, DayGrid, hoursTick, LineChart } from '../components/charts';
 import { Icon } from '../components/Icon';
-import { Badge, Body, Card, GroupLabel, Segmented } from '../components/ui';
+import { Body, Card, GroupLabel, Segmented } from '../components/ui';
 import {
   averageHours,
   bmi,
+  dayKey,
   fastLengths,
   HEALTHY_BMI,
   hoursByDay,
@@ -18,7 +19,7 @@ import {
 import { DAY, formatDuration, formatShort } from '../domain/time';
 import { useStore } from '../state/store';
 import { useNow } from '../state/useNow';
-import { bold, font, layout, space, tabular, useColors } from '../theme';
+import { font, layout, space, strong, tabular, useColors } from '../theme';
 
 const shortDate = (t: number) =>
   new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
@@ -39,6 +40,15 @@ export default function Insights() {
   const height = heights.at(-1)?.m ?? null;
   const latestWeight = weights.at(-1);
   const firstWeight = weights[0];
+  const thisWeek = weeks.at(-1)?.hours ?? 0;
+  const weekAvg = weeks.length ? weeks.reduce((n, w) => n + w.hours, 0) / weeks.length : 0;
+  const busiest = starts.reduce((best, n, h) => (n > (starts[best] ?? 0) ? h : best), 0);
+  const fastedDays = Array.from({ length: 30 }, (_, i) => byDay.get(dayKey(now - i * DAY)) ?? 0).filter(
+    (h) => h > 0,
+  ).length;
+  const rangeWords = range === 365 ? 'the last year' : `the last ${range} days`;
+  const weightChange =
+    latestWeight && firstWeight && firstWeight !== latestWeight ? latestWeight.kg - firstWeight.kg : null;
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: c.bg }} contentContainerStyle={styles.page}>
@@ -52,7 +62,11 @@ export default function Insights() {
         ]}
       />
 
-      <ChartCard title="Fast lengths" subtitle={avg ? `Average ${formatShort(avg * 3_600_000)}` : undefined}>
+      <ChartCard
+        label="Fast length"
+        headline={avg ? formatShort(avg * 3_600_000) : '–'}
+        caption={`Average over ${rangeWords}`}
+      >
         <BarChart
           bars={lengths.map((l) => ({
             key: l.id,
@@ -71,7 +85,11 @@ export default function Insights() {
         />
       </ChartCard>
 
-      <ChartCard title="Hours per week" subtitle="Last 12 weeks">
+      <ChartCard
+        label="Hours per week"
+        headline={`${Math.round(thisWeek)}h`}
+        caption={`This week · ${Math.round(weekAvg)}h a week over 12 weeks`}
+      >
         <BarChart
           bars={weeks.map((w) => ({
             key: String(w.weekStart),
@@ -83,11 +101,19 @@ export default function Insights() {
         />
       </ChartCard>
 
-      <ChartCard title="Your rhythm" subtitle="Last 26 weeks, one square per day">
+      <ChartCard
+        label="Rhythm"
+        headline={`${fastedDays} of 30 days`}
+        caption="Days with a fast this past month · one square per day"
+      >
         <DayGrid hoursByDay={byDay} now={now} />
       </ChartCard>
 
-      <ChartCard title="When you start" subtitle="Fasts started, by hour of day">
+      <ChartCard
+        label="Start time"
+        headline={starts.some((n) => n > 0) ? `Around ${String(busiest).padStart(2, '0')}:00` : '–'}
+        caption={`When most fasts began in ${rangeWords}`}
+      >
         <BarChart
           bars={starts.map((n, h) => ({
             key: String(h),
@@ -102,23 +128,19 @@ export default function Insights() {
       </ChartCard>
 
       <ChartCard
-        title="Weight"
-        subtitle={
-          latestWeight
-            ? `${latestWeight.kg.toFixed(1)} kg${
-                firstWeight && firstWeight !== latestWeight
-                  ? ` · ${latestWeight.kg - firstWeight.kg >= 0 ? '+' : ''}${(latestWeight.kg - firstWeight.kg).toFixed(1)} since ${shortDate(firstWeight.at)}`
-                  : ''
-              }`
-            : undefined
+        label="Weight"
+        headline={latestWeight ? `${latestWeight.kg.toFixed(1)} kg` : '–'}
+        caption={
+          weightChange !== null
+            ? `${weightChange >= 0 ? '+' : ''}${weightChange.toFixed(1)} kg since ${shortDate(firstWeight!.at)}`
+            : 'Shaded areas are your fasts'
         }
-        right={settings.healthSyncEnabled ? <Badge label="Health sync on" /> : undefined}
       >
         {weights.length === 0 ? (
-          <Pressable onPress={() => router.push('/settings')} style={styles.cta}>
+          <Pressable onPress={() => router.push('/settings/health')} style={styles.cta}>
             <Icon name="heart" color={c.text} />
             <Body style={[font.sm, { flex: 1 }]}>
-              Add a weight in Settings, or turn on Health sync, to see this chart.
+              Add a weight, or turn on Health sync, to see this chart.
             </Body>
             <Icon name="chevron" size={18} color={c.text} />
           </Pressable>
@@ -133,8 +155,9 @@ export default function Insights() {
 
       {settings.showBmi && height && weights.length > 0 && (
         <ChartCard
-          title="BMI"
-          subtitle={`${(bmi(latestWeight!.kg, height) ?? 0).toFixed(1)} now · height ${Math.round(height * 100)} cm`}
+          label="BMI"
+          headline={(bmi(latestWeight!.kg, height) ?? 0).toFixed(1)}
+          caption={`At ${Math.round(height * 100)} cm`}
         >
           <LineChart
             points={weights.map((w) => ({ t: w.at, v: bmi(w.kg, height) ?? 0 }))}
@@ -155,28 +178,27 @@ export default function Insights() {
   );
 }
 
+/** A label, the one number that matters, a plain line under it, then the chart. */
 function ChartCard({
-  title,
-  subtitle,
-  right,
+  label,
+  headline,
+  caption,
   children,
 }: {
-  title: string;
-  subtitle?: string;
-  right?: ReactNode;
+  label: string;
+  headline: string;
+  caption?: string;
   children: ReactNode;
 }) {
   const c = useColors();
   return (
     <Card>
-      <View style={styles.chartHead}>
-        <View style={{ flex: 1 }}>
-          <Text accessibilityRole="header" style={[font.md, bold, { color: c.text, letterSpacing: -0.2 }]}>
-            {title}
-          </Text>
-          {subtitle ? <Text style={[font.sm, tabular, { color: c.textMuted }]}>{subtitle}</Text> : null}
-        </View>
-        {right}
+      <View accessible accessibilityLabel={`${label}: ${headline}. ${caption ?? ''}`} style={{ gap: 2 }}>
+        <Text style={[font.xs, styles.label, { color: c.textMuted }]}>{label.toUpperCase()}</Text>
+        <Text accessibilityRole="header" style={[font['2xl'], strong, tabular, { color: c.text }]}>
+          {headline}
+        </Text>
+        {caption ? <Text style={[font.sm, { color: c.textMuted }]}>{caption}</Text> : null}
       </View>
       {children}
     </Card>
@@ -185,6 +207,6 @@ function ChartCard({
 
 const styles = StyleSheet.create({
   page: { padding: layout.gutter, gap: space[4], paddingBottom: space[12] },
-  chartHead: { flexDirection: 'row', alignItems: 'flex-start', gap: space[2] },
+  label: { fontWeight: '600', letterSpacing: 0.6 },
   cta: { flexDirection: 'row', alignItems: 'center', gap: space[3], paddingVertical: space[2] },
 });

@@ -1,5 +1,15 @@
-import { Text, VStack } from '@expo/ui/swift-ui';
-import { font, foregroundStyle, monospacedDigit } from '@expo/ui/swift-ui/modifiers';
+import { ProgressView, Spacer, Text, VStack } from '@expo/ui/swift-ui';
+import {
+  font,
+  foregroundStyle,
+  kerning,
+  labelsHidden,
+  lineLimit,
+  monospacedDigit,
+  progressViewStyle,
+  textCase,
+  tint,
+} from '@expo/ui/swift-ui/modifiers';
 import type { WidgetEnvironment } from 'expo-widgets';
 
 /**
@@ -22,41 +32,61 @@ export interface FastWidgetProps {
 // An arrow function in a const, not `export default function FastWidget`: the widgets Babel plugin
 // turns the function into a string, and in development React Refresh still registers the
 // function's name, which then no longer exists and crashes the app on launch.
+// Colours are written inline: the plugin moves the function body into the widget on its own, so it
+// can't see anything else in this file. Gold is the app's accent; the bar fills toward the goal.
 const FastWidget = (props: FastWidgetProps, env: WidgetEnvironment) => {
   'widget';
-  const small = env.widgetFamily === 'accessoryInline' || env.widgetFamily === 'accessoryCircular';
+  const family = env.widgetFamily;
+  const tiny = family === 'accessoryInline' || family === 'accessoryCircular';
+  const label = [
+    font({ size: 11, weight: 'semibold' }),
+    kerning(0.8),
+    textCase('uppercase'),
+    foregroundStyle({ type: 'hierarchical', style: 'secondary' }),
+  ];
   if (props.start === undefined) {
     return (
-      <VStack>
-        <Text modifiers={[font({ size: small ? 12 : 15, weight: 'semibold' })]}>
+      <VStack alignment="leading" spacing={4}>
+        {!tiny && <Text modifiers={label}>{props.discreet ? 'Timer' : 'Fastaway'}</Text>}
+        <Text modifiers={[font({ size: tiny ? 12 : 17, weight: 'semibold', design: 'rounded' })]}>
           {props.discreet ? '–' : 'Not fasting'}
         </Text>
       </VStack>
     );
   }
   const start = new Date(props.start);
-  return (
-    <VStack alignment="leading" spacing={2}>
-      {!small && (
-        <Text
-          modifiers={[
-            font({ size: 12, weight: 'semibold' }),
-            foregroundStyle({ type: 'hierarchical', style: 'secondary' }),
-          ]}
-        >
-          {props.discreet ? 'Since' : 'Fasting for'}
-        </Text>
-      )}
+  if (tiny) {
+    return (
       <Text
         date={start}
         dateStyle="relative"
-        modifiers={[font({ size: small ? 13 : 22, weight: 'bold', design: 'rounded' }), monospacedDigit()]}
+        modifiers={[font({ size: 13, weight: 'semibold', design: 'rounded' }), monospacedDigit()]}
       />
-      {!small && props.goalAt !== undefined && (
-        <Text modifiers={[font({ size: 12 }), foregroundStyle({ type: 'hierarchical', style: 'secondary' })]}>
-          {props.goalAt > Date.now() ? 'Goal ' : 'Goal reached '}
-          {props.goalText ?? ''}
-        </Text>
+    );
+  }
+  const reached = props.goalAt !== undefined && props.goalAt <= Date.now();
+  return (
+    <VStack alignment="leading" spacing={6}>
+      <Text modifiers={label}>{props.discreet ? 'Since' : reached ? 'Goal reached' : 'Fasting'}</Text>
+      <Text
+        date={start}
+        dateStyle="relative"
+        modifiers={[font({ size: 24, weight: 'bold', design: 'rounded' }), monospacedDigit(), lineLimit(2)]}
+      />
+      <Spacer />
+      {props.goalAt !== undefined && !reached && (
+        <VStack alignment="leading" spacing={4}>
+          <ProgressView
+            timerInterval={{ lower: start, upper: new Date(props.goalAt) }}
+            countsDown={false}
+            modifiers={[progressViewStyle('linear'), tint('#E3BC52'), labelsHidden()]}
+          />
+          <Text
+            modifiers={[font({ size: 12 }), foregroundStyle({ type: 'hierarchical', style: 'secondary' })]}
+          >
+            {`Goal ${props.goalText ?? ''}`}
+          </Text>
+        </VStack>
       )}
     </VStack>
   );

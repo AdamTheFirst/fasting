@@ -39,17 +39,18 @@ export function ConfirmDialog({
       <Pressable
         accessibilityLabel={cancelLabel}
         onPress={onCancel}
-        style={[styles.scrim, { backgroundColor: 'rgba(21,25,32,0.5)' }]}
+        style={[styles.scrim, { backgroundColor: 'rgba(21,25,32,0.35)' }]}
       >
         <Pressable
           accessibilityViewIsModal
           onPress={() => {}}
           style={[styles.card, { backgroundColor: c.surface }]}
         >
-          <Text accessibilityRole="header" style={[font.xl, { color: c.text, ...strong }]}>
+          <View style={[styles.grabber, { backgroundColor: c.border }]} />
+          <Text accessibilityRole="header" style={[font.xl, styles.center, { color: c.text, ...strong }]}>
             {title}
           </Text>
-          {message ? <Text style={[font.md, { color: c.textMuted }]}>{message}</Text> : null}
+          {message ? <Text style={[font.md, styles.center, { color: c.textMuted }]}>{message}</Text> : null}
           <View style={styles.actions}>
             <Button
               label={confirmLabel}
@@ -57,7 +58,7 @@ export function ConfirmDialog({
               variant={destructive ? 'danger' : 'primary'}
               onPress={onConfirm}
             />
-            <Button label={cancelLabel} block variant="secondary" onPress={onCancel} />
+            <Button label={cancelLabel} block variant="ghost" onPress={onCancel} />
           </View>
         </Pressable>
       </Pressable>
@@ -67,6 +68,8 @@ export function ConfirmDialog({
 
 const styles = StyleSheet.create({
   scrim: { flex: 1, justifyContent: 'flex-end', padding: space[4], paddingBottom: space[10] },
-  card: { borderRadius: radius.xl, padding: space[6], gap: space[3] },
-  actions: { gap: space[2], marginTop: space[2] },
+  card: { borderRadius: radius.xl + 4, padding: space[6], paddingTop: space[3], gap: space[3] },
+  grabber: { alignSelf: 'center', width: 36, height: 4, borderRadius: 2, marginBottom: space[2] },
+  center: { textAlign: 'center' },
+  actions: { gap: space[1], marginTop: space[3] },
 });
