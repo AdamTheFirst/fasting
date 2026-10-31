@@ -215,7 +215,11 @@ export default function HistoryScreen() {
             <Icon name="chevron" size={18} color={c.text} />
           </Pressable>
         ) : (
-          <LineChart points={weights.map((w) => ({ t: w.at, v: w.kg }))} />
+          <LineChart
+            points={weights.map((w) => ({ t: w.at, v: w.kg }))}
+            spans={fasts.map((f) => ({ start: f.start, end: f.end ?? now }))}
+            spansLabel="Shaded: when you were fasting"
+          />
         )}
       </ChartCard>
 

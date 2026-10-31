@@ -225,13 +225,18 @@ export interface Point {
   v: number;
 }
 
-/** A plain ink line for weight or BMI, with an optional shaded band (the healthy BMI range). */
+/**
+ * A plain ink line for weight or BMI, with an optional shaded band (the healthy BMI range)
+ * and optional time spans shaded behind it (your fasts, so you can see weight move around them).
+ */
 export function LineChart({
   points,
   height = 150,
   format,
   band,
   bandLabel,
+  spans,
+  spansLabel,
 }: {
   points: readonly Point[];
   height?: number;
@@ -239,6 +244,8 @@ export function LineChart({
   format?: (v: number) => string;
   band?: { min: number; max: number };
   bandLabel?: string;
+  spans?: readonly { start: number; end: number }[];
+  spansLabel?: string;
 }) {
   const c = useColors();
   const [width, onLayout] = useWidth();
@@ -257,6 +264,13 @@ export function LineChart({
   const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(p.t)} ${y(p.v)}`).join(' ');
   const lastP = points.at(-1);
   const date = (t: number) => new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  // Spans are clipped to the weight range; with a single weight there is no range to shade.
+  const shown =
+    t1 > t0
+      ? (spans ?? [])
+          .filter((s) => s.end > t0 && s.start < t1)
+          .map((s) => ({ x0: x(Math.max(s.start, t0)), x1: x(Math.min(s.end, t1)) }))
+      : [];
 
   return (
     <View onLayout={onLayout}>
@@ -272,6 +286,17 @@ export function LineChart({
                 fill={c.accentSubtle}
               />
             )}
+            {shown.map((s, i) => (
+              <Rect
+                key={`s${i}`}
+                x={s.x0}
+                width={Math.max(1.5, s.x1 - s.x0)}
+                y={4}
+                height={height - 8}
+                rx={2}
+                fill={c.periodSubtle}
+              />
+            ))}
             {[0, 1, 2].map((i) => (
               <Line
                 key={i}
@@ -336,6 +361,12 @@ export function LineChart({
             ]}
           />
           <Text style={[font.xs, { color: c.textMuted, flex: 1 }]}>{bandLabel}</Text>
+        </View>
+      ) : null}
+      {shown.length > 0 && spansLabel ? (
+        <View style={styles.legend}>
+          <View style={[styles.legendBox, { backgroundColor: c.periodSubtle }]} />
+          <Text style={[font.xs, { color: c.textMuted, flex: 1 }]}>{spansLabel}</Text>
         </View>
       ) : null}
     </View>
