@@ -41,3 +41,12 @@ export function formatSpoken(ms: number): string {
   parts.push(part(minutes, 'minute'));
   return parts.join(' ');
 }
+
+/** Compact duration for stat tiles: "3d 4h", "16h", and minutes only under an hour ("13m"). */
+export function formatShort(ms: number): string {
+  const totalMinutes = Math.max(0, Math.round(ms / MINUTE));
+  if (totalMinutes < 60) return `${totalMinutes}m`;
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  return days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+}

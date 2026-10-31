@@ -30,7 +30,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: `${identity.bundleId}${suffix}`.replace(/-/g, '_'),
     adaptiveIcon: {
-      backgroundColor: '#F6F2EA',
+      backgroundColor: '#F6F4EE',
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
       monochromeImage: './assets/android-icon-monochrome.png',
@@ -56,7 +56,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-notifications',
       {
-        color: '#5E3A6E',
+        color: '#1B2029',
+        icon: './assets/notification-icon.png',
       },
     ],
     [

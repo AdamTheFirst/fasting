@@ -1,7 +1,18 @@
+import Constants from 'expo-constants';
 import { useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Alert, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Body, Button, Chip, SectionHeader } from '../../components/ui';
+import { BrandMark, Icon } from '../../components/Icon';
+import {
+  Button,
+  Chip,
+  ListGroup,
+  ListRow,
+  Screen,
+  SectionHeader,
+  Segmented,
+  SwitchRow,
+} from '../../components/ui';
 import { APP_NAME } from '../../config/identity';
 import { csvToFasts, fastsToCsv } from '../../domain/csv';
 import { goalLabel, newId } from '../../domain/fast';
@@ -11,12 +22,24 @@ import {
   customMilestone,
   type MilestoneSource,
 } from '../../domain/milestones';
-import { health } from '../../services/health';
 import { toggleWeekday } from '../../domain/settings';
+import { bmi } from '../../domain/stats';
 import { pickCsv, shareCsv } from '../../services/files';
+import { health } from '../../services/health';
 import { ensureNotificationPermission } from '../../services/notifications';
 import { useStore } from '../../state/store';
-import { font, layout, radius, space, useColors } from '../../theme';
+import {
+  type Appearance,
+  font,
+  radius,
+  space,
+  strong,
+  tabular,
+  themes,
+  type ThemeId,
+  useColors,
+  useIsDark,
+} from '../../theme';
 
 // Monday first, in the phone's language.
 const WEEKDAY_NAMES = Array.from({ length: 7 }, (_, i) =>
@@ -26,49 +49,82 @@ const WEEKDAY_LETTERS = WEEKDAY_NAMES.map((_, i) =>
   new Date(2026, 0, 5 + i).toLocaleDateString(undefined, { weekday: 'narrow' }),
 );
 
-function Toggle({
+function Detail({ text, source }: { text?: string; source?: MilestoneSource | null }) {
+  const c = useColors();
+  return (
+    <View style={{ gap: 2 }}>
+      {text ? <Text style={[font.sm, { color: c.textMuted }]}>{text}</Text> : null}
+      {source ? (
+        <Text
+          key={c.text}
+          accessibilityRole="link"
+          style={[font.xs, { color: c.text, textDecorationLine: 'underline' }]}
+          onPress={() => void Linking.openURL(source.url)}
+        >
+          Source: {source.label}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/** A theme with its real colours, like Periodiary's theme list. */
+function ThemeRow({ id, selected, onPress }: { id: ThemeId; selected: boolean; onPress: () => void }) {
+  const c = useColors();
+  const dark = useIsDark();
+  const t = themes[id][dark ? 'dark' : 'light'];
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      accessibilityLabel={`${themes[id].name} theme`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.themeRow, pressed && { backgroundColor: c.surface2 }]}
+    >
+      <View style={[styles.preview, { backgroundColor: t.accent }]}>
+        <View style={[styles.previewDot, { backgroundColor: t.accentStrong }]} />
+      </View>
+      <Text style={[font.md, { color: c.text, flex: 1, fontWeight: '500' }]}>{themes[id].name}</Text>
+      <View
+        style={[
+          styles.radio,
+          selected ? { backgroundColor: c.primary, borderColor: c.primary } : { borderColor: c.borderInput },
+        ]}
+      >
+        {selected ? <Icon name="check" size={16} color={c.onPrimary} /> : null}
+      </View>
+    </Pressable>
+  );
+}
+
+function MeasureInput({
   label,
-  hint,
+  unit,
   value,
-  onChange,
-  source,
+  setValue,
+  onSave,
 }: {
   label: string;
-  hint?: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-  source?: MilestoneSource | null;
+  unit: string;
+  value: string;
+  setValue: (v: string) => void;
+  onSave: () => Promise<void>;
 }) {
   const c = useColors();
-  // The whole row toggles, not only the small switch.
   return (
-    <Pressable style={styles.toggle} onPress={() => onChange(!value)} accessible={false}>
-      <View style={{ flex: 1 }}>
-        <Body>{label}</Body>
-        {hint ? (
-          <Body muted style={font.sm}>
-            {hint}
-          </Body>
-        ) : null}
-        {source ? (
-          <Body
-            accessibilityRole="link"
-            style={[font.sm, { color: c.accent }]}
-            onPress={() => void Linking.openURL(source.url)}
-          >
-            {source.label}
-          </Body>
-        ) : null}
-      </View>
-      <Switch
-        accessibilityLabel={label}
+    <View style={styles.inline}>
+      <TextInput
+        style={[font.md, styles.input, { color: c.text, backgroundColor: c.surface2 }]}
         value={value}
-        onValueChange={onChange}
-        trackColor={{ false: c.border, true: c.accentSubtle }}
-        thumbColor={value ? c.accent : c.surface}
-        ios_backgroundColor={c.border}
+        onChangeText={setValue}
+        placeholder={`New ${label.toLowerCase()} (${unit})`}
+        accessibilityLabel={`${label} in ${unit}`}
+        placeholderTextColor={c.textFaint}
+        keyboardType="decimal-pad"
+        onSubmitEditing={() => void onSave()}
       />
-    </Pressable>
+      <Button label="Add" size="sm" variant="quiet" disabled={!value} onPress={() => void onSave()} />
+    </View>
   );
 }
 
@@ -76,6 +132,8 @@ export default function SettingsScreen() {
   const {
     fasts,
     presets,
+    weights,
+    heights,
     settings,
     updateSettings,
     replaceAllFasts,
@@ -91,6 +149,9 @@ export default function SettingsScreen() {
   const [mNote, setMNote] = useState('');
   const [streakHours, setStreakHours] = useState(String(settings.streakMinHours));
   const ms = settings.milestones;
+  const latestWeight = weights.at(-1);
+  const latestHeight = heights.at(-1);
+  const currentBmi = latestWeight && latestHeight ? bmi(latestWeight.kg, latestHeight.m) : null;
 
   const setMilestones = async (patch: Partial<typeof ms>) => {
     const next = { ...ms, ...patch };
@@ -170,204 +231,275 @@ export default function SettingsScreen() {
     }
   };
 
-  const input = [
-    font.md,
-    styles.input,
-    { color: c.text, borderColor: c.borderInput, backgroundColor: c.surface },
-  ];
-
+  const input = [font.md, styles.input, { color: c.text, backgroundColor: c.surface2 }];
   return (
-    <ScrollView contentContainerStyle={styles.screen}>
-      <SectionHeader>Milestone alerts</SectionHeader>
-      <Body muted style={font.sm}>
-        All off unless you turn them on. Each says what is likely happening and links its source.
-      </Body>
-      {BUILT_IN_MILESTONES.map((m) => (
-        <Toggle
-          key={m.id}
-          label={m.title}
-          hint={m.body}
-          source={m.source}
-          value={ms.enabledIds.includes(m.id)}
-          onChange={(on) =>
-            void setMilestones({
-              enabledIds: on ? [...ms.enabledIds, m.id] : ms.enabledIds.filter((x) => x !== m.id),
-            })
-          }
+    <Screen title="Settings">
+      <SectionHeader>Theme</SectionHeader>
+      <ListGroup>
+        {(Object.keys(themes) as ThemeId[]).map((id) => (
+          <ThemeRow
+            key={id}
+            id={id}
+            selected={settings.theme === id}
+            onPress={() => void updateSettings({ theme: id })}
+          />
+        ))}
+      </ListGroup>
+
+      <SectionHeader>Appearance</SectionHeader>
+      <Segmented<Appearance>
+        value={settings.appearance}
+        onChange={(appearance) => void updateSettings({ appearance })}
+        options={[
+          { value: 'light', label: 'Light' },
+          { value: 'dark', label: 'Dark' },
+          { value: 'system', label: 'System' },
+        ]}
+      />
+
+      <SectionHeader>Health</SectionHeader>
+      <ListGroup footer="Reads and writes weight and height only. Nothing leaves this phone otherwise.">
+        <SwitchRow
+          icon="heart"
+          label={`Sync with ${health.name}`}
+          detail={settings.healthSyncEnabled ? 'On' : 'Off'}
+          value={settings.healthSyncEnabled}
+          onChange={(v) => void toggleHealth(v)}
         />
-      ))}
-      <Toggle
-        label="Goal reached"
-        value={ms.notifyGoal}
-        onChange={(v) => void setMilestones({ notifyGoal: v })}
-      />
-      <Toggle
-        label="New longest fast"
-        value={ms.notifyPersonalBest}
-        onChange={(v) => void setMilestones({ notifyPersonalBest: v })}
-      />
-      <Body muted style={font.sm}>
-        {AUTOPHAGY_NOTE}
-      </Body>
+        <ListRow
+          icon="scale"
+          label="Weight"
+          value={latestWeight ? `${latestWeight.kg.toFixed(1)} kg` : '–'}
+          detail={latestWeight ? `Updated ${new Date(latestWeight.at).toLocaleDateString()}` : undefined}
+        >
+          <MeasureInput label="Weight" unit="kg" value={weight} setValue={setWeight} onSave={saveWeight} />
+        </ListRow>
+        <ListRow
+          icon="ruler"
+          label="Height"
+          value={latestHeight ? `${Math.round(latestHeight.m * 100)} cm` : '–'}
+        >
+          <MeasureInput label="Height" unit="cm" value={height} setValue={setHeight} onSave={saveHeight} />
+        </ListRow>
+        <SwitchRow
+          label="Show BMI chart"
+          detail={currentBmi ? `BMI ${currentBmi.toFixed(1)} now` : 'Needs a weight and a height'}
+          value={settings.showBmi}
+          onChange={(v) => void updateSettings({ showBmi: v })}
+        />
+      </ListGroup>
+
+      <SectionHeader>Milestone alerts</SectionHeader>
+      <ListGroup footer={`All off unless you turn them on. ${AUTOPHAGY_NOTE}`}>
+        {BUILT_IN_MILESTONES.map((m) => (
+          <SwitchRow
+            key={m.id}
+            icon="bell"
+            label={`${m.title} · ${m.short ?? ''}`}
+            detail={<Detail text={m.body} source={m.source} />}
+            value={ms.enabledIds.includes(m.id)}
+            onChange={(on) =>
+              void setMilestones({
+                enabledIds: on ? [...ms.enabledIds, m.id] : ms.enabledIds.filter((x) => x !== m.id),
+              })
+            }
+          />
+        ))}
+        <SwitchRow
+          icon="flag"
+          label="Goal reached"
+          value={ms.notifyGoal}
+          onChange={(v) => void setMilestones({ notifyGoal: v })}
+        />
+        <SwitchRow
+          icon="trophy"
+          label="New longest fast"
+          value={ms.notifyPersonalBest}
+          onChange={(v) => void setMilestones({ notifyPersonalBest: v })}
+        />
+      </ListGroup>
 
       <SectionHeader>Your own milestones</SectionHeader>
-      {ms.custom.map((m) => (
-        <View key={m.id} style={styles.inline}>
-          <View style={{ flex: 1 }}>
-            <Body>{m.title}</Body>
-            <Body muted style={font.sm}>
-              {m.body}
-            </Body>
-          </View>
+      <ListGroup footer="Any hour, any note, e.g. 36 h: walk and electrolytes.">
+        {ms.custom.map((m) => (
+          <ListRow
+            key={m.id}
+            label={m.title}
+            detail={m.body}
+            right={
+              <Button
+                label="Remove"
+                size="sm"
+                variant="ghost"
+                onPress={() => void setMilestones({ custom: ms.custom.filter((x) => x.id !== m.id) })}
+              />
+            }
+          />
+        ))}
+        <View style={[styles.inline, styles.pad]}>
+          <TextInput
+            style={[input, styles.hours]}
+            value={mHours}
+            onChangeText={setMHours}
+            placeholder="Hours"
+            accessibilityLabel="Milestone hours"
+            placeholderTextColor={c.textFaint}
+            keyboardType="decimal-pad"
+          />
+          <TextInput
+            style={input}
+            value={mNote}
+            onChangeText={setMNote}
+            placeholder="Note (optional)"
+            accessibilityLabel="Milestone note"
+            placeholderTextColor={c.textFaint}
+          />
           <Button
-            label="Remove"
-            variant="ghost"
-            onPress={() => void setMilestones({ custom: ms.custom.filter((x) => x.id !== m.id) })}
+            label="Add"
+            size="sm"
+            variant="quiet"
+            disabled={!mHours}
+            onPress={() => void addCustomMilestone()}
           />
         </View>
-      ))}
-      <View style={styles.inline}>
-        <TextInput
-          style={[input, styles.hours]}
-          value={mHours}
-          onChangeText={setMHours}
-          placeholder="Hours"
-          accessibilityLabel="Milestone hours"
-          placeholderTextColor={c.textMuted}
-          keyboardType="decimal-pad"
-        />
-        <TextInput
-          style={input}
-          value={mNote}
-          onChangeText={setMNote}
-          placeholder="Note (optional)"
-          accessibilityLabel="Milestone note"
-          placeholderTextColor={c.textMuted}
-        />
-        <Button label="Add" variant="secondary" onPress={() => void addCustomMilestone()} />
-      </View>
+      </ListGroup>
 
-      <SectionHeader>Long fasts</SectionHeader>
-      <Toggle
-        label="Show the safety card past 72 h"
-        value={!settings.safetyCardDisabled}
-        onChange={(v) => void updateSettings({ safetyCardDisabled: !v })}
-      />
-
-      <SectionHeader>Presets</SectionHeader>
-      {presets.length === 0 ? (
-        <Body muted style={font.sm}>
-          Save one from the Custom goal on the Fast screen, or from any finished fast.
-        </Body>
-      ) : (
-        presets.map((p) => (
-          <View key={p.id} style={styles.preset}>
-            <View style={styles.inline}>
-              <TextInput
-                style={input}
-                defaultValue={p.name}
-                accessibilityLabel={`Preset name, ${goalLabel(p.goal)}`}
-                onEndEditing={(e) => {
-                  const name = e.nativeEvent.text.trim();
-                  if (name && name !== p.name) void savePreset({ ...p, name });
-                }}
-              />
-              <Body muted style={[font.sm, styles.presetGoal]}>
-                {goalLabel(p.goal)}
-              </Body>
-              <Button label="Delete" variant="ghost" onPress={() => confirmDeletePreset(p.id, p.name)} />
-            </View>
-            <View style={styles.days} accessibilityLabel={`Days that start on ${p.name}`}>
-              {WEEKDAY_LETTERS.map((letter, day) => (
-                <Chip
-                  key={day}
-                  label={letter}
-                  accessibilityLabel={WEEKDAY_NAMES[day]}
-                  selected={settings.weekdayPresets[day] === p.id}
-                  onPress={() =>
-                    void updateSettings({ weekdayPresets: toggleWeekday(settings.weekdayPresets, day, p.id) })
-                  }
+      <SectionHeader>Presets and weekly rhythm</SectionHeader>
+      <ListGroup
+        footer={
+          presets.length
+            ? "Pick days to make a preset the Start screen's choice on those days. Optional."
+            : 'Save one from Custom on the Fast screen, or right after you end a fast.'
+        }
+      >
+        {presets.length === 0 ? (
+          <ListRow label="No presets yet" />
+        ) : (
+          presets.map((p) => (
+            <View key={p.id} style={[styles.pad, { gap: space[3] }]}>
+              <View style={styles.inline}>
+                <TextInput
+                  style={[input, { fontWeight: '600' }]}
+                  defaultValue={p.name}
+                  accessibilityLabel={`Preset name, ${goalLabel(p.goal)}`}
+                  onEndEditing={(e) => {
+                    const name = e.nativeEvent.text.trim();
+                    if (name && name !== p.name) void savePreset({ ...p, name });
+                  }}
                 />
-              ))}
+                <Text style={[font.sm, tabular, { color: c.textMuted, minWidth: 56, textAlign: 'right' }]}>
+                  {goalLabel(p.goal)}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Delete preset ${p.name}`}
+                  hitSlop={8}
+                  onPress={() => confirmDeletePreset(p.id, p.name)}
+                  style={styles.iconBtn}
+                >
+                  <Icon name="close" size={18} color={c.danger} />
+                </Pressable>
+              </View>
+              <View style={styles.days} accessibilityLabel={`Days that start on ${p.name}`}>
+                {WEEKDAY_LETTERS.map((letter, day) => (
+                  <Chip
+                    key={day}
+                    compact
+                    label={letter}
+                    accessibilityLabel={WEEKDAY_NAMES[day]}
+                    selected={settings.weekdayPresets[day] === p.id}
+                    onPress={() =>
+                      void updateSettings({
+                        weekdayPresets: toggleWeekday(settings.weekdayPresets, day, p.id),
+                      })
+                    }
+                  />
+                ))}
+              </View>
             </View>
-          </View>
-        ))
-      )}
-      {presets.length > 0 && (
-        <Body muted style={font.sm}>
-          Pick days to make a preset the Start screen&apos;s choice on those days. Optional.
-        </Body>
-      )}
+          ))
+        )}
+      </ListGroup>
 
-      <SectionHeader>Streaks</SectionHeader>
-      <View style={styles.inline}>
-        <Body style={{ flex: 1 }}>A day counts toward a streak after this many hours fasted</Body>
-        <TextInput
-          style={[input, styles.hours]}
-          value={streakHours}
-          onChangeText={setStreakHours}
-          onEndEditing={saveStreakHours}
-          accessibilityLabel="Streak hours"
-          keyboardType="decimal-pad"
+      <SectionHeader>Streaks and long fasts</SectionHeader>
+      <ListGroup footer="No penalties. A gap is just data.">
+        <ListRow
+          label="Hours that make a streak day"
+          detail="A day counts once you fasted this long in it"
+          right={
+            <TextInput
+              style={[input, styles.hours, { textAlign: 'center' }]}
+              value={streakHours}
+              onChangeText={setStreakHours}
+              onEndEditing={saveStreakHours}
+              accessibilityLabel="Streak hours"
+              keyboardType="decimal-pad"
+            />
+          }
         />
-      </View>
-
-      <SectionHeader>Weight and height</SectionHeader>
-      <Toggle
-        label={`Sync with ${health.name}`}
-        hint="Reads and writes weight and height only."
-        value={settings.healthSyncEnabled}
-        onChange={(v) => void toggleHealth(v)}
-      />
-      <View style={styles.inline}>
-        <TextInput
-          style={input}
-          value={weight}
-          onChangeText={setWeight}
-          placeholder="Weight (kg)"
-          placeholderTextColor={c.textMuted}
-          keyboardType="decimal-pad"
+        <SwitchRow
+          label="Safety card past 72 h"
+          detail="Electrolytes, refeeding and who should ask a doctor. Never blocks."
+          value={!settings.safetyCardDisabled}
+          onChange={(v) => void updateSettings({ safetyCardDisabled: !v })}
         />
-        <Button label="Add" variant="secondary" onPress={() => void saveWeight()} />
-      </View>
-      <View style={styles.inline}>
-        <TextInput
-          style={input}
-          value={height}
-          onChangeText={setHeight}
-          placeholder="Height (cm)"
-          placeholderTextColor={c.textMuted}
-          keyboardType="decimal-pad"
-        />
-        <Button label="Add" variant="secondary" onPress={() => void saveHeight()} />
-      </View>
-      <Toggle
-        label="Show BMI chart"
-        value={settings.showBmi}
-        onChange={(v) => void updateSettings({ showBmi: v })}
-      />
+      </ListGroup>
 
       <SectionHeader>Your data</SectionHeader>
-      <Button
-        label="Export CSV"
-        variant="secondary"
-        onPress={() => void shareCsv(`${APP_NAME.toLowerCase()}-fasts.csv`, fastsToCsv(fasts))}
-      />
-      <Button label="Import CSV" variant="secondary" onPress={() => void importCsv()} />
-      <Body muted style={font.sm}>
-        {APP_NAME} is a fasting log, not medical advice. Tracking is free, with no length limit.
-      </Body>
-    </ScrollView>
+      <ListGroup footer="Import replaces your history after you confirm.">
+        <ListRow
+          icon="export"
+          label="Export CSV"
+          detail={`${fasts.length} ${fasts.length === 1 ? 'fast' : 'fasts'}`}
+          chevron
+          onPress={() => void shareCsv(`${APP_NAME.toLowerCase()}-fasts.csv`, fastsToCsv(fasts))}
+        />
+        <ListRow icon="import" label="Import CSV" chevron onPress={() => void importCsv()} />
+      </ListGroup>
+
+      <View style={styles.about}>
+        <BrandMark size={28} color={c.text} />
+        <Text style={[font.lg, { color: c.text, ...strong }]}>Fastaway</Text>
+        <Text style={[font.xs, { color: c.textMuted, textAlign: 'center' }]}>
+          Version {Constants.expoConfig?.version ?? '0.1.0'}. A fasting log, not medical advice.{'\n'}
+          Tracking is free, with no length limit.
+        </Text>
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { padding: layout.gutter, gap: space[3], paddingBottom: space[12] },
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: space[3], minHeight: 44 },
   inline: { flexDirection: 'row', gap: space[2], alignItems: 'center' },
-  hours: { flex: 0, width: 80 },
-  preset: { gap: space[2] },
+  pad: { paddingHorizontal: space[4], paddingVertical: space[3] },
+  hours: { flexGrow: 0, flexShrink: 0, flexBasis: 76, width: 76 },
   days: { flexDirection: 'row', flexWrap: 'wrap', gap: space[1] },
-  presetGoal: { minWidth: 56, textAlign: 'right' },
-  input: { flex: 1, height: 48, borderWidth: 1, borderRadius: radius.md, paddingHorizontal: space[3] },
+  input: {
+    flex: 1,
+    minWidth: 0,
+    height: 48,
+    borderRadius: radius.md,
+    paddingHorizontal: space[4],
+  },
+  themeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[3],
+    paddingHorizontal: space[4],
+    paddingVertical: space[3],
+    minHeight: 64,
+  },
+  preview: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  previewDot: { width: 14, height: 14, borderRadius: 7 },
+  radio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioDot: { width: 12, height: 12, borderRadius: 6 },
+  iconBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  about: { alignItems: 'center', gap: space[2], marginTop: space[8] },
 });

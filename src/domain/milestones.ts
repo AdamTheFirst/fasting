@@ -10,6 +10,8 @@ export interface Milestone {
   id: string;
   hours: number;
   title: string;
+  /** A few words for the running-fast timeline, e.g. "Ketones rising". */
+  short?: string;
   /** "Likely", never "you are now in": these vary by person and by what you ate before. */
   body: string;
   source: MilestoneSource | null;
@@ -32,6 +34,7 @@ const REVIEW_2025 = {
 export const BUILT_IN_MILESTONES: readonly Milestone[] = [
   {
     id: 'h12',
+    short: 'Insulin falling',
     hours: 12,
     title: '12 hours',
     body: 'Insulin is likely low and your liver is running on stored glycogen.',
@@ -39,6 +42,7 @@ export const BUILT_IN_MILESTONES: readonly Milestone[] = [
   },
   {
     id: 'h24',
+    short: 'Glycogen running low',
     hours: 24,
     title: '24 hours',
     body: 'Liver glycogen is likely mostly used up. Your body is shifting to fat.',
@@ -46,6 +50,7 @@ export const BUILT_IN_MILESTONES: readonly Milestone[] = [
   },
   {
     id: 'h48',
+    short: 'Ketones rising',
     hours: 48,
     title: '48 hours',
     body: 'Ketones are likely climbing. Small studies of multi-day fasts show growth hormone rising.',
@@ -53,6 +58,7 @@ export const BUILT_IN_MILESTONES: readonly Milestone[] = [
   },
   {
     id: 'h72',
+    short: 'Ketones near peak',
     hours: 72,
     title: '72 hours',
     body: 'Ketone production is likely near its peak and blood sugar near its low point.',
@@ -138,4 +144,72 @@ export function customMilestone(hours: number, note: string, id: string): Milest
     .replace(/ 0h$/, '')
     .replace(/^0h /, '');
   return { id, hours, title, body: note.trim() || `You reached ${title}.`, source: null };
+}
+
+export type TimelineKind = 'milestone' | 'custom' | 'goal' | 'best';
+
+export interface TimelineMark {
+  key: string;
+  kind: TimelineKind;
+  /** Hours from the start of the fast. */
+  hours: number;
+  title: string;
+  body: string;
+  source: MilestoneSource | null;
+  passed: boolean;
+}
+
+/**
+ * What the running-fast screen shows along the fast: every built-in milestone (shown
+ * as information, whether or not its alert is on), the person's own milestones,
+ * the goal and their previous longest fast. Sorted by hour.
+ */
+export function timeline(
+  fast: Fast,
+  custom: readonly Milestone[],
+  longestPreviousMs: number,
+  now: number,
+): TimelineMark[] {
+  const elapsedH = ((fast.end ?? now) - fast.start) / HOUR;
+  const marks: Omit<TimelineMark, 'passed'>[] = [
+    ...BUILT_IN_MILESTONES.map((m) => ({
+      ...m,
+      title: m.short ?? m.title,
+      key: m.id,
+      kind: 'milestone' as const,
+    })),
+    // A custom milestone's title is just its hour, so its note becomes the title on the timeline.
+    ...custom.map((m) => ({
+      ...m,
+      title: m.body,
+      body: 'Your own milestone.',
+      key: `c:${m.id}`,
+      kind: 'custom' as const,
+    })),
+  ];
+  const goalAt = goalReachedAt(fast);
+  if (goalAt !== null) {
+    const hours = (goalAt - fast.start) / HOUR;
+    marks.push({
+      key: 'goal',
+      kind: 'goal',
+      hours,
+      title: 'Your goal',
+      body: 'Past it, the fast keeps counting until you end it.',
+      source: null,
+    });
+  }
+  if (longestPreviousMs > 0) {
+    marks.push({
+      key: 'best',
+      kind: 'best',
+      hours: longestPreviousMs / HOUR,
+      title: 'Your longest fast',
+      body: 'Pass it and this one is your new record.',
+      source: null,
+    });
+  }
+  return marks
+    .map((m) => ({ ...m, passed: elapsedH >= m.hours }))
+    .sort((a, b) => a.hours - b.hours || a.key.localeCompare(b.key));
 }
