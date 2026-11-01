@@ -80,7 +80,7 @@ export default function HistoryScreen() {
 
   if (view === 'journal') {
     return (
-      <Screen title="History">
+      <Screen title="History" right={addPast}>
         {switcher}
         <JournalView />
       </Screen>
