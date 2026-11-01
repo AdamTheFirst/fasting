@@ -61,13 +61,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="journal"
-        options={{
-          title: 'Journal',
-          tabBarIcon: ({ focused }) => <TabIcon name="journal" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
@@ -84,7 +77,7 @@ function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
   return (
     <View
       style={{
-        width: 56,
+        width: 60,
         height: 32,
         borderRadius: radius.full,
         alignItems: 'center',

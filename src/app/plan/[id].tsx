@@ -38,7 +38,9 @@ export default function EditPlan() {
 
   const choices = [
     ...presets.map((p) => ({ key: p.id, label: p.name, goal: p.goal, presetId: p.id as string | null })),
-    ...GOAL_CHOICES.map((g) => ({ key: g.label, label: g.label, goal: g.goal, presetId: null })),
+    ...GOAL_CHOICES.filter(
+      (g) => !presets.some((p) => JSON.stringify(p.goal) === JSON.stringify(g.goal)),
+    ).map((g) => ({ key: g.label, label: g.label, goal: g.goal, presetId: null as string | null })),
   ];
   const sameGoal = (a: Goal | null, b: Goal | null) => JSON.stringify(a) === JSON.stringify(b);
   const isPicked = (ch: (typeof choices)[number]) =>

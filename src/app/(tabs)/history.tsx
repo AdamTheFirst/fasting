@@ -4,8 +4,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 
 import { BrandMark, Icon } from '../../components/Icon';
+import { JournalView } from '../../components/JournalView';
 import { MonthCalendar } from '../../components/MonthCalendar';
-import { Badge, Body, Button, Card, Screen, SectionHeader, Title } from '../../components/ui';
+import { Badge, Body, Button, Card, Screen, SectionHeader, Segmented, Title } from '../../components/ui';
 import { elapsedMs, type Fast, goalReachedAt } from '../../domain/fast';
 import { averageHours, hoursByDay, hoursInRange, records, streaks } from '../../domain/stats';
 import { DAY, formatDuration, formatShort, HOUR } from '../../domain/time';
@@ -24,6 +25,8 @@ export default function HistoryScreen() {
   const now = useNow(60_000);
   // Months back from the current one: 0 is this month.
   const [monthOffset, setMonthOffset] = useState(0);
+  // Fasts and the notes written during them live side by side, so the bar stays at four tabs.
+  const [view, setView] = useState<'fasts' | 'journal'>('fasts');
   const shownMonth = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - monthOffset, 1);
 
   const byDay = useMemo(() => hoursByDay(fasts, now), [fasts, now]);
@@ -64,9 +67,30 @@ export default function HistoryScreen() {
     </Pressable>
   );
 
+  const switcher = (
+    <Segmented
+      options={[
+        { value: 'fasts', label: 'Fasts' },
+        { value: 'journal', label: 'Journal' },
+      ]}
+      value={view}
+      onChange={setView}
+    />
+  );
+
+  if (view === 'journal') {
+    return (
+      <Screen title="History">
+        {switcher}
+        <JournalView />
+      </Screen>
+    );
+  }
+
   if (fasts.length === 0) {
     return (
       <Screen title="History" right={addPast}>
+        {switcher}
         <Card style={styles.empty}>
           <BrandMark size={64} color={c.text} accent={c.accentStrong} />
           <Title size="xl" style={{ textAlign: 'center', marginTop: space[2] }}>
@@ -90,6 +114,7 @@ export default function HistoryScreen() {
 
   return (
     <Screen title="History" right={addPast}>
+      {switcher}
       <Summary
         hours={recs.hoursThisMonth}
         fastCount={fastsThisMonth}
