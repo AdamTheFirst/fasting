@@ -4,6 +4,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fro
 import type { MilestoneSource } from '../domain/milestones';
 import { font, layout, radius, space, themes, type ThemeId, useColors, useIsDark } from '../theme';
 import { Icon } from './Icon';
+import { PlusTag } from './Plus';
 import { Button } from './ui';
 
 /** A settings sub-page: the stack header carries the title, the groups scroll under it. */
@@ -41,7 +42,18 @@ export function Detail({ text, source }: { text?: string; source?: MilestoneSour
 }
 
 /** A theme with its real colours. */
-export function ThemeRow({ id, selected, onPress }: { id: ThemeId; selected: boolean; onPress: () => void }) {
+export function ThemeRow({
+  id,
+  selected,
+  locked,
+  onPress,
+}: {
+  id: ThemeId;
+  selected: boolean;
+  /** Comes with Plus: still shown in its real colours, tagged, and tapping it opens Plus. */
+  locked?: boolean;
+  onPress: () => void;
+}) {
   const c = useColors();
   const dark = useIsDark();
   const t = themes[id][dark ? 'dark' : 'light'];
@@ -49,7 +61,7 @@ export function ThemeRow({ id, selected, onPress }: { id: ThemeId; selected: boo
     <Pressable
       accessibilityRole="radio"
       accessibilityState={{ selected }}
-      accessibilityLabel={`${themes[id].name} theme`}
+      accessibilityLabel={`${themes[id].name} theme${locked ? ', comes with Plus' : ''}`}
       onPress={onPress}
       style={({ pressed }) => [kit.themeRow, pressed && { backgroundColor: c.surface2 }]}
     >
@@ -57,6 +69,7 @@ export function ThemeRow({ id, selected, onPress }: { id: ThemeId; selected: boo
         <View style={[kit.previewDot, { backgroundColor: t.accentStrong }]} />
       </View>
       <Text style={[font.md, { color: c.text, flex: 1, fontWeight: '500' }]}>{themes[id].name}</Text>
+      {locked ? <PlusTag /> : null}
       {selected ? <Icon name="check" size={22} color={c.text} /> : null}
     </Pressable>
   );

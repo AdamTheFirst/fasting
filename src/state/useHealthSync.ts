@@ -5,10 +5,11 @@ import { DAY } from '../domain/time';
 import { health } from '../services/health';
 import { useStore } from './store';
 
-/** On open, pulls the last year of weights and the latest height from Health, if the person turned sync on. */
+/** On open (with Plus), pulls the last year of weights and the latest height from Health, if the person turned sync on. */
 export function useHealthSync(): void {
-  const { loaded, settings, weights, heights, addWeight, addHeight } = useStore();
-  const enabled = loaded && settings.healthSyncEnabled;
+  const { loaded, plus, settings, weights, heights, addWeight, addHeight } = useStore();
+  // Health sync comes with Plus. Weight and height typed in by hand stay free.
+  const enabled = loaded && plus && settings.healthSyncEnabled;
 
   useEffect(() => {
     if (!enabled) return;

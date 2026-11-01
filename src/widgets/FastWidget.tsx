@@ -23,6 +23,8 @@ export interface FastWidgetProps {
   goalText?: string;
   /** Discreet mode: only the time, never the word "fast". */
   discreet: boolean;
+  /** Without Plus: the widget says where to unlock it instead of showing the fast. */
+  locked?: boolean;
 }
 
 /**
@@ -44,6 +46,16 @@ const FastWidget = (props: FastWidgetProps, env: WidgetEnvironment) => {
     textCase('uppercase'),
     foregroundStyle({ type: 'hierarchical', style: 'secondary' }),
   ];
+  if (props.locked) {
+    return (
+      <VStack alignment="leading" spacing={4}>
+        {!tiny && <Text modifiers={label}>{props.discreet ? 'Timer' : 'Fastaway'}</Text>}
+        <Text modifiers={[font({ size: tiny ? 12 : 15, weight: 'semibold', design: 'rounded' })]}>
+          {tiny ? 'Plus' : 'Comes with Plus. Open the app to unlock.'}
+        </Text>
+      </VStack>
+    );
+  }
   if (props.start === undefined) {
     return (
       <VStack alignment="leading" spacing={4}>

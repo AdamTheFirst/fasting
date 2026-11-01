@@ -8,6 +8,7 @@ import { planName } from '../domain/plan';
 import { type AppSettings, DEFAULT_SETTINGS } from '../domain/settings';
 import { longestFast } from '../domain/stats';
 import { syncMilestoneAlerts, syncPlanReminders } from '../services/notifications';
+import { checkPlus, listenForPlus } from '../services/purchases';
 import { syncWidgets } from '../services/widgets';
 
 interface Store {
@@ -18,6 +19,12 @@ interface Store {
   weights: WeightEntry[];
   heights: HeightEntry[];
   settings: AppSettings;
+  /** Fastaway Plus is unlocked. Only the extras read this; tracking never does. */
+  plus: boolean;
+  /** The last purchase failure in plain words, cleared on the next try. */
+  purchaseError: string | null;
+  setPlus(owned: boolean): Promise<void>;
+  clearPurchaseError(): void;
   startFast(goal: Goal | null, presetId?: string | null): Promise<void>;
   endFast(at?: number): Promise<void>;
   saveFast(fast: Fast): Promise<void>;
@@ -43,6 +50,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [weights, setWeights] = useState<WeightEntry[]>([]);
   const [heights, setHeights] = useState<HeightEntry[]>([]);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -61,6 +69,39 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setLoaded(true);
     })();
   }, []);
+
+  // Plus is written straight to the saved settings, so a purchase that lands while another
+  // setting is being saved can't be lost.
+  const setPlus = useCallback(async (owned: boolean) => {
+    setSettings((s) => {
+      if (s.plusOwned === owned) return s;
+      const next = { ...s, plusOwned: owned };
+      void db.setSetting('app', next);
+      return next;
+    });
+  }, []);
+
+  // A purchase that goes through, now or replayed by the store at launch, unlocks Plus.
+  useEffect(() => {
+    if (!loaded) return;
+    return listenForPlus(
+      () => {
+        setPurchaseError(null);
+        void setPlus(true);
+      },
+      (message) => setPurchaseError(message),
+    );
+  }, [loaded, setPlus]);
+
+  // At launch, ask the store once. Only a yes changes anything: an offline phone or a store that
+  // can't answer never takes Plus away from someone who bought it.
+  useEffect(() => {
+    if (!loaded || settings.plusOwned) return;
+    void checkPlus().then((owned) => {
+      if (owned) void setPlus(true);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]);
 
   const running = useMemo(() => fasts.find((f) => f.end === null) ?? null, [fasts]);
 
@@ -86,8 +127,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // The widget and lock screen follow the running fast, its goal and the discreet setting.
   useEffect(() => {
-    if (loaded) syncWidgets(running, settings.discreetWidget);
-  }, [loaded, running, settings.discreetWidget]);
+    if (loaded) syncWidgets(running, settings.discreetWidget, settings.plusOwned);
+  }, [loaded, running, settings.discreetWidget, settings.plusOwned]);
 
   const reloadFasts = useCallback(async () => setFasts(await db.listFasts()), []);
 
@@ -100,6 +141,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       weights,
       heights,
       settings,
+      plus: settings.plusOwned,
+      purchaseError,
+      setPlus,
+      clearPurchaseError: () => setPurchaseError(null),
       async startFast(goal, presetId = null) {
         if (running) return;
         await db.saveFast({ id: newId(), start: Date.now(), end: null, goal, presetId, note: null, log: [] });
@@ -132,7 +177,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setPresets([]);
         setWeights([]);
         setHeights([]);
-        setSettings(DEFAULT_SETTINGS);
+        // Plus was paid for, not written by you: it stays after everything else is deleted.
+        const kept = { ...DEFAULT_SETTINGS, plusOwned: settings.plusOwned };
+        setSettings(kept);
+        if (kept.plusOwned) await db.setSetting('app', kept);
       },
       async savePreset(preset) {
         await db.savePreset(preset);
@@ -156,7 +204,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         await db.setSetting('app', next);
       },
     }),
-    [loaded, fasts, running, presets, weights, heights, settings, reloadFasts],
+    [loaded, fasts, running, presets, weights, heights, settings, purchaseError, setPlus, reloadFasts],
   );
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;

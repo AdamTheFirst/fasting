@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { BrandMark } from '../../components/Icon';
+import { openPlus, usePlusPrice } from '../../components/Plus';
 import { ListGroup, ListRow, Screen } from '../../components/ui';
 import { APP_NAME } from '../../config/identity';
 import { health } from '../../services/health';
@@ -11,9 +12,10 @@ import { font, space, strong, themes, useColors } from '../../theme';
 
 const MODE = { system: 'Auto', light: 'Light', dark: 'Dark' } as const;
 
-/** Five doors, nothing else. Every setting lives one tap in, on its own page. */
+/** Five doors and the Plus row, nothing else. Every setting lives one tap in, on its own page. */
 export default function SettingsScreen() {
-  const { fasts, presets, settings } = useStore();
+  const { fasts, presets, settings, plus } = useStore();
+  const price = usePlusPrice();
   const c = useColors();
   const ms = settings.milestones;
   const alertsOn =
@@ -51,7 +53,7 @@ export default function SettingsScreen() {
         <ListRow
           icon="heart"
           label={health.name}
-          value={settings.healthSyncEnabled ? 'On' : 'Off'}
+          value={plus ? (settings.healthSyncEnabled ? 'On' : 'Off') : 'Plus'}
           chevron
           onPress={() => router.push('/settings/health')}
         />
@@ -61,6 +63,16 @@ export default function SettingsScreen() {
           value={`${fasts.length} ${fasts.length === 1 ? 'fast' : 'fasts'}`}
           chevron
           onPress={() => router.push('/settings/data')}
+        />
+      </ListGroup>
+
+      <ListGroup footer={plus ? undefined : 'One payment, no subscription. Tracking stays free.'}>
+        <ListRow
+          icon={plus ? 'check' : 'lock'}
+          label={`${APP_NAME} Plus`}
+          value={plus ? 'Unlocked' : `${price} once`}
+          chevron
+          onPress={openPlus}
         />
       </ListGroup>
 

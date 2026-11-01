@@ -67,7 +67,7 @@ Water tracking stays out unless dogfooding asks for it.
 - Medical claims: no "fat-burning stage" timers shown as fact, no diagnosis or treatment advice.
 - Anything for under-18s, or marketing it for weight loss.
 
-**Money, later:** if it ever earns money, it will be a one-time supporter unlock for extras like themes or sync. It will never gate fast length or editing, and there will be no trial that turns into a charge.
+**Money: Fastaway Plus**, one payment of $9.99 (store regional pricing), no subscription, no trial, Family Sharing on. Plus holds the widget and Live Activity, Insights, Apple Health / Health Connect sync and body signals, the Sage and Powder themes, and extras added later. Everything that tracks, edits or protects a fast stays free: any length, editing, presets, the plan, history (calendar, list, longest fast, totals, streaks), notes, alerts, the safety card, Siri shortcuts, and CSV export and import. Plus is only sold from its own sheet, opened by a Plus tag or the Settings row, never by itself. `src/domain/__tests__/plus.test.ts` fails if a free file starts checking Plus.
 
 ## What we need to do
 

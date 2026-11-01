@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { BodySignals } from '../components/BodySignals';
 import { BarChart, DayGrid, hoursTick, LineChart } from '../components/charts';
 import { Icon } from '../components/Icon';
+import { PlusGate } from '../components/Plus';
 import { Body, Card, GroupLabel, Segmented } from '../components/ui';
 import {
   averageHours,
@@ -28,6 +29,23 @@ type Range = 30 | 90 | 365;
 
 /** Every chart, one tap in from History, so History itself stays a calendar and a list. */
 export default function Insights() {
+  const { plus } = useStore();
+  const c = useColors();
+  // Insights comes with Plus. History, the calendar, longest fast and totals stay free.
+  if (!plus) {
+    return (
+      <ScrollView style={{ flex: 1, backgroundColor: c.bg }} contentContainerStyle={styles.page}>
+        <PlusGate
+          title="Insights comes with Plus"
+          detail="Lengths over 30, 90 or 365 days, weekly hours, when you start, weight and BMI charts, and body signals next to your fasts. Your history, longest fast and totals stay free."
+        />
+      </ScrollView>
+    );
+  }
+  return <InsightsCharts />;
+}
+
+function InsightsCharts() {
   const { fasts, weights, heights, settings } = useStore();
   const c = useColors();
   const now = useNow(60_000);
