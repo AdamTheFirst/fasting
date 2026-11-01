@@ -71,7 +71,12 @@ export function MilestoneList({
                 <Text
                   numberOfLines={1}
                   adjustsFontSizeToFit
-                  style={[font.xs, medium, tabular, { color: isNext ? c.onPrimary : c.text }]}
+                  style={[
+                    font.xs,
+                    medium,
+                    tabular,
+                    { color: isNext ? c.onPrimary : m.passed ? c.onAccent : c.text },
+                  ]}
                 >
                   {hoursLabel(m.hours)}
                 </Text>

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Icon } from '../../components/Icon';
+import { PhaseRoad } from '../../components/PhaseVisuals';
 import { Body, Button, Card, Chip, ListGroup, ListRow, Screen, SectionHeader } from '../../components/ui';
 import { type Goal, goalLabel } from '../../domain/fast';
 import {
@@ -13,7 +14,9 @@ import {
   upcomingPlans,
   weekAhead,
 } from '../../domain/plan';
+import { phaseAt } from '../../domain/phases';
 import { toggleWeekday } from '../../domain/settings';
+import { HOUR } from '../../domain/time';
 import { tick } from '../../services/haptics';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
@@ -54,6 +57,9 @@ export default function PlanScreen() {
   const day = week[picked]!;
   const next = plans[0];
   const later = plans.slice(1);
+  const nextHours = next?.goal
+    ? (next.goal.kind === 'duration' ? next.goal.ms : next.goal.at - next.at) / HOUR
+    : null;
 
   const start = async (goal: Goal | null, presetId: string | null, plan?: PlannedFast) => {
     if (running) return;
@@ -108,6 +114,14 @@ export default function PlanScreen() {
               Starts {countdownLabel(next, now)}
             </Text>
           </View>
+          {nextHours !== null && nextHours > 0 ? (
+            <View style={{ gap: space[3], marginTop: space[2] }}>
+              <Text style={[font.sm, { color: c.textMuted }]}>
+                Likely reaches <Text style={[bold, { color: c.text }]}>{phaseAt(nextHours).label}</Text>
+              </Text>
+              <PhaseRoad reach={nextHours} goal={nextHours} />
+            </View>
+          ) : null}
           <View style={styles.buttons}>
             {running ? (
               <Body muted style={[font.sm, { flex: 1 }]}>

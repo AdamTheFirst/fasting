@@ -6,9 +6,18 @@ import Svg, { Circle, G } from 'react-native-svg';
 import { BrandMark, Icon } from '../../components/Icon';
 import { JournalView } from '../../components/JournalView';
 import { MonthCalendar } from '../../components/MonthCalendar';
+import { DayDepthBars, PhaseLengthBar } from '../../components/PhaseVisuals';
 import { Badge, Body, Button, Card, Screen, SectionHeader, Segmented, Title } from '../../components/ui';
 import { elapsedMs, type Fast, goalReachedAt } from '../../domain/fast';
-import { averageHours, hoursByDay, hoursInRange, records, streaks } from '../../domain/stats';
+import {
+  averageHours,
+  type DayDepth,
+  dayDepths,
+  hoursByDay,
+  hoursInRange,
+  records,
+  streaks,
+} from '../../domain/stats';
 import { DAY, formatDuration, formatShort, HOUR } from '../../domain/time';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
@@ -34,6 +43,7 @@ export default function HistoryScreen() {
     () => records(fasts, settings.streakMinHours, now),
     [fasts, settings.streakMinHours, now],
   );
+  const twoWeeks = useMemo(() => dayDepths(fasts, 14, now), [fasts, now]);
   const streak = streaks(fasts, settings.streakMinHours, now).current;
   const monthStart = new Date(new Date(now).getFullYear(), new Date(now).getMonth(), 1).getTime();
   const prevMonth = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - 1, 1);
@@ -123,6 +133,8 @@ export default function HistoryScreen() {
     <Screen title="History" right={addPast}>
       {switcher}
       <Summary
+        days={twoWeeks}
+        now={now}
         hours={recs.hoursThisMonth}
         fastCount={fastsThisMonth}
         lastMonthHours={earlyInMonth ? 0 : hoursLastMonth}
@@ -187,7 +199,13 @@ export default function HistoryScreen() {
             ]}
           >
             {list.map((f, i) => (
-              <FastRow key={f.id} fast={f} now={now} first={i === 0} />
+              <FastRow
+                key={f.id}
+                fast={f}
+                now={now}
+                first={i === 0}
+                maxHours={Math.max(24, ...list.map((g) => elapsedMs(g, now) / HOUR))}
+              />
             ))}
           </View>
         </View>
@@ -196,7 +214,17 @@ export default function HistoryScreen() {
   );
 }
 
-function FastRow({ fast, now, first }: { fast: Fast; now: number; first: boolean }) {
+function FastRow({
+  fast,
+  now,
+  first,
+  maxHours,
+}: {
+  fast: Fast;
+  now: number;
+  first: boolean;
+  maxHours: number;
+}) {
   const c = useColors();
   const goalAt = goalReachedAt(fast);
   const running = fast.end === null;
@@ -224,10 +252,11 @@ function FastRow({ fast, now, first }: { fast: Fast; now: number; first: boolean
           {d.toLocaleDateString(undefined, { weekday: 'short' })}
         </Text>
       </View>
-      <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flex: 1, gap: 6 }}>
         <Text style={[font.md, bold, tabular, { color: c.text }]}>
           {formatDuration(elapsedMs(fast, now))}
         </Text>
+        <PhaseLengthBar hours={elapsedMs(fast, now) / HOUR} maxHours={maxHours} />
         <Text numberOfLines={1} style={[font.xs, { color: c.textMuted }]}>
           {dayTime(fast.start)} → {running ? 'now' : dayTime(fast.end!)}
           {fast.note ? ` · ${fast.note}` : ''}
@@ -246,12 +275,16 @@ function FastRow({ fast, now, first }: { fast: Fast; now: number; first: boolean
 }
 
 function Summary({
+  days,
+  now,
   hours,
   fastCount,
   lastMonthHours,
   lastMonthName,
   stats,
 }: {
+  days: DayDepth[];
+  now: number;
   hours: number;
   fastCount: number;
   lastMonthHours: number;
@@ -288,6 +321,7 @@ function Summary({
           ) : null}
         </View>
       </View>
+      <DayDepthBars days={days} now={now} />
       <View style={[styles.statRow, { borderTopColor: c.border }]}>
         {stats.map((st, i) => (
           <View

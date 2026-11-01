@@ -9,6 +9,7 @@ import { FastNotesCard, PastYouCard } from '../../components/FastNotes';
 import { Icon } from '../../components/Icon';
 import { MilestoneBanner, useJustPassed } from '../../components/MilestoneBanner';
 import { MilestoneList } from '../../components/MilestoneList';
+import { PhaseArt, PhaseRoad } from '../../components/PhaseVisuals';
 import { SafetyCard } from '../../components/SafetyCard';
 import { Body, Button, Card, Screen, SectionHeader, Segmented, Title } from '../../components/ui';
 import {
@@ -25,7 +26,7 @@ import {
 } from '../../domain/fast';
 import { AUTOPHAGY_NOTE, timeline } from '../../domain/milestones';
 import { noteFromPastYou } from '../../domain/notes';
-import { phaseAt, type PhaseKey } from '../../domain/phases';
+import { phaseAt } from '../../domain/phases';
 import { shouldShowSafetyCard } from '../../domain/safety';
 import { presetForToday } from '../../domain/settings';
 import { longestFast } from '../../domain/stats';
@@ -33,18 +34,7 @@ import { DAY, formatDuration, formatElapsed, formatShort, HOUR } from '../../dom
 import { tick } from '../../services/haptics';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
-import {
-  bold,
-  elevation,
-  font,
-  medium,
-  phaseColor,
-  radius,
-  space,
-  strong,
-  tabular,
-  useColors,
-} from '../../theme';
+import { bold, elevation, font, medium, radius, space, strong, tabular, useColors } from '../../theme';
 
 const CUSTOM = 'custom';
 
@@ -175,6 +165,7 @@ function StartFast({
         <FastDial progress={null}>
           <GoalCenter goal={goal} />
         </FastDial>
+        <GoalReach hours={goalHoursOf(goal, now)} />
         <View style={[styles.factRow, { borderTopColor: c.border }]}>
           <Fact label="Start" value="Now" />
           <View style={[styles.factDivider, { backgroundColor: c.border }]} />
@@ -305,6 +296,26 @@ function GoalCenter({ goal }: { goal: Goal | null }) {
   );
 }
 
+/** Under the idle dial: how deep the chosen goal goes, drawn on the phase road. */
+function GoalReach({ hours }: { hours: number | null }) {
+  const c = useColors();
+  return (
+    <View style={{ gap: space[3] }}>
+      <View style={styles.caption}>
+        {hours === null ? (
+          <Text style={[font.sm, { color: c.textMuted }]}>No end set. Go as deep as you like.</Text>
+        ) : (
+          <>
+            <Text style={[font.sm, { color: c.textMuted }]}>Likely reaches</Text>
+            <Text style={[font.sm, bold, { color: c.text }]}>{phaseAt(hours).label}</Text>
+          </>
+        )}
+      </View>
+      <PhaseRoad reach={hours} goal={hours} />
+    </View>
+  );
+}
+
 /** A label over a value, in a card's fact row. */
 function Fact({ label, value }: { label: string; value: string }) {
   const c = useColors();
@@ -387,21 +398,6 @@ function GoalTile({
   );
 }
 
-/** A small square in the phase's colour, outlined in ink so the pastel never carries meaning alone. */
-function PhaseSwatch({ phase, size = 14 }: { phase: PhaseKey; size?: number }) {
-  const c = useColors();
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: phaseColor(c, phase),
-      }}
-    />
-  );
-}
-
 function EndedCard({
   fast,
   previousBestMs,
@@ -436,9 +432,9 @@ function EndedCard({
           <Icon name="close" color={c.textMuted} />
         </Pressable>
       </View>
-      <View style={styles.phaseRow}>
-        <PhaseSwatch phase={phase.key} />
-        <Text style={[font.sm, { color: c.text, flex: 1 }]}>
+      <View style={{ gap: space[3] }}>
+        <PhaseRoad reach={ms / HOUR} ticks={false} height={10} />
+        <Text style={[font.sm, { color: c.text }]}>
           Reached {phase.label.toLowerCase()}. {note}
         </Text>
       </View>
@@ -526,10 +522,12 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
             </Text>
           </View>
         </FastDial>
-        <View style={[styles.phasePill, { backgroundColor: c.surface2 }]}>
-          <PhaseSwatch phase={phase.key} size={10} />
-          <Text style={[font.sm, bold, { color: c.text }]}>{phase.label}</Text>
-          <Text style={[font.xs, { color: c.textMuted }]}>likely phase now</Text>
+        <View style={{ gap: space[3] }}>
+          <View style={styles.caption}>
+            <Text style={[font.md, bold, { color: c.text }]}>{phase.label}</Text>
+            <Text style={[font.xs, { color: c.textMuted }]}>likely phase now</Text>
+          </View>
+          <PhaseRoad reach={elapsedHours} at={elapsedHours} goal={goalH} />
         </View>
       </Card>
 
@@ -544,20 +542,15 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
 
       {next ? (
         <Card style={styles.nextCard}>
-          <View
-            style={[
-              styles.nextIcon,
-              {
-                backgroundColor: next.kind === 'goal' ? c.accent : phaseColor(c, phaseAt(next.hours).key),
-              },
-            ]}
-          >
-            <Icon
-              name={next.kind === 'goal' ? 'flag' : next.kind === 'best' ? 'trophy' : 'fast'}
-              size={18}
-              color={c.onAccent}
-            />
-          </View>
+          {next.kind === 'goal' || next.kind === 'best' ? (
+            <View
+              style={[styles.nextIcon, { backgroundColor: next.kind === 'goal' ? c.accent : c.periodSubtle }]}
+            >
+              <Icon name={next.kind === 'goal' ? 'flag' : 'trophy'} size={18} color={c.onAccent} />
+            </View>
+          ) : (
+            <PhaseArt phase={phaseAt(next.hours).key} />
+          )}
           <View style={{ flex: 1, gap: 2 }}>
             <Text style={[font.xs, { color: c.textMuted }]}>
               {next.hours - elapsedHours < 1 / 60
@@ -618,16 +611,7 @@ const styles = StyleSheet.create({
     paddingTop: space[4],
   },
   factDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
-  phasePill: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[2],
-    borderRadius: radius.sm,
-    paddingHorizontal: space[4],
-    paddingVertical: space[2],
-  },
-  phaseRow: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
+  caption: { flexDirection: 'row', alignItems: 'baseline', gap: space[2] },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2], alignItems: 'center' },
   rowBetween: { flexDirection: 'row', gap: space[3], alignItems: 'center' },
   tilesScroll: { marginHorizontal: -20, marginVertical: -space[3] },
