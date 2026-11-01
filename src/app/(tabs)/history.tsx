@@ -7,13 +7,7 @@ import { BrandMark, Icon } from '../../components/Icon';
 import { MonthCalendar } from '../../components/MonthCalendar';
 import { Badge, Body, Button, Card, Screen, SectionHeader, Title } from '../../components/ui';
 import { elapsedMs, type Fast, goalReachedAt } from '../../domain/fast';
-import {
-  averageHours,
-  hoursByDay,
-  hoursInRange,
-  records,
-  streaks,
-} from '../../domain/stats';
+import { averageHours, hoursByDay, hoursInRange, records, streaks } from '../../domain/stats';
 import { DAY, formatDuration, formatShort, HOUR } from '../../domain/time';
 import { useStore } from '../../state/store';
 import { useNow } from '../../state/useNow';
@@ -153,7 +147,13 @@ export default function HistoryScreen() {
           <Text style={[font.xs, styles.eyebrow, { color: c.textMuted, paddingHorizontal: space[1] }]}>
             {month.toUpperCase()}
           </Text>
-          <View style={[styles.list, { backgroundColor: c.surface, shadowColor: c.shadow, ...elevation }]}>
+          <View
+            style={[
+              styles.list,
+              { backgroundColor: c.surface, shadowColor: c.shadow, ...elevation },
+              { borderWidth: StyleSheet.hairlineWidth, borderColor: c.border },
+            ]}
+          >
             {list.map((f, i) => (
               <FastRow key={f.id} fast={f} now={now} first={i === 0} />
             ))}

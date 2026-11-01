@@ -1,113 +1,78 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 
 import { Icon } from '../../components/Icon';
-import { kit, SubPage } from '../../components/SettingsKit';
-import { Chip, GroupLabel, ListGroup, ListRow, SwitchRow } from '../../components/ui';
+import { SubPage } from '../../components/SettingsKit';
+import { GroupLabel, ListGroup, ListRow, SwitchRow } from '../../components/ui';
 import { goalLabel } from '../../domain/fast';
-import { toggleWeekday } from '../../domain/settings';
+import { tick } from '../../services/haptics';
 import { useStore } from '../../state/store';
-import { font, space, tabular, useColors } from '../../theme';
+import { font, radius, space, tabular, useColors } from '../../theme';
 
 // Monday first, in the phone's language.
-const WEEKDAY_NAMES = Array.from({ length: 7 }, (_, i) =>
-  new Date(2026, 0, 5 + i).toLocaleDateString(undefined, { weekday: 'long' }),
-);
-const WEEKDAY_LETTERS = WEEKDAY_NAMES.map((_, i) =>
-  new Date(2026, 0, 5 + i).toLocaleDateString(undefined, { weekday: 'narrow' }),
+const WEEKDAY_SHORT = Array.from({ length: 7 }, (_, i) =>
+  new Date(2026, 0, 5 + i).toLocaleDateString(undefined, { weekday: 'short' }),
 );
 
 export default function FastingSettings() {
-  const { presets, settings, updateSettings, savePreset, deletePreset } = useStore();
+  const { presets, settings, updateSettings } = useStore();
   const c = useColors();
-  const [streakHours, setStreakHours] = useState(String(settings.streakMinHours));
-  const input = [font.md, kit.input, { color: c.text, backgroundColor: c.surface2 }];
-
-  const saveStreakHours = () => {
-    const h = Number(streakHours.replace(',', '.'));
-    if (h > 0 && h <= 24) void updateSettings({ streakMinHours: h });
-    else setStreakHours(String(settings.streakMinHours));
+  const streak = settings.streakMinHours;
+  const setStreak = (h: number) => {
+    tick();
+    void updateSettings({ streakMinHours: Math.min(24, Math.max(1, h)) });
   };
-
-  const confirmDeletePreset = (id: string, name: string) =>
-    Alert.alert(`Delete the preset "${name}"?`, 'Past fasts keep their goal.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => void deletePreset(id) },
-    ]);
+  const daysFor = (id: string) =>
+    WEEKDAY_SHORT.filter((_, day) => settings.weekdayPresets[day] === id).join(', ');
 
   return (
     <SubPage>
       <GroupLabel>Presets</GroupLabel>
-      <ListGroup
-        footer={
-          presets.length
-            ? 'Pick days to make a preset the first choice on those days. Optional.'
-            : 'Save one from Custom on the Fast screen, or right after you end a fast.'
-        }
-      >
+      <ListGroup footer="Save a preset from Custom on the Fast screen, or right after a fast ends.">
         {presets.length === 0 ? (
           <ListRow label="No presets yet" />
         ) : (
           presets.map((p) => (
-            <View key={p.id} style={[kit.pad, { gap: space[3] }]}>
-              <View style={kit.inline}>
-                <TextInput
-                  style={[input, { fontWeight: '600' }]}
-                  defaultValue={p.name}
-                  accessibilityLabel={`Preset name, ${goalLabel(p.goal)}`}
-                  onEndEditing={(e) => {
-                    const name = e.nativeEvent.text.trim();
-                    if (name && name !== p.name) void savePreset({ ...p, name });
-                  }}
-                />
-                <Text style={[font.sm, tabular, { color: c.textMuted, minWidth: 56, textAlign: 'right' }]}>
-                  {goalLabel(p.goal)}
-                </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`Delete preset ${p.name}`}
-                  hitSlop={8}
-                  onPress={() => confirmDeletePreset(p.id, p.name)}
-                  style={kit.iconBtn}
-                >
-                  <Icon name="close" size={18} color={c.textMuted} />
-                </Pressable>
-              </View>
-              <View style={kit.days} accessibilityLabel={`Days that start on ${p.name}`}>
-                {WEEKDAY_LETTERS.map((letter, day) => (
-                  <Chip
-                    key={day}
-                    compact
-                    label={letter}
-                    accessibilityLabel={WEEKDAY_NAMES[day]}
-                    selected={settings.weekdayPresets[day] === p.id}
-                    onPress={() =>
-                      void updateSettings({
-                        weekdayPresets: toggleWeekday(settings.weekdayPresets, day, p.id),
-                      })
-                    }
-                  />
-                ))}
-              </View>
-            </View>
+            <ListRow
+              key={p.id}
+              label={p.name}
+              detail={daysFor(p.id) || undefined}
+              value={goalLabel(p.goal)}
+              chevron
+              onPress={() => router.push(`/settings/preset/${p.id}`)}
+            />
           ))
         )}
       </ListGroup>
 
       <GroupLabel>Streaks</GroupLabel>
-      <ListGroup footer="No penalties. A gap is just data.">
+      <ListGroup footer="A day counts toward your streak once you fasted this long in it.">
         <ListRow
-          label="Hours for a streak day"
+          label="Streak day"
           right={
-            <TextInput
-              style={[input, kit.hours, { textAlign: 'center' }]}
-              value={streakHours}
-              onChangeText={setStreakHours}
-              onEndEditing={saveStreakHours}
-              accessibilityLabel="Hours for a streak day"
-              keyboardType="decimal-pad"
-            />
+            <View style={styles.stepper}>
+              <StepButton
+                icon="minus"
+                label="Fewer hours"
+                disabled={streak <= 1}
+                onPress={() => setStreak(streak - 1)}
+              />
+              <Text
+                style={[
+                  font.md,
+                  tabular,
+                  { color: c.text, fontWeight: '600', minWidth: 48, textAlign: 'center' },
+                ]}
+              >
+                {streak} h
+              </Text>
+              <StepButton
+                icon="plus"
+                label="More hours"
+                disabled={streak >= 24}
+                onPress={() => setStreak(streak + 1)}
+              />
+            </View>
           }
         />
       </ListGroup>
@@ -116,37 +81,75 @@ export default function FastingSettings() {
       <ListGroup>
         <SwitchRow
           label="Notes from past you"
-          detail="What you wrote at the same hour of an earlier fast"
           value={settings.showPastNotes}
           onChange={(v) => void updateSettings({ showPastNotes: v })}
         />
         <SwitchRow
-          label="Safety card past 72 h"
-          detail="Electrolytes, refeeding and when to ask a doctor"
+          label="Safety card after 72 h"
           value={!settings.safetyCardDisabled}
           onChange={(v) => void updateSettings({ safetyCardDisabled: !v })}
         />
       </ListGroup>
 
-      {Platform.OS === 'ios' && (
-        <>
-          <GroupLabel>Widget and Siri</GroupLabel>
-          <ListGroup footer="Add the timer widget from your home screen or lock screen.">
-            <SwitchRow
-              label="Discreet widget"
-              detail="Shows only the time, never the word fast"
-              value={settings.discreetWidget}
-              onChange={(v) => void updateSettings({ discreetWidget: v })}
-            />
-            <ListRow label="Shortcuts and Siri" chevron onPress={() => router.push('/shortcuts')} />
-          </ListGroup>
-        </>
-      )}
-      {Platform.OS === 'android' && (
-        <ListGroup>
-          <ListRow label="Shortcuts" chevron onPress={() => router.push('/shortcuts')} />
-        </ListGroup>
-      )}
+      <GroupLabel>{Platform.OS === 'ios' ? 'Widget and Siri' : 'Shortcuts'}</GroupLabel>
+      <ListGroup>
+        {Platform.OS === 'ios' ? (
+          <SwitchRow
+            label="Discreet widget"
+            detail="Shows the time only"
+            value={settings.discreetWidget}
+            onChange={(v) => void updateSettings({ discreetWidget: v })}
+          />
+        ) : null}
+        <ListRow
+          label={Platform.OS === 'ios' ? 'Shortcuts and Siri' : 'Shortcuts'}
+          chevron
+          onPress={() => router.push('/shortcuts')}
+        />
+      </ListGroup>
     </SubPage>
   );
 }
+
+function StepButton({
+  icon,
+  label,
+  disabled,
+  onPress,
+}: {
+  icon: 'plus' | 'minus';
+  label: string;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  const c = useColors();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      disabled={disabled}
+      hitSlop={6}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.step,
+        { borderColor: c.borderInput, backgroundColor: c.surface },
+        pressed && { backgroundColor: c.surface2 },
+        disabled && { opacity: 0.35 },
+      ]}
+    >
+      <Icon name={icon} size={18} color={c.text} />
+    </Pressable>
+  );
+}
+
+const styles = {
+  stepper: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: space[1] },
+  step: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    borderWidth: 1.5,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+};

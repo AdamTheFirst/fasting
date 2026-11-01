@@ -1,10 +1,11 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, TextInput, View } from 'react-native';
 
-import { Detail, kit, SubPage } from '../../components/SettingsKit';
+import { kit, SubPage } from '../../components/SettingsKit';
 import { Button, GroupLabel, ListGroup, ListRow, SwitchRow } from '../../components/ui';
 import { newId } from '../../domain/fast';
-import { AUTOPHAGY_NOTE, BUILT_IN_MILESTONES, customMilestone } from '../../domain/milestones';
+import { BUILT_IN_MILESTONES, customMilestone } from '../../domain/milestones';
 import { ensureNotificationPermission } from '../../services/notifications';
 import { useStore } from '../../state/store';
 import { font, useColors } from '../../theme';
@@ -41,7 +42,8 @@ export default function ReminderSettings() {
 
   return (
     <SubPage>
-      <ListGroup footer="All off unless you turn them on.">
+      <GroupLabel>Alerts</GroupLabel>
+      <ListGroup footer="All off until you turn them on.">
         <SwitchRow
           label="Goal reached"
           value={ms.notifyGoal}
@@ -55,12 +57,12 @@ export default function ReminderSettings() {
       </ListGroup>
 
       <GroupLabel>Milestones</GroupLabel>
-      <ListGroup footer={AUTOPHAGY_NOTE}>
+      <ListGroup>
         {BUILT_IN_MILESTONES.map((m) => (
           <SwitchRow
             key={m.id}
-            label={`${m.title} · ${m.short ?? ''}`}
-            detail={<Detail text={m.body} source={m.source} />}
+            label={m.title}
+            detail={m.short}
             value={ms.enabledIds.includes(m.id)}
             onChange={(on) =>
               void setMilestones({
@@ -69,6 +71,7 @@ export default function ReminderSettings() {
             }
           />
         ))}
+        <ListRow label="What these mean" chevron onPress={() => router.push('/settings/milestones-about')} />
       </ListGroup>
 
       <GroupLabel>Your own</GroupLabel>
@@ -82,7 +85,7 @@ export default function ReminderSettings() {
               <Button
                 label="Remove"
                 size="sm"
-                variant="ghost"
+                variant="quiet"
                 onPress={() => void setMilestones({ custom: ms.custom.filter((x) => x.id !== m.id) })}
               />
             }

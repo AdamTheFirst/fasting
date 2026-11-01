@@ -32,7 +32,7 @@ export function SafetyCard({ onDismiss, onTurnOff }: { onDismiss: () => void; on
       </View>
       <View style={styles.row}>
         <Button label="Got it" size="sm" variant="secondary" onPress={onDismiss} />
-        <Button label="Don't show again" size="sm" variant="ghost" onPress={onTurnOff} />
+        <Button label="Don't show again" size="sm" variant="quiet" onPress={onTurnOff} />
       </View>
     </View>
   );

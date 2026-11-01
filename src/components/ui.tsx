@@ -54,13 +54,16 @@ export function Button({
   const c = useColors();
   // Pills only. The main action is solid ink; the second one is a raised white pill; the rest are
   // plain text. Pastels never carry a label.
+  // Every button but the ghost has a visible shape: the main one is solid ink, the others a filled
+  // pill with a firm outline, so they read as buttons on a white card and on the page alike.
   const bg = {
     primary: c.primary,
     secondary: c.surface,
     ghost: 'transparent',
-    quiet: c.surface2,
+    quiet: c.surface,
     danger: c.surface2,
   }[variant];
+  const outlined = variant === 'secondary' || variant === 'quiet' || variant === 'danger';
   const fg = {
     primary: c.onPrimary,
     secondary: c.text,
@@ -81,7 +84,7 @@ export function Button({
           paddingHorizontal: size === 'sm' ? space[4] : space[6],
           alignSelf: block ? 'stretch' : 'center',
         },
-        variant === 'secondary' && { ...elevation, shadowColor: c.shadow },
+        outlined && { borderWidth: 1.5, borderColor: c.borderInput },
         pressed && { opacity: 0.75, transform: [{ scale: 0.985 }] },
         rest.disabled && { opacity: 0.4 },
         style,
@@ -211,6 +214,7 @@ export function Card({
     styles.card,
     { backgroundColor: bg },
     tone === 'plain' && { ...elevation, shadowColor: c.shadow },
+    tone === 'plain' && { borderWidth: StyleSheet.hairlineWidth, borderColor: c.border },
     style,
   ];
   if (!onPress) return <View style={body}>{children}</View>;
@@ -311,7 +315,13 @@ export function ListGroup({ children, footer }: { children: ReactNode; footer?: 
   const items = (Array.isArray(children) ? children.flat() : [children]).filter(Boolean);
   return (
     <View style={{ gap: space[2] }}>
-      <View style={[styles.group, { backgroundColor: c.surface, ...elevation, shadowColor: c.shadow }]}>
+      <View
+        style={[
+          styles.group,
+          { backgroundColor: c.surface, ...elevation, shadowColor: c.shadow },
+          { borderWidth: StyleSheet.hairlineWidth, borderColor: c.border },
+        ]}
+      >
         <View>
           {items.map((child, i) => (
             <View key={i}>

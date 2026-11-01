@@ -373,7 +373,13 @@ function GoalTile({
         styles.tile,
         selected
           ? { backgroundColor: c.primary }
-          : { backgroundColor: c.surface, ...elevation, shadowColor: c.shadow },
+          : {
+              backgroundColor: c.surface,
+              ...elevation,
+              shadowColor: c.shadow,
+              borderWidth: 1,
+              borderColor: c.borderInput,
+            },
         pressed && { transform: [{ scale: 0.96 }] },
       ]}
     >
@@ -441,7 +447,13 @@ function EndedCard({
       </View>
       <View style={styles.row}>
         <Button label="Save as preset" icon="plus" size="sm" onPress={onSavePreset} />
-        <Button label="Edit" size="sm" variant="ghost" onPress={() => router.push(`/fast/${fast.id}`)} />
+        <Button
+          label="Edit"
+          icon="edit"
+          size="sm"
+          variant="secondary"
+          onPress={() => router.push(`/fast/${fast.id}`)}
+        />
       </View>
     </Card>
   );
@@ -527,8 +539,9 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
       <Button label="End fast" size="lg" block onPress={() => setConfirming(true)} />
       <Button
         label="Change start or goal"
-        variant="ghost"
-        size="sm"
+        icon="edit"
+        variant="secondary"
+        block
         onPress={() => router.push(`/fast/${fast.id}`)}
       />
 

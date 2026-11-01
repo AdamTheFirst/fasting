@@ -94,7 +94,7 @@ export function MeasureInput({
 }
 
 export const kit = StyleSheet.create({
-  page: { padding: layout.gutter, gap: space[4], paddingBottom: space[12] },
+  page: { padding: layout.gutter, paddingTop: space[1], gap: space[4], paddingBottom: space[12] },
   inline: { flexDirection: 'row', gap: space[2], alignItems: 'center' },
   pad: { paddingHorizontal: space[4], paddingVertical: space[3] },
   hours: { flexGrow: 0, flexShrink: 0, flexBasis: 76, width: 76 },

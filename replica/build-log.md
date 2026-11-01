@@ -24,3 +24,10 @@
 - Confirm sheets: centred text, a grabber, and a quiet text button for cancel.
 - Decision: kept every feature and moved it one tap deeper instead of deleting it.
 - Self-score from Simulator screenshots: Settings 8.5, Fast 8.5, History 8.5, Insights 8, Live Activity 8.5, icon 8. Dark mode checked.
+
+## 2026-11-01 · Contrast, clearer buttons, simpler settings pages
+
+- Feedback: contrast too low, some buttons didn't look like buttons, settings sub-pages were confusing with things buried in them.
+- Contrast: secondary text about 7.9:1 (was 6.2), faint text at least 5:1, input and track fills and outlines firmer, accents deeper (butter gold #CC9C24, sage #6A9E79, powder #5B8CC8), cards and lists get a fine edge. Dark mode secondary text brighter.
+- Buttons: every action but a dialog's cancel has a visible shape. Second actions are white pills with a 1.5 pt outline. "Change start or goal" is a full-width button with an icon, and goal tiles are outlined.
+- Settings sub-pages: one line per row. Presets open their own screen (name, days, delete), streak hours use − / + buttons, weight and height open a screen with one big field, and milestone switches are one line each, with the explanations and sources on an "About milestones" page.

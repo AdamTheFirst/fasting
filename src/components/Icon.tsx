@@ -5,6 +5,7 @@ export type IconName =
   | 'history'
   | 'settings'
   | 'plus'
+  | 'minus'
   | 'check'
   | 'chevron'
   | 'chevronLeft'
@@ -54,6 +55,7 @@ export function Icon({ name, size = 22, color }: { name: IconName; size?: number
         </>
       )}
       {name === 'plus' && <Path d="M12 5v14M5 12h14" {...p} />}
+      {name === 'minus' && <Path d="M5 12h14" {...p} />}
       {name === 'check' && <Path d="M5 12.5l4.5 4.5L19 7.5" {...p} />}
       {name === 'chevron' && <Path d="M9 5l7 7-7 7" {...p} />}
       {name === 'chevronLeft' && <Path d="M15 5l-7 7 7 7" {...p} />}

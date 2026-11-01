@@ -42,6 +42,12 @@ function Root() {
           options={{ title: 'Reminders', headerBackTitle: 'Settings' }}
         />
         <Stack.Screen name="settings/health" options={{ title: 'Health', headerBackTitle: 'Settings' }} />
+        <Stack.Screen name="settings/preset/[id]" options={{ title: 'Preset', headerBackTitle: 'Fasting' }} />
+        <Stack.Screen name="settings/measure" options={{ title: 'Measurement', headerBackTitle: 'Health' }} />
+        <Stack.Screen
+          name="settings/milestones-about"
+          options={{ title: 'About milestones', headerBackTitle: 'Reminders' }}
+        />
         <Stack.Screen name="settings/data" options={{ title: 'Your data', headerBackTitle: 'Settings' }} />
       </Stack>
     </>
