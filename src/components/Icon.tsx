@@ -141,23 +141,38 @@ export function Icon({ name, size = 22, color }: { name: IconName; size?: number
 
 /** The Fastaway mark: one ring, most of the way round, as on the app icon. */
 export function BrandMark({ size = 28, color, accent }: { size?: number; color: string; accent?: string }) {
-  const stroke = size * 0.2;
-  const r = (size - stroke) / 2;
-  const mid = size / 2;
-  const circ = 2 * Math.PI * r;
+  // Open tally: filled days, today outlined, then open days that fade out. No end is drawn.
+  const n = 6;
+  const filled = 3;
+  const step = size / n;
+  const w = step * 0.62;
+  const h = size * 0.78;
+  const y = (size - h) / 2;
+  const sw = Math.max(1, w * 0.22);
   return (
     <Svg width={size} height={size}>
-      <Circle
-        cx={mid}
-        cy={mid}
-        r={r}
-        stroke={accent ?? color}
-        strokeWidth={stroke}
-        strokeLinecap="round"
-        strokeDasharray={`${circ * (300 / 360)} ${circ}`}
-        transform={`rotate(-90 ${mid} ${mid})`}
-        fill="none"
-      />
+      {Array.from({ length: n }, (_, i) => {
+        const x = i * step + (step - w) / 2;
+        if (i < filled) {
+          return <Rect key={i} x={x} y={y} width={w} height={h} rx={w / 2} fill={accent ?? color} />;
+        }
+        const today = i === filled;
+        return (
+          <Rect
+            key={i}
+            x={x + sw / 2}
+            y={y + sw / 2}
+            width={w - sw}
+            height={h - sw}
+            rx={(w - sw) / 2}
+            fill="none"
+            stroke={color}
+            strokeWidth={sw}
+            strokeDasharray={today ? undefined : `${h * 0.12} ${h * 0.09}`}
+            opacity={today ? 1 : i === filled + 1 ? 0.55 : 0.28}
+          />
+        );
+      })}
     </Svg>
   );
 }
