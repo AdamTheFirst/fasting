@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[2],
-    borderRadius: radius.full,
+    borderRadius: radius.sm,
     paddingHorizontal: space[4],
     paddingVertical: space[2],
   },

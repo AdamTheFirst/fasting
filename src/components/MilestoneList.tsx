@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   cell: {
     width: 52,
     height: 36,
-    borderRadius: radius.full,
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,

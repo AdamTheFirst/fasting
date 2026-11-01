@@ -350,14 +350,14 @@ const styles = StyleSheet.create({
   headerBtn: {
     width: 44,
     height: 44,
-    borderRadius: radius.full,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
   },
   eyebrow: { fontWeight: '600', letterSpacing: 0.6 },
   summaryLine: { flexDirection: 'row', alignItems: 'center', gap: space[2], flexWrap: 'wrap', marginTop: 2 },
-  pill: { borderRadius: radius.full, paddingHorizontal: space[2], paddingVertical: 3 },
+  pill: { borderRadius: radius.xs, paddingHorizontal: space[2], paddingVertical: 3 },
   statRow: {
     flexDirection: 'row',
     borderTopWidth: StyleSheet.hairlineWidth,
