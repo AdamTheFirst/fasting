@@ -38,7 +38,14 @@ export default function HistoryScreen() {
   const monthStart = new Date(new Date(now).getFullYear(), new Date(now).getMonth(), 1).getTime();
   const prevMonth = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - 1, 1);
   const fastsThisMonth = fasts.filter((f) => f.start >= monthStart).length;
-  const hoursLastMonth = hoursInRange(fasts, prevMonth.getTime(), monthStart, now);
+  // Month to date against the same stretch of last month, so the 1st isn't compared with a full month.
+  const hoursLastMonth = hoursInRange(
+    fasts,
+    prevMonth.getTime(),
+    Math.min(monthStart, prevMonth.getTime() + (now - monthStart)),
+    now,
+  );
+  const earlyInMonth = now - monthStart < 3 * DAY;
   const avg30 = averageHours(fasts, now - 30 * DAY);
 
   // Tapping a day opens the longest fast that touched it.
@@ -118,7 +125,7 @@ export default function HistoryScreen() {
       <Summary
         hours={recs.hoursThisMonth}
         fastCount={fastsThisMonth}
-        lastMonthHours={hoursLastMonth}
+        lastMonthHours={earlyInMonth ? 0 : hoursLastMonth}
         lastMonthName={prevMonth.toLocaleDateString(undefined, { month: 'long' })}
         stats={[
           { label: 'Average', value: avg30 ? formatShort(avg30 * HOUR) : '–', hint: 'Last 30 days' },
@@ -258,8 +265,8 @@ function Summary({
       ? null
       : diff === 0
         ? `Level with ${lastMonthName}`
-        : `${Math.abs(diff)}h ${diff > 0 ? 'more' : 'less'} than ${lastMonthName}`;
-  const fastsLine = `${fastCount} ${fastCount === 1 ? 'fast' : 'fasts'}`;
+        : `${Math.abs(diff)}h ${diff > 0 ? 'more' : 'less'} than this time in ${lastMonthName}`;
+  const fastsLine = fastCount ? `${fastCount} ${fastCount === 1 ? 'fast' : 'fasts'}` : '';
   return (
     <Card style={{ gap: space[4] }}>
       <View
@@ -273,7 +280,7 @@ function Summary({
           <Text style={[font.lg, { color: c.textMuted, fontWeight: '600', letterSpacing: 0 }]}> hours</Text>
         </Text>
         <View style={styles.summaryLine}>
-          <Text style={[font.sm, { color: c.textMuted }]}>{fastsLine}</Text>
+          {fastsLine ? <Text style={[font.sm, { color: c.textMuted }]}>{fastsLine}</Text> : null}
           {compare ? (
             <View style={[styles.pill, { backgroundColor: diff >= 0 ? c.accentSubtle : c.surface2 }]}>
               <Text style={[font.xs, tabular, { color: c.text, fontWeight: '600' }]}>{compare}</Text>

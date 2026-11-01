@@ -121,7 +121,13 @@ export default function PlanScreen() {
                 onPress={() => void start(next.goal, next.presetId, next)}
               />
             )}
-            <Button label="Edit" size="sm" variant="ghost" onPress={() => router.push(`/plan/${next.id}`)} />
+            <Button
+              label="Edit"
+              icon="edit"
+              size="sm"
+              variant="secondary"
+              onPress={() => router.push(`/plan/${next.id}`)}
+            />
           </View>
         </Card>
       ) : (
@@ -131,7 +137,7 @@ export default function PlanScreen() {
           </View>
           <Text style={[font.lg, strong, { color: c.text, textAlign: 'center' }]}>Nothing planned</Text>
           <Body muted style={{ textAlign: 'center', maxWidth: 290 }}>
-            Put a long fast on the calendar, like 72 h from Friday evening. Nothing starts without you.
+            Put a long fast on the calendar, like 72 h from Friday evening. Nothing starts without you.
           </Body>
           <Button
             label="Plan a fast"
@@ -143,7 +149,7 @@ export default function PlanScreen() {
       )}
 
       <SectionHeader>This week</SectionHeader>
-      <Card style={{ gap: space[4] }}>
+      <Card style={{ gap: space[5] }}>
         <View style={styles.week} accessibilityRole="tablist">
           {week.map((d, i) => {
             const on = i === picked;
@@ -159,7 +165,7 @@ export default function PlanScreen() {
                 }}
                 style={[
                   styles.dayCell,
-                  { backgroundColor: on ? c.primary : d.isToday ? c.accentSubtle : c.surface2 },
+                  { backgroundColor: on ? c.primary : d.isToday ? c.accentSubtle : 'transparent' },
                 ]}
               >
                 <Text
@@ -205,10 +211,10 @@ export default function PlanScreen() {
               <Icon name="chevron" size={16} color={c.textFaint} />
             </Pressable>
           ))}
-          <Text style={[font.sm, { color: c.textMuted }]}>
+          <Text style={[font.xs, styles.eyebrow, { color: c.textMuted, marginTop: space[2] }]}>
             {presets.length === 0
-              ? 'Save a preset to give each weekday its own fast. It is then picked for you on the Fast screen.'
-              : `Every ${weekdayLong(day.start)}, the Fast screen picks:`}
+              ? 'SAVE A PRESET TO REPEAT IT WEEKLY'
+              : `EVERY ${weekdayLong(day.start).toUpperCase()}`}
           </Text>
           {presets.length > 0 && (
             <View style={styles.chips} accessibilityRole="radiogroup">
@@ -224,16 +230,6 @@ export default function PlanScreen() {
               ))}
             </View>
           )}
-        </View>
-        <View style={[styles.legend, { borderTopColor: c.border }]}>
-          <View style={styles.rowCenter}>
-            <View style={[styles.dot, { backgroundColor: c.accentStrong }]} />
-            <Text style={[font.xs, { color: c.textMuted }]}>Weekly rhythm</Text>
-          </View>
-          <View style={styles.rowCenter}>
-            <View style={[styles.ringDot, { borderColor: c.text }]} />
-            <Text style={[font.xs, { color: c.textMuted }]}>Planned fast</Text>
-          </View>
         </View>
       </Card>
 
@@ -259,30 +255,30 @@ export default function PlanScreen() {
       {presets.length > 0 && (
         <>
           <SectionHeader>Your presets</SectionHeader>
-          <ListGroup footer={running ? 'Start is back once your current fast ends.' : undefined}>
+          <ListGroup
+            footer={
+              running
+                ? 'Start is back once your current fast ends. Tap a preset to plan it.'
+                : 'Tap a preset to plan it for later.'
+            }
+          >
             {presets.map((p) => (
               <ListRow
                 key={p.id}
                 label={p.name}
                 detail={goalLabel(p.goal)}
+                onPress={() => router.push(`/plan/new?preset=${p.id}`)}
                 right={
-                  <View style={styles.presetButtons}>
+                  running ? (
+                    <Icon name="chevron" size={18} color={c.textFaint} />
+                  ) : (
                     <Button
-                      label="Plan"
+                      label="Start"
                       size="sm"
-                      variant="quiet"
-                      accessibilityLabel={`Plan ${p.name}`}
-                      onPress={() => router.push(`/plan/new?preset=${p.id}`)}
+                      accessibilityLabel={`Start ${p.name} now`}
+                      onPress={() => void start(p.goal, p.id)}
                     />
-                    {!running && (
-                      <Button
-                        label="Start"
-                        size="sm"
-                        accessibilityLabel={`Start ${p.name} now`}
-                        onPress={() => void start(p.goal, p.id)}
-                      />
-                    )}
-                  </View>
+                  )
                 }
               />
             ))}
@@ -327,11 +323,4 @@ const styles = StyleSheet.create({
   ringDot: { width: 8, height: 8, borderRadius: 4, borderWidth: 1.5 },
   dotSpace: { width: 7, height: 7 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2] },
-  legend: {
-    flexDirection: 'row',
-    gap: space[4],
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: space[3],
-  },
-  presetButtons: { flexDirection: 'row', gap: space[2] },
 });

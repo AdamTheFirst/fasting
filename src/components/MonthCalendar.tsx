@@ -97,7 +97,7 @@ export function MonthCalendar({
                 pressed && { opacity: 0.6 },
               ]}
             >
-              {size > 0 && <DayRing size={size - 6} hours={hours} full={full} />}
+              {size > 0 && !isFuture && <DayRing size={size - 6} hours={hours} full={full} />}
               <Text
                 style={[
                   font.sm,
