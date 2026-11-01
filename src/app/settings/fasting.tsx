@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Platform, Pressable, Text, View } from 'react-native';
 
 import { Icon } from '../../components/Icon';
+import { openPlus, PlusTag } from '../../components/Plus';
 import { SubPage } from '../../components/SettingsKit';
 import { GroupLabel, ListGroup, ListRow, SwitchRow } from '../../components/ui';
 import { goalLabel } from '../../domain/fast';
@@ -15,7 +16,7 @@ const WEEKDAY_SHORT = Array.from({ length: 7 }, (_, i) =>
 );
 
 export default function FastingSettings() {
-  const { presets, settings, updateSettings } = useStore();
+  const { plus, presets, settings, updateSettings } = useStore();
   const c = useColors();
   const streak = settings.streakMinHours;
   const setStreak = (h: number) => {
@@ -93,6 +94,9 @@ export default function FastingSettings() {
 
       <GroupLabel>{Platform.OS === 'ios' ? 'Widget and Siri' : 'Shortcuts'}</GroupLabel>
       <ListGroup>
+        {Platform.OS === 'ios' && !plus ? (
+          <ListRow label="Widget and Live Activity" detail={<PlusTag />} chevron onPress={openPlus} />
+        ) : null}
         {Platform.OS === 'ios' ? (
           <SwitchRow
             label="Discreet widget"

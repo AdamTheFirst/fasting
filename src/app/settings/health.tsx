@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { Alert } from 'react-native';
 
+import { openPlus, PlusTag } from '../../components/Plus';
 import { SubPage } from '../../components/SettingsKit';
 import { GroupLabel, ListGroup, ListRow, SwitchRow } from '../../components/ui';
 import { APP_NAME } from '../../config/identity';
@@ -9,7 +10,7 @@ import { health } from '../../services/health';
 import { useStore } from '../../state/store';
 
 export default function HealthSettings() {
-  const { weights, heights, settings, updateSettings } = useStore();
+  const { plus, weights, heights, settings, updateSettings } = useStore();
   const latestWeight = weights.at(-1);
   const latestHeight = heights.at(-1);
   const currentBmi = latestWeight && latestHeight ? bmi(latestWeight.kg, latestHeight.m) : null;
@@ -26,11 +27,19 @@ export default function HealthSettings() {
 
   return (
     <SubPage>
-      <ListGroup footer="Weight and height only. Nothing else leaves this phone.">
+      <ListGroup
+        footer={
+          plus
+            ? 'Weight and height only. Nothing else leaves this phone.'
+            : 'Sync comes with Plus. Weight and height you type in below stay free.'
+        }
+      >
         <SwitchRow
           label={`Sync with ${health.name}`}
-          value={settings.healthSyncEnabled}
+          detail={plus ? undefined : <PlusTag />}
+          value={plus && settings.healthSyncEnabled}
           onChange={async (on) => {
+            if (!plus) return openPlus();
             if (on && !(await ask(false))) return;
             void updateSettings({ healthSyncEnabled: on });
           }}
@@ -63,8 +72,10 @@ export default function HealthSettings() {
         />
         <SwitchRow
           label="Body signals"
-          value={settings.healthSignals}
+          detail={plus ? undefined : <PlusTag />}
+          value={plus && settings.healthSignals}
           onChange={async (on) => {
+            if (!plus) return openPlus();
             if (on && !(await ask(true))) return;
             void updateSettings({ healthSignals: on });
           }}

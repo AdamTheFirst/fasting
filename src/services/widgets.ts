@@ -24,8 +24,22 @@ function goalWhen(at: number): string {
   return `${d.toLocaleDateString(undefined, { weekday: 'short' })} ${time}`;
 }
 
-export function syncWidgets(running: Fast | null, discreet: boolean): void {
+/**
+ * The widget and Live Activity come with Plus. Without it the widget, if someone adds it anyway,
+ * says where to unlock it, and no Live Activity starts.
+ */
+export function syncWidgets(running: Fast | null, discreet: boolean, plus: boolean): void {
   if (!widget || !activities) return;
+  if (!plus) {
+    try {
+      widget.updateSnapshot({ discreet, locked: true });
+      currentKey = '';
+      for (const a of activities.getInstances()) void a.end('immediate');
+    } catch {
+      // Same as below: the app works the same without widgets.
+    }
+    return;
+  }
   // Leave keys out instead of setting them to null: the widget's props go into UserDefaults,
   // which rejects null and makes the native call throw.
   const goalAt = running ? goalReachedAt(running) : null;

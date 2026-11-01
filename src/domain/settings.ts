@@ -24,6 +24,11 @@ export interface AppSettings {
   discreetWidget: boolean;
   /** Fasts planned ahead on the Plan tab. Nothing starts on its own. */
   plannedFasts: PlannedFast[];
+  /**
+   * Fastaway Plus is bought. A copy of what the store says, so it works offline; the store is asked
+   * again at launch and by Restore.
+   */
+  plusOwned: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -41,6 +46,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   healthSignals: false,
   discreetWidget: false,
   plannedFasts: [],
+  plusOwned: false,
 };
 
 /** Monday-first weekday index for a local time: 0 = Monday … 6 = Sunday. */

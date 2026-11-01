@@ -85,6 +85,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     'react-native-health-connect',
+    // The one-time Plus purchase (App Store and Google Play billing). Adds the billing permission.
+    'expo-iap',
     ...(withWidgets
       ? [
           [

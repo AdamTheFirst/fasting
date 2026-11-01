@@ -4,6 +4,8 @@ import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 
 import { Welcome } from '../components/Welcome';
+import { APP_NAME } from '../config/identity';
+import { effectiveTheme } from '../domain/plus';
 import { StoreProvider, useStore } from '../state/store';
 import { useHealthSync } from '../state/useHealthSync';
 import { strong, ThemeContext, useColors, useIsDark } from '../theme';
@@ -44,6 +46,7 @@ function Root() {
         <Stack.Screen name="action/[verb]" options={{ headerShown: false }} />
         <Stack.Screen name="shortcuts" options={{ title: 'Shortcuts and Siri' }} />
         <Stack.Screen name="privacy" options={{ title: 'Privacy' }} />
+        <Stack.Screen name="plus" options={{ presentation: 'modal', title: `${APP_NAME} Plus` }} />
         <Stack.Screen name="insights" options={{ title: 'Insights', headerBackTitle: 'History' }} />
         <Stack.Screen
           name="settings/appearance"
@@ -70,7 +73,9 @@ function Root() {
 function Themed() {
   const { settings } = useStore();
   return (
-    <ThemeContext.Provider value={{ theme: settings.theme, appearance: settings.appearance }}>
+    <ThemeContext.Provider
+      value={{ theme: effectiveTheme(settings.theme, settings.plusOwned), appearance: settings.appearance }}
+    >
       <Root />
     </ThemeContext.Provider>
   );

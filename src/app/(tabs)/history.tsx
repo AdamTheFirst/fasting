@@ -6,6 +6,7 @@ import Svg, { Circle, G } from 'react-native-svg';
 import { BrandMark, Icon } from '../../components/Icon';
 import { JournalView } from '../../components/JournalView';
 import { MonthCalendar } from '../../components/MonthCalendar';
+import { PlusTag } from '../../components/Plus';
 import { DayDepthBars, PhaseLengthBar } from '../../components/PhaseVisuals';
 import { Badge, Body, Button, Card, Screen, SectionHeader, Segmented, Title } from '../../components/ui';
 import { elapsedMs, type Fast, goalReachedAt } from '../../domain/fast';
@@ -29,7 +30,7 @@ const dayTime = (t: number) =>
   new Date(t).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' });
 
 export default function HistoryScreen() {
-  const { fasts, settings } = useStore();
+  const { fasts, settings, plus } = useStore();
   const c = useColors();
   const now = useNow(60_000);
   // Months back from the current one: 0 is this month.
@@ -181,6 +182,7 @@ export default function HistoryScreen() {
             <Text style={[font.md, bold, { color: c.text }]}>Insights</Text>
             <Text style={[font.sm, { color: c.textMuted }]}>Lengths, weekly hours, rhythm and weight</Text>
           </View>
+          {plus ? null : <PlusTag />}
           <Icon name="chevron" size={18} color={c.textFaint} />
         </View>
       </Card>

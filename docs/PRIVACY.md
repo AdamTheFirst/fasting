@@ -1,6 +1,6 @@
 # Fastaway privacy policy
 
-Last updated: 31 October 2026
+Last updated: 1 November 2026
 
 This is the same text the app shows under Settings → Privacy. The source is `src/config/privacy.ts`; keep the two in step.
 
@@ -19,6 +19,10 @@ Only if you turn on Health sync: the app reads and writes weight and height. Onl
 ## Widget and lock screen
 
 The widget and lock screen show how long your current fast has run. They read it from the phone. Discreet mode hides the word "fast".
+
+## Buying Plus
+
+Fastaway Plus is a one-time purchase through the App Store or Google Play. Apple or Google handle the payment and keep the receipt under your store account; we never see your card or your name. To know whether Plus is unlocked, the app asks the store on your phone. No fasts, notes or health data are sent with it.
 
 ## Sharing and export
 

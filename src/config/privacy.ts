@@ -4,7 +4,7 @@ import { APP_NAME } from './identity';
  * The privacy policy, shown in the app and published as docs/PRIVACY.md for the store listings.
  * Keep the two in step, and update both before adding anything that sends data off the phone.
  */
-export const PRIVACY_UPDATED = '31 October 2026';
+export const PRIVACY_UPDATED = '1 November 2026';
 
 export const PRIVACY_SECTIONS: { title: string; body: string }[] = [
   {
@@ -22,6 +22,10 @@ export const PRIVACY_SECTIONS: { title: string; body: string }[] = [
   {
     title: 'Widget and lock screen',
     body: 'The widget and lock screen show how long your current fast has run. They read it from the phone. Discreet mode hides the word "fast".',
+  },
+  {
+    title: 'Buying Plus',
+    body: `${APP_NAME} Plus is a one-time purchase through the App Store or Google Play. Apple or Google handle the payment and keep the receipt under your store account; we never see your card or your name. To know whether Plus is unlocked, the app asks the store on your phone. No fasts, notes or health data are sent with it.`,
   },
   {
     title: 'Sharing and export',
