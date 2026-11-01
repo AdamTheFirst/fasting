@@ -134,8 +134,7 @@ export function DayDepthBars({ days, now }: { days: readonly DayDepth[]; now: nu
     >
       <View style={[styles.bars, { height: chartH }]}>
         {days.map((d) => {
-          const h = d.hours > 0 ? Math.max(6, (Math.min(d.hours, 24) / 24) * chartH) : 4;
-          const isToday = now - d.day < 24 * 3_600_000 && now >= d.day;
+          const h = d.hours > 0 ? Math.max(8, (Math.min(d.hours, 24) / 24) * chartH) : 4;
           return (
             <View key={d.day} style={styles.barCol}>
               <View
@@ -143,8 +142,6 @@ export function DayDepthBars({ days, now }: { days: readonly DayDepth[]; now: nu
                   height: h,
                   borderRadius: 4,
                   backgroundColor: d.hours > 0 ? phaseColor(c, phaseAt(d.depth).key) : c.surface2,
-                  borderWidth: isToday && d.hours > 0 ? 1.5 : 0,
-                  borderColor: c.text,
                 }}
               />
             </View>
