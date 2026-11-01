@@ -2,17 +2,16 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { FastNotesCard } from '../../components/FastNotes';
-import { Icon } from '../../components/Icon';
-import { Body, Card, Screen, SectionHeader } from '../../components/ui';
-import { elapsedMs, goalLabel } from '../../domain/fast';
-import { filterEntries, groupByFast, journalEntries, themes } from '../../domain/journal';
-import { noteOffsetLabel } from '../../domain/notes';
-import { formatShort } from '../../domain/time';
-import { tick } from '../../services/haptics';
-import { useStore } from '../../state/store';
-import { useNow } from '../../state/useNow';
-import { bold, font, radius, space, strong, tabular, useColors } from '../../theme';
+import { Icon } from './Icon';
+import { Body, Card, SectionHeader } from './ui';
+import { elapsedMs, goalLabel } from '../domain/fast';
+import { filterEntries, groupByFast, journalEntries, themes } from '../domain/journal';
+import { noteOffsetLabel } from '../domain/notes';
+import { formatShort } from '../domain/time';
+import { tick } from '../services/haptics';
+import { useStore } from '../state/store';
+import { useNow } from '../state/useNow';
+import { bold, font, radius, space, strong, tabular, useColors } from '../theme';
 
 const shortDate = (t: number) =>
   new Date(t).toLocaleDateString(undefined, {
@@ -22,9 +21,9 @@ const shortDate = (t: number) =>
     year: 'numeric',
   });
 
-/** Everything you wrote during your fasts, on one page, so past you can talk to present you. */
-export default function JournalScreen() {
-  const { fasts, running, saveFast } = useStore();
+/** History's Journal view: everything you wrote during your fasts, so past you can talk to present you. */
+export function JournalView() {
+  const { fasts } = useStore();
   const c = useColors();
   const now = useNow(60_000);
   const [query, setQuery] = useState('');
@@ -38,16 +37,7 @@ export default function JournalScreen() {
   };
 
   return (
-    <Screen title="Journal">
-      {running ? (
-        <View style={{ gap: space[2] }}>
-          <Text style={[font.xs, styles.eyebrow, { color: c.textMuted, paddingHorizontal: space[1] }]}>
-            NOW · {noteOffsetLabel(now - running.start).toUpperCase()}
-          </Text>
-          <FastNotesCard fast={running} onSave={(f) => void saveFast(f)} />
-        </View>
-      ) : null}
-
+    <>
       {all.length === 0 ? (
         <Card style={styles.empty}>
           <View style={[styles.emptyIcon, { backgroundColor: c.accentSubtle }]}>
@@ -57,9 +47,8 @@ export default function JournalScreen() {
             Your notes gather here
           </Text>
           <Body muted style={{ textAlign: 'center', maxWidth: 300 }}>
-            {running
-              ? 'Tap a word above or write a line. Each note keeps the hour it was written.'
-              : 'Write a line during a fast, like "clear-headed" or "had electrolytes". Each note keeps the hour it was written.'}
+            Write a line during a fast, like &ldquo;clear-headed&rdquo; or &ldquo;had electrolytes&rdquo;.
+            Each note keeps the hour it was written.
           </Body>
         </Card>
       ) : (
@@ -181,7 +170,7 @@ export default function JournalScreen() {
           )}
         </>
       )}
-    </Screen>
+    </>
   );
 }
 

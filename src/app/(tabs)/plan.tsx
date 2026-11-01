@@ -28,6 +28,15 @@ const dayAndTime = (t: number) =>
     hour: '2-digit',
     minute: '2-digit',
   });
+/** "Tue, Nov 10, 18:00": short enough for a list row next to its countdown. */
+const shortDayAndTime = (t: number) =>
+  new Date(t).toLocaleString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 const weekdayLong = (t: number) => new Date(t).toLocaleDateString(undefined, { weekday: 'long' });
 const weekdayShort = (t: number) => new Date(t).toLocaleDateString(undefined, { weekday: 'short' });
 
@@ -237,7 +246,7 @@ export default function PlanScreen() {
                 key={p.id}
                 icon={p.remind ? 'bell' : 'calendar'}
                 label={planName(p, presets)}
-                detail={dayAndTime(p.at)}
+                detail={shortDayAndTime(p.at)}
                 value={countdownLabel(p, now)}
                 chevron
                 onPress={() => router.push(`/plan/${p.id}`)}
