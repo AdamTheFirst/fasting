@@ -31,3 +31,8 @@
 - Contrast: secondary text about 7.9:1 (was 6.2), faint text at least 5:1, input and track fills and outlines firmer, accents deeper (butter gold #CC9C24, sage #6A9E79, powder #5B8CC8), cards and lists get a fine edge. Dark mode secondary text brighter.
 - Buttons: every action but a dialog's cancel has a visible shape. Second actions are white pills with a 1.5 pt outline. "Change start or goal" is a full-width button with an icon, and goal tiles are outlined.
 - Settings sub-pages: one line per row. Presets open their own screen (name, days, delete), streak hours use − / + buttons, weight and height open a screen with one big field, and milestone switches are one line each, with the explanations and sources on an "About milestones" page.
+
+## 2026-11-01: new logo, "Open tally"
+
+- Picked by Salih from three rounds of concepts (sheets in the project's `logo-concepts/` folder). Filled days in butter, today outlined, then dashed open days fading off the edge, so the mark has no end. Matches the progress bar on the running Fast screen and keeps rings out of the logo.
+- Replaced `icon.png`, the Android adaptive layers (foreground, background, monochrome), `favicon.png`, `notification-icon.png` and both splash images. `BrandMark` (Welcome, History, Settings) now draws the same tally. The Fast tab glyph is unchanged.
