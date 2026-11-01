@@ -116,7 +116,7 @@ export function FastNotesCard({ fast, onSave }: { fast: Fast; onSave: (f: Fast) 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
   quick: { flexDirection: 'row', flexWrap: 'wrap', gap: space[2] },
-  quickChip: { borderRadius: radius.full, paddingHorizontal: space[3], paddingVertical: space[2] },
+  quickChip: { borderRadius: radius.sm, paddingHorizontal: space[3], paddingVertical: space[2] },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',

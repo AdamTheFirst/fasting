@@ -147,7 +147,7 @@ const styles = {
   step: {
     width: 40,
     height: 40,
-    borderRadius: radius.full,
+    borderRadius: radius.sm,
     borderWidth: 1.5,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,

@@ -165,7 +165,8 @@ export const themes: Record<ThemeId, { name: string; light: ColorRoles; dark: Co
 export const colors = themes.butter;
 
 export const space = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40, 12: 48 } as const;
-export const radius = { sm: 10, md: 14, lg: 20, xl: 24, full: 9999 } as const;
+/** Corners are rounded, never pill-shaped: `full` is only for dots and other true circles. */
+export const radius = { xs: 8, sm: 10, md: 14, lg: 20, xl: 24, full: 9999 } as const;
 
 /** The Periodiary type scale: 13/16, 15/20, 17/24, 22/28, 28/36, 40/44, plus 20/26 for card titles. */
 export const font = {

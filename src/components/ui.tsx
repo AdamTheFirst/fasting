@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   buttonRow: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
   chip: {
     height: 44,
-    borderRadius: radius.full,
+    borderRadius: radius.sm,
     paddingHorizontal: space[4],
     flexDirection: 'row',
     gap: space[1],
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipCompact: { height: 36, minWidth: 36, paddingHorizontal: space[2] },
-  segmented: { flexDirection: 'row', borderRadius: radius.full, padding: 4 },
+  segmented: { flexDirection: 'row', borderRadius: radius.md, padding: 4 },
   segment: {
     flex: 1,
     minHeight: 40,
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
     gap: space[1],
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.full,
+    borderRadius: radius.sm,
   },
   card: {
     borderRadius: radius.xl,
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space[3] },
   rowIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   badge: {
-    borderRadius: radius.full,
+    borderRadius: radius.xs,
     paddingHorizontal: space[2],
     paddingVertical: 4,
     alignSelf: 'flex-start',

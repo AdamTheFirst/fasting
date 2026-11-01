@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   headerBtn: {
     width: 44,
     height: 44,
-    borderRadius: radius.full,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   rowCenter: { flexDirection: 'row', alignItems: 'center', gap: space[2] },
   pill: {
     alignSelf: 'flex-start',
-    borderRadius: radius.full,
+    borderRadius: radius.xs,
     paddingHorizontal: space[3],
     paddingVertical: 6,
   },

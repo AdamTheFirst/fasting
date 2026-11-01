@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -space[2],
     right: 0,
-    borderRadius: 9999,
+    borderRadius: 8,
     paddingHorizontal: space[3],
     paddingVertical: 5,
   },

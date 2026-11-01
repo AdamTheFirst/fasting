@@ -79,7 +79,7 @@ function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
       style={{
         width: 60,
         height: 32,
-        borderRadius: radius.full,
+        borderRadius: radius.sm,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: focused ? c.accentSubtle : 'transparent',
