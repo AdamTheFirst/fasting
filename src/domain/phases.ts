@@ -29,3 +29,24 @@ export function phaseAt(hours: number): Phase {
 }
 
 export const phaseAtMs = (ms: number) => phaseAt(ms / HOUR);
+
+/** The deep phase has no end; on a road it is drawn as 48 hours wide and anything past that sits at the end. */
+const DEEP_SPAN = 48;
+
+/**
+ * Where `hours` sits on the phase road, 0 to 1. Every phase gets an equal share of the road,
+ * so the short early phases stay readable next to the long ones.
+ */
+export function roadPosition(hours: number): number {
+  const h = Math.max(0, hours);
+  const i = PHASES.indexOf(phaseAt(h));
+  const from = PHASES[i]!.from;
+  const to = PHASES[i + 1]?.from ?? from + DEEP_SPAN;
+  return (i + Math.min(1, (h - from) / (to - from))) / PHASES.length;
+}
+
+/** How full phase `index` is at `hours`, 0 to 1. */
+export function phaseFill(index: number, hours: number): number {
+  const p = roadPosition(hours) * PHASES.length - index;
+  return Math.min(1, Math.max(0, p));
+}

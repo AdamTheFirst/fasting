@@ -180,3 +180,32 @@ export function averageHours(fasts: readonly Fast[], since: number): number {
   if (done.length === 0) return 0;
   return done.reduce((sum, f) => sum + (f.end! - f.start), 0) / done.length / HOUR;
 }
+
+export interface DayDepth {
+  /** Local midnight that starts the day. */
+  day: number;
+  /** Hours fasted inside the day. */
+  hours: number;
+  /** The longest any fast had run by the end of this day, in hours: how deep the day went. */
+  depth: number;
+}
+
+/** The last `days` days, oldest first, ending today: hours fasted and how deep each day went. */
+export function dayDepths(fasts: readonly Fast[], days: number, now: number): DayDepth[] {
+  const byDay = hoursByDay(fasts, now);
+  const today = startOfLocalDay(now);
+  const out: DayDepth[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const from = d.getTime();
+    const to = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime();
+    let depth = 0;
+    for (const f of fasts) {
+      const end = fastEnd(f, now);
+      if (f.start < to && end > from) depth = Math.max(depth, (Math.min(end, to) - f.start) / HOUR);
+    }
+    out.push({ day: from, hours: byDay.get(dayKey(from)) ?? 0, depth });
+  }
+  return out;
+}

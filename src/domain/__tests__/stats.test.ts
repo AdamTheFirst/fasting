@@ -1,6 +1,7 @@
 import type { Fast } from '../fast';
 import {
   bmi,
+  dayDepths,
   dayKey,
   fastLengths,
   hoursByDay,
@@ -93,5 +94,20 @@ describe('startHours and averageHours', () => {
   it('averages finished fasts only', () => {
     expect(averageHours([a, b, running], 0)).toBeCloseTo((16 + 48) / 2);
     expect(averageHours([running], 0)).toBe(0);
+  });
+});
+
+describe('dayDepths', () => {
+  it('reports hours per day and how deep each day went', () => {
+    const now = local(2026, 3, 4, 12);
+    const days = dayDepths([fast(local(2026, 3, 1, 20), local(2026, 3, 3, 8))], 4, now);
+    expect(days.map((d) => d.day)).toEqual([
+      local(2026, 3, 1),
+      local(2026, 3, 2),
+      local(2026, 3, 3),
+      local(2026, 3, 4),
+    ]);
+    expect(days.map((d) => d.hours)).toEqual([4, 24, 8, 0]);
+    expect(days.map((d) => d.depth)).toEqual([4, 28, 36, 0]);
   });
 });
