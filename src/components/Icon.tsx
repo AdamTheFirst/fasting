@@ -23,7 +23,9 @@ export type IconName =
   | 'scale'
   | 'ruler'
   | 'sun'
-  | 'folder';
+  | 'folder'
+  | 'plan'
+  | 'journal';
 
 /** Line icons drawn for Fastaway: 24 px grid, 1.75 stroke, round caps. No rings, no clocks faces as heroes. */
 export function Icon({ name, size = 22, color }: { name: IconName; size?: number; color: string }) {
@@ -103,6 +105,22 @@ export function Icon({ name, size = 22, color }: { name: IconName; size?: number
       )}
       {name === 'folder' && (
         <Path d="M3.5 7.5a2 2 0 012-2h4l2 2.5h7a2 2 0 012 2V17a2 2 0 01-2 2h-13a2 2 0 01-2-2V7.5z" {...p} />
+      )}
+      {name === 'plan' && (
+        <>
+          <Rect x="3.5" y="5" width="17" height="15" rx="3" {...p} />
+          <Line x1="8" y1="3" x2="8" y2="6.5" {...p} />
+          <Line x1="16" y1="3" x2="16" y2="6.5" {...p} />
+          <Path d="M8 14h7M12.5 11.5L15 14l-2.5 2.5" {...p} />
+        </>
+      )}
+      {name === 'journal' && (
+        <>
+          <Path d="M6.5 3.5h10a2 2 0 012 2v13a2 2 0 01-2 2h-10z" {...p} />
+          <Line x1="6.5" y1="3.5" x2="6.5" y2="20.5" {...p} />
+          <Line x1="10" y1="8.5" x2="15" y2="8.5" {...p} />
+          <Line x1="10" y1="12" x2="15" y2="12" {...p} />
+        </>
       )}
       {name === 'scale' && (
         <>

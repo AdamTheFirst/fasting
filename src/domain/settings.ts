@@ -1,5 +1,6 @@
 import type { Appearance, ThemeId } from '../theme/tokens';
 import { DEFAULT_MILESTONE_SETTINGS, type MilestoneSettings } from './milestones';
+import type { PlannedFast } from './plan';
 
 /** Everything a fresh install starts with. Nothing is on that the person did not turn on. */
 export interface AppSettings {
@@ -21,6 +22,8 @@ export interface AppSettings {
   healthSignals: boolean;
   /** Widget and lock screen show only the time, never the word "fast". */
   discreetWidget: boolean;
+  /** Fasts planned ahead on the Plan tab. Nothing starts on its own. */
+  plannedFasts: PlannedFast[];
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -37,6 +40,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   adultConfirmed: false,
   healthSignals: false,
   discreetWidget: false,
+  plannedFasts: [],
 };
 
 /** Monday-first weekday index for a local time: 0 = Monday … 6 = Sunday. */

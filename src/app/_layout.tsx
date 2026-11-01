@@ -28,6 +28,7 @@ function Root() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="fast/[id]" options={{ presentation: 'modal', title: 'Edit fast' }} />
+        <Stack.Screen name="plan/[id]" options={{ presentation: 'modal', title: 'Plan a fast' }} />
         <Stack.Screen name="action/[verb]" options={{ headerShown: false }} />
         <Stack.Screen name="shortcuts" options={{ title: 'Shortcuts and Siri' }} />
         <Stack.Screen name="privacy" options={{ title: 'Privacy' }} />
