@@ -4,9 +4,10 @@ import * as db from '../data/db';
 import type { HeightEntry, WeightEntry } from '../domain/body';
 import { elapsedMs, type Fast, type Goal, newId, type Preset } from '../domain/fast';
 import { planAlerts } from '../domain/milestones';
+import { planName } from '../domain/plan';
 import { type AppSettings, DEFAULT_SETTINGS } from '../domain/settings';
 import { longestFast } from '../domain/stats';
-import { syncMilestoneAlerts } from '../services/notifications';
+import { syncMilestoneAlerts, syncPlanReminders } from '../services/notifications';
 import { syncWidgets } from '../services/widgets';
 
 interface Store {
@@ -76,6 +77,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       : [];
     void syncMilestoneAlerts(alerts);
   }, [loaded, fasts, running, settings.milestones]);
+
+  // Reminders for planned fasts follow the plan list; only plans with "Remind me" on get one.
+  useEffect(() => {
+    if (!loaded) return;
+    void syncPlanReminders(settings.plannedFasts, (p) => planName(p, presets), Date.now());
+  }, [loaded, settings.plannedFasts, presets]);
 
   // The widget and lock screen follow the running fast, its goal and the discreet setting.
   useEffect(() => {

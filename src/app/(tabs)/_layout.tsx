@@ -47,10 +47,24 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="plan"
+        options={{
+          title: 'Plan',
+          tabBarIcon: ({ focused }) => <TabIcon name="plan" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="history"
         options={{
           title: 'History',
           tabBarIcon: ({ focused }) => <TabIcon name="history" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="journal"
+        options={{
+          title: 'Journal',
+          tabBarIcon: ({ focused }) => <TabIcon name="journal" focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -70,7 +84,7 @@ function TabIcon({ name, focused }: { name: IconName; focused: boolean }) {
   return (
     <View
       style={{
-        width: 60,
+        width: 56,
         height: 32,
         borderRadius: radius.full,
         alignItems: 'center',
