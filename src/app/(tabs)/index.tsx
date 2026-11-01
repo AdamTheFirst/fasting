@@ -6,7 +6,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { DateTimeField } from '../../components/DateTimeField';
 import { FastDial } from '../../components/FastDial';
 import { FastNotesCard, PastYouCard } from '../../components/FastNotes';
-import { BrandMark, Icon } from '../../components/Icon';
+import { Icon } from '../../components/Icon';
 import { MilestoneBanner, useJustPassed } from '../../components/MilestoneBanner';
 import { MilestoneList } from '../../components/MilestoneList';
 import { SafetyCard } from '../../components/SafetyCard';
@@ -75,12 +75,9 @@ function previousBest(fasts: readonly Fast[], now: number, exceptId?: string) {
 }
 
 export default function FastScreen() {
-  const { loaded, running, settings, updateSettings } = useStore();
+  const { loaded, running } = useStore();
   const [justEndedId, setJustEndedId] = useState<string | null>(null);
   if (!loaded) return null;
-  if (!settings.adultConfirmed) {
-    return <AdultGate onConfirm={() => void updateSettings({ adultConfirmed: true })} />;
-  }
   return running ? (
     <RunningFast fast={running} onEnded={setJustEndedId} />
   ) : (
@@ -606,25 +603,6 @@ function RunningFast({ fast, onEnded }: { fast: Fast; onEnded: (id: string) => v
           void endFast();
         }}
       />
-    </Screen>
-  );
-}
-
-/** First launch only: one tap that says you're an adult. No questions, no account; one flag on the phone. */
-function AdultGate({ onConfirm }: { onConfirm: () => void }) {
-  const c = useColors();
-  return (
-    <Screen title="Welcome" scroll={false}>
-      <Card style={{ alignItems: 'center', gap: space[4], paddingVertical: space[8] }}>
-        <BrandMark size={44} color={c.text} accent={c.accentStrong} />
-        <Title size="xl" style={{ textAlign: 'center' }}>
-          Fastaway is for adults
-        </Title>
-        <Text style={[font.md, { color: c.textMuted, textAlign: 'center' }]}>
-          It tracks fasts of any length. If you&apos;re under 18, please talk to a doctor before fasting.
-        </Text>
-        <Button label="I'm 18 or older" size="lg" block onPress={onConfirm} />
-      </Card>
     </Screen>
   );
 }

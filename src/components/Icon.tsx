@@ -25,7 +25,8 @@ export type IconName =
   | 'sun'
   | 'folder'
   | 'plan'
-  | 'journal';
+  | 'journal'
+  | 'lock';
 
 /** Line icons drawn for Fastaway: 24 px grid, 1.75 stroke, round caps. No rings, no clocks faces as heroes. */
 export function Icon({ name, size = 22, color }: { name: IconName; size?: number; color: string }) {
@@ -93,6 +94,12 @@ export function Icon({ name, size = 22, color }: { name: IconName; size?: number
         </>
       )}
       {name === 'clock' && <Path d="M12 7v5l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z" {...p} />}
+      {name === 'lock' && (
+        <>
+          <Rect x="5" y="10.5" width="14" height="10" rx="2.5" {...p} />
+          <Path d="M8.5 10.5V7.5a3.5 3.5 0 017 0v3" {...p} />
+        </>
+      )}
       {name === 'ruler' && <Path d="M4 16L16 4l4 4L8 20l-4-4zM8 12l2 2M11 9l2 2M14 6l2 2" {...p} />}
       {name === 'sun' && (
         <>

@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 
+import { Welcome } from '../components/Welcome';
 import { StoreProvider, useStore } from '../state/store';
 import { useHealthSync } from '../state/useHealthSync';
 import { strong, ThemeContext, useColors, useIsDark } from '../theme';
@@ -10,10 +11,21 @@ import { strong, ThemeContext, useColors, useIsDark } from '../theme';
 function Root() {
   const c = useColors();
   const dark = useIsDark();
+  const { loaded, settings, updateSettings } = useStore();
   useHealthSync();
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(c.bg);
   }, [c.bg]);
+  if (!loaded) return null;
+  // First launch: the welcome screen fills the whole screen, before the tabs exist.
+  if (!settings.adultConfirmed) {
+    return (
+      <>
+        <StatusBar style={dark ? 'light' : 'dark'} />
+        <Welcome onConfirm={() => void updateSettings({ adultConfirmed: true })} />
+      </>
+    );
+  }
   return (
     <>
       <StatusBar style={dark ? 'light' : 'dark'} />
